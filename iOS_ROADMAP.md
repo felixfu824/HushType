@@ -30,7 +30,7 @@ Porting VoxKey to iPhone is **technically feasible but architecturally different
 ### Key finding
 
 **TypeWhisper iOS is the only open-source project with a working iOS keyboard extension for voice-to-text.** It's very new (5 stars, beta) but validates the architecture. All other projects are either libraries (you build on top) or standalone apps (no keyboard integration).
-
+(Felix: should check TypeLess)
 ---
 
 ## The Fundamental iOS Constraint
