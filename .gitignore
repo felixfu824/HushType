@@ -1,0 +1,6 @@
+.build/
+.swiftpm/
+VoxKey.app/
+*.xcodeproj/
+xcuserdata/
+.DS_Store
