@@ -5,16 +5,19 @@ Local voice-to-text input for macOS. Hold a key, speak, release — transcribed 
 ## Quick Start
 
 ```bash
-# Build (first time takes ~7 min, subsequent builds ~15s)
-make build
+# Build + install to /Applications (launch from Spotlight: Cmd+Space → VoxKey)
+make install
 
-# Run from terminal (shows debug logs)
+# Or run from terminal (shows debug logs)
 make run
-
-# Or bundle as .app and double-click
-make bundle
-open VoxKey.app
 ```
+
+Other make targets:
+- `make build` — compile only
+- `make bundle` — create VoxKey.app in project folder
+- `make install` — build + copy to /Applications (Spotlight-launchable)
+- `make uninstall` — remove from /Applications
+- `make clean` — remove build artifacts
 
 **First launch requirements:**
 1. Grant **Accessibility** permission (System Settings > Privacy & Security > Accessibility)
