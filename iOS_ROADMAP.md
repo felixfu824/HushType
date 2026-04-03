@@ -26,6 +26,53 @@ Porting VoxKey to iPhone is **technically feasible but architecturally different
 | [speech-swift](https://github.com/soniqo/speech-swift) | Library + demos | Qwen3-ASR, Parakeet | Yes (52 langs) | 512 | Active |
 | [KeyboardKit](https://github.com/KeyboardKit/KeyboardKit) | Keyboard framework | Apple Speech (Pro only) | Yes (75 locales) | 1,800 | Active, paid |
 | [FUTO Voice Input](https://voiceinput.futo.org/) | Full voice keyboard | Whisper finetuned | Yes | N/A | **Android only** |
+| [ByeType](https://github.com/lixiaojie001/byetype) | iOS keyboard + desktop | Multimodal AI (Gemini/Qwen) + WhisperKit | Yes (Chinese-first) | 148 | Active, MIT |
+
+### ByeType — The Most Relevant Reference Implementation
+
+[ByeType](https://byetype.com/en/) ([GitHub](https://github.com/lixiaojie001/byetype), MIT, 148 stars) is the closest analog to what VoxKey iOS would be. **Built in 7 days during 2026 Lunar New Year using Claude Code** by an engineer with 7+ years of AI audio experience. Total cost: $330 (Claude Max subscription).
+
+**Why this matters for VoxKey:**
+- Proves a single developer can build an iOS voice keyboard with Claude Code in ~1 week
+- Uses WhisperKit for on-device STT (same approach we'd take with Qwen3-ASR CoreML)
+- Has a working iOS Custom Keyboard Extension on the App Store
+- Chinese-first design with mixed zh-en support — same target as VoxKey
+- MIT licensed — we can study the architecture directly
+
+**Architecture — "Markdown-driven" approach:**
+```
+🎤 Audio → STT (WhisperKit local OR cloud Gemini/Qwen multimodal)
+  → LLM refinement via customizable Markdown prompts (agent.md + rules.md + vocabulary.md)
+  → Paste at cursor
+```
+
+Key innovation: Instead of a traditional STT → post-process pipeline, ByeType can send **raw audio directly to multimodal AI models** (Gemini 3 Flash, Qwen 3.5 Omni) which transcribe + polish in one pass. The Markdown prompt files let users customize vocabulary, formatting rules, and filler word removal without touching code.
+
+**Technical stack:**
+- Desktop: Tauri v2 (React 19 + TypeScript + Rust), ~8 MB footprint
+- iOS: Native Swift, WhisperKit for on-device STT, Custom Keyboard Extension
+- Supports: WhisperKit (local), OpenAI API, Gemini API, Qwen-Omni API (BYOK)
+- iOS also available via Shortcuts (lightweight alternative to keyboard extension)
+
+**Developer insights (from the build blog post):**
+1. State management across Claude Code sessions is the #1 challenge — need explicit architecture docs
+2. Audio format constraints vary across ASR vendors — need domain expertise
+3. Feature integration testing is critical — new features easily break existing ones
+4. Used Opus 4.6 for "better consistency across long sessions" vs Sonnet
+
+**Comparison: ByeType vs VoxKey iOS plan:**
+
+| | ByeType | VoxKey iOS (planned) |
+|---|---|---|
+| STT engine | WhisperKit + cloud multimodal | Qwen3-ASR CoreML (on-device) |
+| LLM polish | Cloud (Gemini/Qwen API, BYOK) | Future: Qwen3.5-0.8B on-device |
+| Chinese quality | Good (Chinese-first design) | Excellent (Qwen3-ASR trained for code-switching) |
+| Traditional Chinese | Via LLM prompt | Native from model + OpenCC fallback |
+| Privacy | BYOK cloud APIs | Fully on-device, zero network |
+| Customization | Markdown prompt files | AppConfig (UserDefaults) |
+| Cost to user | Free + bring API keys | Free, no API keys needed |
+
+**Actionable takeaway:** Fork-study ByeType's iOS keyboard extension code to understand the Custom Keyboard → main app → App Group pattern. Their Swift implementation of this flow is the most directly applicable reference for VoxKey iOS.
 
 ### Typeless — The Market Leader
 
