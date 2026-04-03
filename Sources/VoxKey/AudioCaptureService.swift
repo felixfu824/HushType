@@ -1,7 +1,7 @@
 import AVFoundation
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "audio")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "audio")
 
 final class AudioCaptureService {
     private let audioEngine = AVAudioEngine()

@@ -2,7 +2,7 @@ import Foundation
 import Qwen3ASR
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "transcription")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "transcription")
 
 // MARK: - Protocol
 

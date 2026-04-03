@@ -3,14 +3,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "VoxKey",
+    name: "HushType",
     platforms: [.macOS(.v15)],
     dependencies: [
         .package(url: "https://github.com/soniqo/speech-swift.git", branch: "main"),
     ],
     targets: [
         .executableTarget(
-            name: "VoxKey",
+            name: "HushType",
             dependencies: [
                 .product(name: "Qwen3ASR", package: "speech-swift"),
                 .product(name: "AudioCommon", package: "speech-swift"),

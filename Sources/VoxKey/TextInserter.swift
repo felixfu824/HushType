@@ -1,7 +1,7 @@
 import AppKit
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "insertion")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "insertion")
 
 struct TextInserter {
     static func insert(_ text: String) {

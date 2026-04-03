@@ -261,7 +261,7 @@ class KeyboardViewController: UIInputViewController {
                 micButton.setImage(UIImage(systemName: "exclamationmark.triangle.fill", withConfiguration: config), for: .normal)
                 micButton.tintColor = .systemYellow
                 micButton.backgroundColor = .systemGray5
-                statusLabel.text = "Open VoxKey app first"
+                statusLabel.text = "Open HushType app first"
             }
         }
     }

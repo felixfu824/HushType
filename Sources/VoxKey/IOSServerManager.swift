@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "ios-server")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "ios-server")
 
 /// Manages the iOS server (ios_server.py) as a child process.
 /// The server proxies mlx-audio with OpenCC s2twp conversion for iPhone clients.

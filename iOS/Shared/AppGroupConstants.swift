@@ -1,7 +1,7 @@
 import Foundation
 
 enum AppGroup {
-    static let id = "group.com.felix.voxkey"
+    static let id = "group.com.felix.hushtype"
 
     static var userDefaults: UserDefaults {
         UserDefaults(suiteName: id)!

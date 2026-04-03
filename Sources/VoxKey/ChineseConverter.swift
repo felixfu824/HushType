@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "converter")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "converter")
 
 struct ChineseConverter {
     private static let openccPath = "/opt/homebrew/bin/opencc"

@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey.ios", category: "transcriber")
+private let log = Logger(subsystem: "com.felix.hushtype.ios", category: "transcriber")
 
 struct TranscriptionResponse: Codable {
     let text: String
@@ -72,7 +72,7 @@ final class RemoteTranscriber {
         // model field
         body.append("--\(boundary)\r\n")
         body.append("Content-Disposition: form-data; name=\"model\"\r\n\r\n")
-        // Same weights as macOS VoxKey's aufklarer/Qwen3-ASR-0.6B-MLX-4bit
+        // Same weights as macOS HushType's aufklarer/Qwen3-ASR-0.6B-MLX-4bit
         // mlx-community version has preprocessor_config.json needed by mlx-audio server
         body.append("mlx-community/Qwen3-ASR-0.6B-4bit")
         body.append("\r\n")

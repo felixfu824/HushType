@@ -3,22 +3,24 @@
 <plist version="1.0">
 <dict>
     <key>CFBundleIdentifier</key>
-    <string>com.felix.voxkey</string>
+    <string>com.felix.hushtype</string>
     <key>CFBundleName</key>
-    <string>VoxKey</string>
+    <string>HushType</string>
     <key>CFBundleDisplayName</key>
-    <string>VoxKey</string>
+    <string>HushType</string>
     <key>CFBundleExecutable</key>
-    <string>VoxKey</string>
+    <string>HushType</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
     <string>1.0</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
+    <key>CFBundleIconFile</key>
+    <string>HushType</string>
     <key>LSUIElement</key>
     <true/>
     <key>NSMicrophoneUsageDescription</key>
-    <string>VoxKey needs microphone access to transcribe your voice input.</string>
+    <string>HushType needs microphone access to transcribe your voice input.</string>
 </dict>
 </plist>

@@ -2,7 +2,7 @@ import AVFoundation
 import UIKit
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey.ios", category: "background")
+private let log = Logger(subsystem: "com.felix.hushtype.ios", category: "background")
 
 /// Manages the background audio session and IPC with keyboard extension.
 /// Uses a "listening session" model: the audio engine runs continuously in background
@@ -11,7 +11,7 @@ final class BackgroundAudioManager: ObservableObject {
     let recorder = AudioRecorder()
     let transcriber = RemoteTranscriber()
 
-    @Published var state: VoxKeyState = .idle
+    @Published var state: HushTypeState = .idle
     @Published var lastResult: String = ""
     @Published var errorMessage: String?
     @Published var isListening = false
@@ -25,7 +25,7 @@ final class BackgroundAudioManager: ObservableObject {
     /// Session duration in seconds (default 5 minutes)
     let sessionDuration: TimeInterval = 5 * 60
 
-    enum VoxKeyState: String {
+    enum HushTypeState: String {
         case idle, recording, transcribing, done, error
     }
 

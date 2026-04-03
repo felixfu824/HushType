@@ -1,7 +1,7 @@
 import AppKit
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "hotkey")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "hotkey")
 
 final class HotkeyManager {
     var onPress: (() -> Void)?
@@ -109,7 +109,7 @@ final class HotkeyManager {
         DispatchQueue.main.async {
             let alert = NSAlert()
             alert.messageText = "Accessibility Permission Required"
-            alert.informativeText = "VoxKey needs Accessibility access to listen for the Right Option key.\n\nGo to System Settings → Privacy & Security → Accessibility and add VoxKey."
+            alert.informativeText = "HushType needs Accessibility access to listen for the Right Option key.\n\nGo to System Settings → Privacy & Security → Accessibility and add HushType."
             alert.alertStyle = .warning
             alert.addButton(withTitle: "Open System Settings")
             alert.addButton(withTitle: "Quit")

@@ -1,4 +1,4 @@
-APP_NAME = VoxKey
+APP_NAME = HushType
 BUILD_DIR = .build/release
 BUNDLE_DIR = $(APP_NAME).app
 
@@ -18,6 +18,7 @@ bundle: build
 	@cp "$(BUILD_DIR)/$(APP_NAME)" "$(BUNDLE_DIR)/Contents/MacOS/"
 	@cp "$(BUILD_DIR)/mlx.metallib" "$(BUNDLE_DIR)/Contents/MacOS/" 2>/dev/null || true
 	@cp Resources/Info.plist "$(BUNDLE_DIR)/Contents/"
+	@cp Resources/HushType.icns "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@cp scripts/ios_server.py "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@echo "Bundle created: $(BUNDLE_DIR)"
 
@@ -26,7 +27,7 @@ install: bundle
 	@rm -rf /Applications/$(BUNDLE_DIR)
 	@cp -R "$(BUNDLE_DIR)" /Applications/
 	@echo "Installed to /Applications/$(BUNDLE_DIR)"
-	@echo "You can now launch VoxKey from Spotlight (Cmd+Space → VoxKey)"
+	@echo "You can now launch HushType from Spotlight (Cmd+Space → HushType)"
 
 uninstall:
 	@killall $(APP_NAME) 2>/dev/null || true

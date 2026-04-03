@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-VoxKey iOS Server — proxy for mlx-audio with OpenCC s2twp conversion.
+HushType iOS Server — proxy for mlx-audio with OpenCC s2twp conversion.
 
 Proxies audio to the built-in mlx-audio server, then converts
 Simplified → Traditional Chinese before returning to the iOS client.
@@ -30,7 +30,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, Response
 
-app = FastAPI(title="VoxKey iOS Server")
+app = FastAPI(title="HushType iOS Server")
 
 OPENCC_PATH = "/opt/homebrew/bin/opencc"
 CJK_RANGE = re.compile(r"[\u4e00-\u9fff]")
@@ -78,7 +78,7 @@ def parse_ndjson_text(body: bytes) -> str:
 
 @app.get("/")
 def root():
-    return {"status": "ok", "service": "VoxKey iOS Server", "opencc": Path(OPENCC_PATH).exists()}
+    return {"status": "ok", "service": "HushType iOS Server", "opencc": Path(OPENCC_PATH).exists()}
 
 
 @app.get("/health")
@@ -156,7 +156,7 @@ def stop_backend():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="VoxKey iOS Server")
+    parser = argparse.ArgumentParser(description="HushType iOS Server")
     parser.add_argument("--host", default="0.0.0.0")
     parser.add_argument("--port", type=int, default=8000, help="Port for iOS clients")
     parser.add_argument("--backend-port", type=int, default=8199, help="Internal mlx-audio port")
@@ -164,12 +164,12 @@ if __name__ == "__main__":
 
     _backend_port = args.backend_port
 
-    print(f"[ios_server] VoxKey iOS Server")
+    print(f"[ios_server] HushType iOS Server")
     print(f"[ios_server] Frontend: {args.host}:{args.port} (for iPhone)")
     print(f"[ios_server] Backend:  127.0.0.1:{args.backend_port} (mlx-audio)")
     print(f"[ios_server] OpenCC:   {'✓' if Path(OPENCC_PATH).exists() else '✗ not found'}")
 
-    # Create a new process group so the parent (VoxKey app) can kill us + children
+    # Create a new process group so the parent (HushType app) can kill us + children
     os.setpgrp()
 
     # Ensure cleanup on any exit

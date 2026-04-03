@@ -1,7 +1,7 @@
 import AppKit
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "statusbar")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "statusbar")
 
 final class StatusBarController: NSObject {
     enum State {
@@ -90,7 +90,7 @@ final class StatusBarController: NSObject {
         menu.addItem(.separator())
 
         // Quit
-        let quitItem = NSMenuItem(title: "Quit VoxKey", action: #selector(quitClicked), keyEquivalent: "q")
+        let quitItem = NSMenuItem(title: "Quit HushType", action: #selector(quitClicked), keyEquivalent: "q")
         quitItem.target = self
         menu.addItem(quitItem)
 
@@ -144,7 +144,7 @@ final class StatusBarController: NSObject {
             symbolName = "exclamationmark.triangle"
         }
 
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "VoxKey")
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "HushType")
     }
 
     private func updateStatusText(for state: State) {

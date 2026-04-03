@@ -1,11 +1,11 @@
 # macOS build artifacts
 .build/
 .swiftpm/
-VoxKey.app/
+HushType.app/
 logs/
 
 # iOS build artifacts
-iOS/VoxKey.xcodeproj/
+iOS/HushType.xcodeproj/
 iOS/build/
 xcuserdata/
 

@@ -2,13 +2,13 @@ import Foundation
 
 enum IPC {
     // Keyboard → Main App
-    static let startRecording = "com.felix.voxkey.startRecording" as CFString
-    static let stopRecording  = "com.felix.voxkey.stopRecording" as CFString
+    static let startRecording = "com.felix.hushtype.startRecording" as CFString
+    static let stopRecording  = "com.felix.hushtype.stopRecording" as CFString
 
     // Main App → Keyboard
-    static let resultReady    = "com.felix.voxkey.resultReady" as CFString
-    static let recordingStarted = "com.felix.voxkey.recordingStarted" as CFString
-    static let errorOccurred  = "com.felix.voxkey.errorOccurred" as CFString
+    static let resultReady    = "com.felix.hushtype.resultReady" as CFString
+    static let recordingStarted = "com.felix.hushtype.recordingStarted" as CFString
+    static let errorOccurred  = "com.felix.hushtype.errorOccurred" as CFString
 
     static func post(_ name: CFString) {
         let center = CFNotificationCenterGetDarwinNotifyCenter()

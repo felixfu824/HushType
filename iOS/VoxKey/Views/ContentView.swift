@@ -11,7 +11,7 @@ struct ContentView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: 28) {
-                Text("VoxKey")
+                Text("HushType")
                     .font(.largeTitle.bold())
                     .padding(.top, 20)
 
@@ -68,7 +68,7 @@ struct ContentView: View {
                             .font(.system(size: 32, weight: .light, design: .monospaced))
                             .foregroundColor(.secondary)
 
-                        Text("Switch to any app and use the VoxKey keyboard.\nAuto-stops when timer expires.")
+                        Text("Switch to any app and use the HushType keyboard.\nAuto-stops when timer expires.")
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -132,7 +132,7 @@ struct ContentView: View {
 
                 Spacer(minLength: 40)
 
-                Text("Keyboard Setup: Settings → General → Keyboard → Keyboards → Add → VoxKey")
+                Text("Keyboard Setup: Settings → General → Keyboard → Keyboards → Add → HushType")
                     .font(.caption)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)

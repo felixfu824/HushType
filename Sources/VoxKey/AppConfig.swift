@@ -1,7 +1,7 @@
 import Foundation
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "config")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "config")
 
 final class AppConfig {
     static let shared = AppConfig()
@@ -9,9 +9,9 @@ final class AppConfig {
     private let defaults = UserDefaults.standard
 
     private enum Keys {
-        static let language = "voxkey.language"
-        static let modelId = "voxkey.modelId"
-        static let chineseConversionEnabled = "voxkey.chineseConversionEnabled"
+        static let language = "hushtype.language"
+        static let modelId = "hushtype.modelId"
+        static let chineseConversionEnabled = "hushtype.chineseConversionEnabled"
     }
 
     /// Language for transcription. nil = auto-detect.

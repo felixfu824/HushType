@@ -1,7 +1,7 @@
 import Carbon
 import os
 
-private let log = Logger(subsystem: "com.felix.voxkey", category: "inputsource")
+private let log = Logger(subsystem: "com.felix.hushtype", category: "inputsource")
 
 struct InputSourceManager {
     /// Returns the current input source ID string.
