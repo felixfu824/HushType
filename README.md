@@ -13,6 +13,8 @@
   <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
+> **HushType** is a free, open-source, offline speech-to-text app for macOS and iOS. It uses [Qwen3-ASR](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) running locally on Apple Silicon (MLX) to transcribe voice input in English, Chinese, and Japanese — including mixed-language sentences. Outputs Traditional Chinese (繁體中文) via OpenCC. A privacy-first alternative to cloud dictation services and Whisper-based tools.
+
 ---
 
 ## Why HushType
