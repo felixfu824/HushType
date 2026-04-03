@@ -63,6 +63,12 @@ iOS（透過你的 Mac 作為伺服器）：
 
 ---
 
+## 零基礎安裝
+
+**完全不懂技術？沒問題。** 打開 [AGENT_SETUP.md](AGENT_SETUP.md)，複製全部內容，貼到任何 AI 程式助手中——[Claude Code](https://claude.ai/code)、[Cursor](https://cursor.com)、[Codex](https://openai.com/index/codex/) 或 [Windsurf](https://windsurf.com)。AI 助手會一步一步帶你完成整個安裝，從安裝相依套件到在你的 Mac 和 iPhone 上執行。
+
+---
+
 ## 前置需求與相依套件
 
 **硬體與系統：**

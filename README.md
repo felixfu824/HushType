@@ -79,6 +79,12 @@ iOS (via your Mac as server):
 
 ---
 
+## Zero-Experience Setup
+
+**Not technical? No problem.** Open [AGENT_SETUP.md](AGENT_SETUP.md), copy the entire content, and paste it into any AI coding agent — [Claude Code](https://claude.ai/code), [Cursor](https://cursor.com), [Codex](https://openai.com/index/codex/), or [Windsurf](https://windsurf.com). The agent will walk you through the entire setup step by step, from installing dependencies to running the app on your Mac and iPhone.
+
+---
+
 ## Prerequisites and Dependencies
 
 **Hardware and OS:**
@@ -322,7 +328,7 @@ HushType/
     │   ├── AppGroupConstants.swift    App Group keys + file-based IPC
     │   ├── IPCConstants.swift         Darwin notification names
     │   └── WAVEncoder.swift           Float32 → 16-bit PCM WAV
-    ├── VoxKey/                        Main iOS app
+    ├── VoxKey/                        Main iOS app (directory name kept from v1)
     │   ├── VoxKeyApp.swift            SwiftUI entry point (@main HushTypeApp)
     │   ├── Views/ContentView.swift    Server config, listening session, countdown
     │   ├── Services/
