@@ -18,6 +18,7 @@ bundle: build
 	@cp "$(BUILD_DIR)/$(APP_NAME)" "$(BUNDLE_DIR)/Contents/MacOS/"
 	@cp "$(BUILD_DIR)/mlx.metallib" "$(BUNDLE_DIR)/Contents/MacOS/" 2>/dev/null || true
 	@cp Resources/Info.plist "$(BUNDLE_DIR)/Contents/"
+	@cp scripts/ios_server.py "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@echo "Bundle created: $(BUNDLE_DIR)"
 
 install: bundle

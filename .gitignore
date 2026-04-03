@@ -1,6 +1,14 @@
+# macOS build artifacts
 .build/
 .swiftpm/
 VoxKey.app/
-*.xcodeproj/
+logs/
+
+# iOS build artifacts
+iOS/VoxKey.xcodeproj/
+iOS/build/
 xcuserdata/
+
+# System
 .DS_Store
+*.xcuserdata

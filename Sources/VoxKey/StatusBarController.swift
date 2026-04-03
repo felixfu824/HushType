@@ -3,7 +3,7 @@ import os
 
 private let log = Logger(subsystem: "com.felix.voxkey", category: "statusbar")
 
-final class StatusBarController {
+final class StatusBarController: NSObject {
     enum State {
         case loading(Double) // progress 0.0–1.0
         case idle
@@ -16,16 +16,20 @@ final class StatusBarController {
     private let statusMenuItem: NSMenuItem
     private let languageMenu: NSMenu
     private var languageItems: [NSMenuItem] = []
+    private var iosServerMenuItem: NSMenuItem!
+    let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
     var onQuit: (() -> Void)?
 
-    init() {
+    override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusMenuItem = NSMenuItem(title: "Loading...", action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
 
         languageMenu = NSMenu(title: "Language")
+
+        super.init()
 
         setupMenu()
         updateIcon(for: .idle)
@@ -72,6 +76,19 @@ final class StatusBarController {
 
         menu.addItem(.separator())
 
+        // iOS Server toggle
+        iosServerMenuItem = NSMenuItem(title: "Start iOS Server", action: #selector(toggleIOSServer), keyEquivalent: "")
+        iosServerMenuItem.target = self
+        menu.addItem(iosServerMenuItem)
+
+        iosServerManager.onStatusChanged = { [weak self] running in
+            DispatchQueue.main.async {
+                self?.iosServerMenuItem.title = running ? "Stop iOS Server (port 8000)" : "Start iOS Server"
+            }
+        }
+
+        menu.addItem(.separator())
+
         // Quit
         let quitItem = NSMenuItem(title: "Quit VoxKey", action: #selector(quitClicked), keyEquivalent: "q")
         quitItem.target = self
@@ -88,7 +105,16 @@ final class StatusBarController {
         log.info("Language changed to: \(value ?? "auto")")
     }
 
+    @objc private func toggleIOSServer() {
+        if iosServerManager.isRunning {
+            iosServerManager.stop()
+        } else {
+            iosServerManager.start(port: 8000)
+        }
+    }
+
     @objc private func quitClicked() {
+        iosServerManager.stop()
         onQuit?()
         NSApp.terminate(nil)
     }
