@@ -63,13 +63,33 @@ iOS（透過你的 Mac 作為伺服器）：
 
 ---
 
-## 零基礎安裝
+## 安裝
+
+### 方案 A：下載 DMG（不需要任何開發工具）
+
+1. 從[最新版本](https://github.com/felixfu824/HushType/releases)下載 `HushType.dmg`
+2. 打開 DMG，將 HushType 拖到「應用程式」
+3. 右鍵點擊 HushType.app → 打開（首次啟動時需要——App 使用臨時簽章，未經 Apple 公證）
+4. 授予**輔助使用**與**麥克風**權限
+5. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
+
+DMG 為完全獨立版本——OpenCC 及所有相依套件皆已內含。不需要 Homebrew、不需要終端機指令。
+
+> **iOS 伺服器支援：** DMG 也包含選單列中的 iOS 伺服器切換功能。需要額外安裝 Python 3 及相關套件——參見下方 [iOS 安裝指南](#安裝指南ios（iphone--mac-伺服器）)。若缺少相依套件，App 會顯示錯誤訊息及所需的 `pip3 install` 指令。
+
+### 方案 B：從原始碼編譯
+
+參見下方[前置需求](#前置需求與相依套件)及 [macOS 安裝指南](#安裝指南macos)。
+
+### 方案 C：零基礎安裝
 
 **完全不懂技術？沒問題。** 打開 [AGENT_SETUP.md](AGENT_SETUP.md)，複製全部內容，貼到任何 AI 程式助手中——[Claude Code](https://claude.ai/code)、[Cursor](https://cursor.com)、[Codex](https://openai.com/index/codex/) 或 [Windsurf](https://windsurf.com)。AI 助手會一步一步帶你完成整個安裝，從安裝相依套件到在你的 Mac 和 iPhone 上執行。
 
 ---
 
 ## 前置需求與相依套件
+
+> **注意：** 若你使用 DMG 安裝（方案 A），可跳過此段——所有相依套件皆已內含。以下僅適用於從原始碼編譯或設定 iOS 伺服器。
 
 **硬體與系統：**
 
@@ -79,13 +99,13 @@ iOS（透過你的 Mac 作為伺服器）：
 | macOS 15.0+ | speech-swift 最低版本需求 |
 | iPhone（iOS 17+）| iOS 客戶端（選用）|
 
-**軟體相依套件：**
+**軟體相依套件（從原始碼編譯）：**
 
 | 套件 | 用途 | 安裝方式 | 需要於 |
 |---|---|---|---|
-| [Homebrew](https://brew.sh) | 套件管理器 | 見 brew.sh | 兩者皆需 |
-| [opencc](https://formulae.brew.sh/formula/opencc) | 簡體 → 繁體中文 | `brew install opencc` | 兩者皆需 |
-| [speech-swift](https://github.com/soniqo/speech-swift) | Apple Silicon 上的 Qwen3-ASR（MLX）| SPM 自動安裝 | macOS |
+| [Homebrew](https://brew.sh) | 套件管理器 | 見 brew.sh | 從原始碼編譯 |
+| [opencc](https://formulae.brew.sh/formula/opencc) | 簡體 → 繁體中文 | `brew install opencc` | 從原始碼編譯（DMG 已內含）|
+| [speech-swift](https://github.com/soniqo/speech-swift) | Apple Silicon 上的 Qwen3-ASR（MLX）| SPM 自動安裝 | 從原始碼編譯 |
 | [Python 3.13+](https://python.org) | iOS 伺服器執行環境 | `brew install python` | 僅 iOS |
 | [mlx-audio](https://github.com/Blaizzy/mlx-audio) | iOS 用的 STT 伺服器 | `pip3 install "mlx-audio[stt,server]"` | 僅 iOS |
 | [httpx](https://www.python-httpx.org/) | 代理伺服器用的非同步 HTTP | `pip3 install httpx` | 僅 iOS |
@@ -314,10 +334,21 @@ lsof -ti :8000 :8199 | xargs kill
 
 ---
 
+## 隱私與安全
+
+- **不儲存任何錄音。** 語音資料僅存在於記憶體中（錄音 → 轉錄流程），完成後即丟棄。無論 macOS 或 iOS 伺服器，皆不會將任何音訊寫入磁碟。
+- **設定完成後不需要網路。** 唯一需要連網的是首次啟動時下載模型（約 675 MB）。之後，App 與模型完全離線運行，零對外連線。
+- **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）外，不包含任何網路程式碼。
+- **iOS 音訊留在你的網路中。** iPhone 音訊直接傳送到你的 Mac，透過區域網路 WiFi 或 Tailscale（WireGuard 加密）。不經過任何第三方伺服器。
+- **可完全離網運作。** 在另一台電腦上預先下載模型資料夾（`~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`），複製過來即可——App 將永遠不需要網路。
+
+---
+
 ## 已知限制
 
 - iOS 需要 Mac 開機且伺服器運行中（無雲端備援）
 - 免費佈署：iOS App 每 7 天過期（需透過 Xcode 重新簽署）
 - 聆聽時間固定為 5 分鐘（尚無介面可調整）
 - Mac 必須是 iPhone 可連線的（同一 WiFi 或 Tailscale）
+- DMG 使用臨時簽章（未經 Apple 公證）——首次啟動時 macOS Gatekeeper 會發出警告，需右鍵 → 打開來略過
 
