@@ -13,9 +13,11 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>1.0</string>
+    <string>2</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>0.2.1</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>MIT License © 2026 Felix Fu</string>
     <key>CFBundleIconFile</key>
     <string>HushType</string>
     <key>LSUIElement</key>

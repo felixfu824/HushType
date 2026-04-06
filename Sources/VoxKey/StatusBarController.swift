@@ -89,6 +89,11 @@ final class StatusBarController: NSObject {
 
         menu.addItem(.separator())
 
+        // About
+        let aboutItem = NSMenuItem(title: "About HushType", action: #selector(aboutClicked), keyEquivalent: "")
+        aboutItem.target = self
+        menu.addItem(aboutItem)
+
         // Quit
         let quitItem = NSMenuItem(title: "Quit HushType", action: #selector(quitClicked), keyEquivalent: "q")
         quitItem.target = self
@@ -111,6 +116,25 @@ final class StatusBarController: NSObject {
         } else {
             iosServerManager.start(port: 8000)
         }
+    }
+
+    @objc private func aboutClicked() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let alert = NSAlert()
+        alert.messageText = "HushType v\(version)"
+        alert.informativeText = """
+            Local voice-to-text for macOS and iOS.
+            Multilingual (EN/ZH/JP) with Traditional Chinese output.
+
+            Author: Felix Fu
+            Co-authored with: Claude (Anthropic)
+            License: MIT
+
+            github.com/felixfu824/HushType
+            """
+        alert.icon = NSImage(named: "AppIcon") ?? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     @objc private func quitClicked() {
