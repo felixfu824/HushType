@@ -4,7 +4,27 @@ import os
 private let log = Logger(subsystem: "com.felix.hushtype", category: "converter")
 
 struct ChineseConverter {
-    private static let openccPath = "/opt/homebrew/bin/opencc"
+    private static let openccPath: String = {
+        // Prefer bundled opencc inside the app bundle
+        if let bundlePath = Bundle.main.executableURL?
+            .deletingLastPathComponent()
+            .appendingPathComponent("opencc").path,
+           FileManager.default.fileExists(atPath: bundlePath) {
+            return bundlePath
+        }
+        // Fallback to Homebrew
+        return "/opt/homebrew/bin/opencc"
+    }()
+
+    private static let openccDataDir: String? = {
+        if let bundleDir = Bundle.main.executableURL?
+            .deletingLastPathComponent()
+            .appendingPathComponent("opencc_data").path,
+           FileManager.default.fileExists(atPath: bundleDir) {
+            return bundleDir
+        }
+        return nil
+    }()
 
     /// Returns true if the text contains any CJK Unified Ideographs (U+4E00–U+9FFF).
     static func containsCJK(_ text: String) -> Bool {
@@ -30,7 +50,11 @@ struct ChineseConverter {
 
         let process = Process()
         process.executableURL = URL(fileURLWithPath: openccPath)
-        process.arguments = ["-c", "s2twp"]
+        if let dataDir = openccDataDir {
+            process.arguments = ["-c", "\(dataDir)/s2twp.json"]
+        } else {
+            process.arguments = ["-c", "s2twp"]
+        }
 
         let inputPipe = Pipe()
         let outputPipe = Pipe()

@@ -81,13 +81,33 @@ iOS (via your Mac as server):
 
 ---
 
-## Zero-Experience Setup
+## Install
+
+### Option A: Download DMG (no build tools needed)
+
+1. Download `HushType.dmg` from the [latest release](https://github.com/felixfu824/HushType/releases)
+2. Open the DMG and drag HushType to Applications
+3. Right-click HushType.app → Open (required on first launch — the app is ad-hoc signed, not notarized)
+4. Grant **Accessibility** and **Microphone** permissions when prompted
+5. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
+
+The DMG is self-contained — OpenCC and all dependencies are bundled. No Homebrew, no terminal commands.
+
+> **iOS server support:** The DMG also includes the iOS server toggle in the menu bar. It requires Python 3 and additional packages to be installed separately — see the [iOS setup guide](#setup-guide-ios-iphone--mac-server) below. If dependencies are missing, the app will show an error with the exact `pip3 install` command needed.
+
+### Option B: Build from source
+
+See [Prerequisites](#prerequisites-and-dependencies) and [macOS Setup Guide](#setup-guide-macos) below.
+
+### Option C: Zero-experience setup
 
 **Not technical? No problem.** Open [AGENT_SETUP.md](AGENT_SETUP.md), copy the entire content, and paste it into any AI coding agent — [Claude Code](https://claude.ai/code), [Cursor](https://cursor.com), [Codex](https://openai.com/index/codex/), or [Windsurf](https://windsurf.com). The agent will walk you through the entire setup step by step, from installing dependencies to running the app on your Mac and iPhone.
 
 ---
 
 ## Prerequisites and Dependencies
+
+> **Note:** If you installed via DMG (Option A), skip this section — everything is bundled. These are only needed for building from source or setting up the iOS server.
 
 **Hardware and OS:**
 
@@ -97,13 +117,13 @@ iOS (via your Mac as server):
 | macOS 15.0+ | Minimum OS for speech-swift |
 | iPhone with iOS 17+ | iOS client (optional) |
 
-**Software dependencies:**
+**Software dependencies (build from source):**
 
 | Dependency | Purpose | Install | Required for |
 |---|---|---|---|
-| [Homebrew](https://brew.sh) | Package manager | See brew.sh | Both |
-| [opencc](https://formulae.brew.sh/formula/opencc) | Simplified → Traditional Chinese | `brew install opencc` | Both |
-| [speech-swift](https://github.com/soniqo/speech-swift) | Qwen3-ASR on Apple Silicon (MLX) | Automatic via SPM | macOS |
+| [Homebrew](https://brew.sh) | Package manager | See brew.sh | Build from source |
+| [opencc](https://formulae.brew.sh/formula/opencc) | Simplified → Traditional Chinese | `brew install opencc` | Build from source (bundled in DMG) |
+| [speech-swift](https://github.com/soniqo/speech-swift) | Qwen3-ASR on Apple Silicon (MLX) | Automatic via SPM | Build from source |
 | [Python 3.13+](https://python.org) | iOS server runtime | `brew install python` | iOS only |
 | [mlx-audio](https://github.com/Blaizzy/mlx-audio) | STT server for iOS | `pip3 install "mlx-audio[stt,server]"` | iOS only |
 | [httpx](https://www.python-httpx.org/) | Async HTTP for proxy server | `pip3 install httpx` | iOS only |
@@ -390,10 +410,21 @@ lsof -ti :8000 :8199 | xargs kill
 
 ---
 
+## Privacy & Security
+
+- **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk — not on macOS, not on the iOS server.
+- **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
+- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift).
+- **iOS audio stays on your network.** iPhone audio travels directly to your Mac over local WiFi or Tailscale (WireGuard-encrypted). No third-party server is involved.
+- **Fully air-gappable.** Pre-download the model folder (`~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`) on another machine and copy it over — the app will never need internet.
+
+---
+
 ## Known Limitations
 
 - iOS requires Mac to be on and server running (no cloud fallback)
 - Free provisioning: iOS app expires every 7 days (re-sign via Xcode)
 - Session timeout is fixed at 5 minutes (no UI to change yet)
 - Mac must be reachable from iPhone (same WiFi or Tailscale)
+- DMG is ad-hoc signed (not notarized) — macOS Gatekeeper will warn on first launch. Right-click → Open to bypass.
 

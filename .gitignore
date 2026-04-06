@@ -13,6 +13,9 @@ xcuserdata/
 # Local docs (not for public repo)
 HANDOVER.md
 
+# DMG builds (local distribution only)
+*.dmg
+
 # System
 .DS_Store
 *.xcuserdata
