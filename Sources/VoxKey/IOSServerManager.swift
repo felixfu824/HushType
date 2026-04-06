@@ -1,4 +1,5 @@
 import Foundation
+import AppKit
 import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "ios-server")
@@ -9,6 +10,8 @@ final class IOSServerManager {
     private var process: Process?
     private(set) var isRunning = false
     private(set) var port: Int = 8000
+    private var earlyOutput: String = ""
+    private var startTime: Date?
 
     var onStatusChanged: ((Bool) -> Void)?
 
@@ -48,19 +51,33 @@ final class IOSServerManager {
         log.info("Starting iOS server: \(script) on port \(port)")
 
         let proc = Process()
-        proc.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        proc.arguments = ["python3", script, "--port", "\(port)"]
+        // macOS GUI apps have a stripped PATH — /usr/bin/env python3 finds
+        // Apple's /usr/bin/python3 instead of the user's installed Python.
+        // Check common locations where pip packages are actually installed.
+        let pythonCandidates = [
+            "/Library/Frameworks/Python.framework/Versions/3.13/bin/python3",
+            "/opt/homebrew/bin/python3",
+            "/usr/local/bin/python3",
+            "/usr/bin/python3",
+        ]
+        let python = pythonCandidates.first { FileManager.default.fileExists(atPath: $0) } ?? "/usr/bin/env python3"
+        proc.executableURL = URL(fileURLWithPath: python)
+        proc.arguments = [script, "--port", "\(port)"]
         proc.currentDirectoryURL = URL(fileURLWithPath: (script as NSString).deletingLastPathComponent)
 
         let pipe = Pipe()
         proc.standardOutput = pipe
         proc.standardError = pipe
 
-        pipe.fileHandleForReading.readabilityHandler = { handle in
+        pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             guard !data.isEmpty, let line = String(data: data, encoding: .utf8) else { return }
             for l in line.split(separator: "\n") {
                 log.info("[ios_server] \(l)")
+            }
+            // Buffer first 5 seconds of output for error reporting
+            if let start = self?.startTime, Date().timeIntervalSince(start) < 5 {
+                self?.earlyOutput += line
             }
         }
 
@@ -68,11 +85,19 @@ final class IOSServerManager {
             DispatchQueue.main.async {
                 self?.isRunning = false
                 self?.onStatusChanged?(false)
-                log.info("iOS server terminated (exit code \(proc.terminationStatus))")
+                let code = proc.terminationStatus
+                log.info("iOS server terminated (exit code \(code))")
+
+                // Show alert if process died within 5 seconds (dependency or config error)
+                if let start = self?.startTime, Date().timeIntervalSince(start) < 5, code != 0 {
+                    self?.showServerError(code: code, output: self?.earlyOutput ?? "")
+                }
             }
         }
 
         do {
+            earlyOutput = ""
+            startTime = Date()
             try proc.run()
             process = proc
             isRunning = true
@@ -80,6 +105,7 @@ final class IOSServerManager {
             log.info("iOS server started (PID \(proc.processIdentifier))")
         } catch {
             log.error("Failed to start iOS server: \(error.localizedDescription)")
+            showServerError(code: -1, output: error.localizedDescription)
         }
     }
 
@@ -107,6 +133,26 @@ final class IOSServerManager {
         isRunning = false
         onStatusChanged?(false)
         log.info("iOS server stopped")
+    }
+
+    private func showServerError(code: Int32, output: String) {
+        let detail = output.trimmingCharacters(in: .whitespacesAndNewlines)
+        let truncated = detail.count > 800 ? String(detail.suffix(800)) : detail
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = "iOS Server Failed to Start"
+        alert.informativeText = """
+            The server exited with code \(code). This usually means a missing Python dependency.
+
+            See the README for required packages:
+            pip3 install "mlx-audio[stt,server]" httpx webrtcvad-wheels setuptools
+
+            Error output:
+            \(truncated)
+            """
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     deinit {
