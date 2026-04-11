@@ -12,18 +12,12 @@ struct TextInserter {
 
         let pasteboard = NSPasteboard.general
 
-        // Save current clipboard
-        let savedChangeCount = pasteboard.changeCount
-        let savedString = pasteboard.string(forType: .string)
-        print("[TextInserter] Saved clipboard: '\(savedString?.prefix(30) ?? "nil")'")
-
-        // Set transcription text to clipboard
+        // Set transcription text to clipboard. Intentionally NOT saving/restoring
+        // the previous clipboard contents — leaving the result on the clipboard
+        // lets the user re-paste elsewhere or recover if cursor paste was blocked
+        // by the focused app.
         pasteboard.clearContents()
         pasteboard.setString(text, forType: .string)
-
-        // Verify clipboard was set
-        let verify = pasteboard.string(forType: .string)
-        print("[TextInserter] Clipboard now: '\(verify ?? "nil")'")
 
         // Handle CJK input method
         var previousInputSourceID: String?
@@ -44,15 +38,6 @@ struct TextInserter {
         if let previousID = previousInputSourceID {
             InputSourceManager.restore(inputSourceID: previousID)
             print("[TextInserter] Restored input source")
-        }
-
-        // Restore clipboard after a delay
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            pasteboard.clearContents()
-            if let saved = savedString {
-                pasteboard.setString(saved, forType: .string)
-            }
-            print("[TextInserter] Clipboard restored")
         }
 
         print("[TextInserter] Insert complete")
