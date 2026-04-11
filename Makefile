@@ -47,7 +47,15 @@ bundle-opencc:
 	@# Fix libopencc's own id
 	@install_name_tool -id "@executable_path/libopencc.1.2.dylib" "$(BUNDLE_DIR)/Contents/MacOS/libopencc.1.2.dylib"
 	@install_name_tool -id "@executable_path/libmarisa.0.dylib" "$(BUNDLE_DIR)/Contents/MacOS/libmarisa.0.dylib"
-	@echo "OpenCC bundled (binary + dylibs + data files)"
+	@# Re-sign after install_name_tool — modifying load commands invalidates the
+	@# original Homebrew adhoc signature, and macOS Sequoia kills processes with
+	@# invalid signatures (SIGKILL, no error). Without this step, the bundled
+	@# opencc fails silently and ChineseConverter falls back to returning the
+	@# input unchanged. Both `make install` and `make dmg` need this.
+	@codesign --force --sign - "$(BUNDLE_DIR)/Contents/MacOS/libmarisa.0.dylib"
+	@codesign --force --sign - "$(BUNDLE_DIR)/Contents/MacOS/libopencc.1.2.dylib"
+	@codesign --force --sign - "$(BUNDLE_DIR)/Contents/MacOS/opencc"
+	@echo "OpenCC bundled (binary + dylibs + data files, re-signed)"
 
 install: bundle
 	@killall $(APP_NAME) 2>/dev/null || true
@@ -62,10 +70,8 @@ uninstall:
 	@echo "Uninstalled from /Applications"
 
 dmg: bundle
-	@echo "Re-signing bundle..."
-	@codesign --force --deep --sign - "$(BUNDLE_DIR)/Contents/MacOS/libmarisa.0.dylib"
-	@codesign --force --deep --sign - "$(BUNDLE_DIR)/Contents/MacOS/libopencc.1.2.dylib"
-	@codesign --force --deep --sign - "$(BUNDLE_DIR)/Contents/MacOS/opencc"
+	@# OpenCC binaries are already signed in bundle-opencc; just sign the outer bundle.
+	@echo "Signing app bundle..."
 	@codesign --force --deep --sign - "$(BUNDLE_DIR)"
 	@rm -f $(APP_NAME).dmg
 	@mkdir -p dmg_staging
