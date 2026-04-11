@@ -105,6 +105,31 @@ See [Prerequisites](#prerequisites-and-dependencies) and [macOS Setup Guide](#se
 
 ---
 
+## Updating
+
+macOS apps don't have a Windows-style uninstaller — updating just means **replacing the `.app` bundle**. Your preferences, the downloaded ASR model, and user data all live outside the bundle, so replacing it preserves everything.
+
+**To update HushType (DMG):**
+
+1. **Quit HushType** — menu bar icon → Quit HushType. Finder can't replace a running app.
+2. **Download the new `HushType.dmg`** from the [latest release](https://github.com/felixfu824/HushType/releases).
+3. **Open the DMG and drag `HushType.app` onto the `Applications` shortcut** inside the DMG window. Finder asks *"An item named HushType.app already exists. Do you want to replace it?"* — click **Replace**.
+4. **Launch HushType from Spotlight.** On first launch of the new version, HushType automatically resets its stale Accessibility entry (left over from the previous build's code hash) and shows the onboarding modal again. Follow it once — toggle HushType on in System Settings → Accessibility, then click **Restart HushType** in the modal. You only need to do this once per update.
+
+**To update when building from source:** `git pull && make install` handles everything. The same Accessibility re-grant still applies because the new binary has a new code hash.
+
+**Why the permission re-grant?** HushType is ad-hoc signed (not notarized). macOS's permission database tracks ad-hoc signed apps by their code hash, which changes on every build. Proper Developer ID signing (requires a paid Apple Developer account) would eliminate this step. Until then, HushType auto-cleans the stale entry on launch so you only have to re-toggle the switch — not manually hunt down the orphaned row.
+
+**To fully uninstall HushType:**
+
+1. Quit HushType
+2. Drag `/Applications/HushType.app` to the Trash
+3. *(Optional)* Remove preferences: `defaults delete com.felix.hushtype`
+4. *(Optional)* Remove the downloaded model: `rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
+5. *(Optional)* Remove the Accessibility entry: System Settings → Privacy & Security → Accessibility → select HushType → click the `-` button
+
+---
+
 ## Prerequisites and Dependencies
 
 > **Note:** If you installed via DMG (Option A), skip this section — everything is bundled. These are only needed for building from source or setting up the iOS server.

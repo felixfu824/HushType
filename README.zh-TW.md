@@ -87,6 +87,31 @@ DMG 為完全獨立版本——OpenCC 及所有相依套件皆已內含。不需
 
 ---
 
+## 更新
+
+macOS 沒有 Windows 那種「解除安裝程式」的概念——更新一個 App 就是**直接覆蓋 `.app` 資料夾**。你的偏好設定、下載好的 ASR 模型、以及其他使用者資料都存在 `.app` 外面，覆蓋的時候不會被動到。
+
+**更新 HushType（DMG 使用者）：**
+
+1. **退出 HushType** — 選單列圖示 → Quit HushType。正在執行中的 App 沒辦法被 Finder 覆蓋。
+2. **從 [latest release](https://github.com/felixfu824/HushType/releases) 下載新的 `HushType.dmg`**。
+3. **打開 DMG，把 `HushType.app` 拖到視窗內的 `Applications` 捷徑上**。Finder 會跳出：「名為 HushType.app 的項目已存在。要取代嗎？」點 **取代 / Replace**。
+4. **從 Spotlight 啟動 HushType**。新版本首次啟動時，HushType 會自動清除舊版本留下的輔助使用權限記錄（舊版的程式碼雜湊值），然後重新顯示 onboarding 歡迎對話框。照著流程走一次：在系統設定 → 隱私權與安全性 → 輔助使用 中把 HushType 開關打開，然後在對話框點 **Restart HushType**。每次更新只需要做一次這個動作。
+
+**從原始碼編譯的使用者：** 直接 `git pull && make install` 就搞定。新編譯出的 binary 會有新的程式碼雜湊，所以一樣需要重新授權輔助使用一次。
+
+**為什麼每次更新都要重新授權？** HushType 目前是 ad-hoc 簽章（沒有 Notarization）。macOS 的權限資料庫對 ad-hoc 簽章的 App 是用 **程式碼雜湊值（cdhash）** 來追蹤的，而 cdhash 在每次重新編譯後都會改變。正式的 Developer ID 簽章（需要付費 Apple Developer 帳號）可以解決這個問題。在那之前，HushType 會在啟動時自動清理舊的 entry，讓你只要重按一次開關就好，不用手動去找哪個是舊的、哪個是新的。
+
+**完全解除安裝 HushType：**
+
+1. 退出 HushType
+2. 把 `/Applications/HushType.app` 拖到垃圾桶
+3. *(可選)* 移除偏好設定：`defaults delete com.felix.hushtype`
+4. *(可選)* 移除下載的模型：`rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
+5. *(可選)* 移除輔助使用權限紀錄：系統設定 → 隱私權與安全性 → 輔助使用 → 選 HushType → 點 `-` 按鈕
+
+---
+
 ## 前置需求與相依套件
 
 > **注意：** 若你使用 DMG 安裝（方案 A），可跳過此段——所有相依套件皆已內含。以下僅適用於從原始碼編譯或設定 iOS 伺服器。

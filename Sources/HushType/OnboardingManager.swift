@@ -46,6 +46,21 @@ enum OnboardingManager {
 
         log.info("Accessibility not granted — running onboarding flow")
 
+        // Clear any stale TCC entries from previous builds before prompting.
+        // macOS TCC tracks Accessibility grants as (identifier + cdhash). For
+        // ad-hoc signed apps like HushType, every rebuild produces a new
+        // cdhash, so upgrades leave the previous entry orphaned in the list
+        // with the OLD cdhash, and the OS creates a fresh entry for the NEW
+        // cdhash. Users then see two identical "HushType" rows in System
+        // Settings → Accessibility and have to guess which one to delete.
+        //
+        // `tccutil reset Accessibility com.felix.hushtype` wipes ALL entries
+        // for this bundle ID. It's a no-op on true first installs (nothing
+        // to clear), and on upgrades it leaves exactly one fresh entry once
+        // the current process re-registers itself on the next API call.
+        // No sudo required — users can always reset their own TCC records.
+        resetStaleAccessibilityEntries()
+
         // Foreground the app so the modal appears in front of other windows
         // (HushType is LSUIElement so it doesn't activate by default).
         NSApp.setActivationPolicy(.regular)
@@ -135,6 +150,21 @@ enum OnboardingManager {
         log.info("Requesting microphone permission")
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             log.info("Microphone permission granted: \(granted, privacy: .public)")
+        }
+    }
+
+    // MARK: - TCC reset
+
+    private static func resetStaleAccessibilityEntries() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        task.arguments = ["reset", "Accessibility", "com.felix.hushtype"]
+        do {
+            try task.run()
+            task.waitUntilExit()
+            log.info("tccutil reset Accessibility exit code: \(task.terminationStatus)")
+        } catch {
+            log.error("Failed to run tccutil reset: \(error.localizedDescription, privacy: .public)")
         }
     }
 
