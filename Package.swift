@@ -15,7 +15,7 @@ let package = Package(
                 .product(name: "Qwen3ASR", package: "speech-swift"),
                 .product(name: "AudioCommon", package: "speech-swift"),
             ],
-            path: "Sources/VoxKey",
+            path: "Sources/HushType",
             linkerSettings: [
                 .linkedFramework("Carbon"),
             ]
