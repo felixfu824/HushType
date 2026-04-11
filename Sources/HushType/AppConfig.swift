@@ -13,6 +13,7 @@ final class AppConfig {
         static let modelId = "hushtype.modelId"
         static let chineseConversionEnabled = "hushtype.chineseConversionEnabled"
         static let floatingOverlayEnabled = "hushtype.floatingOverlayEnabled"
+        static let onboardingCompleted = "hushtype.onboardingCompleted"
     }
 
     /// Language for transcription. nil = auto-detect.
@@ -54,6 +55,14 @@ final class AppConfig {
             defaults.set(newValue, forKey: Keys.floatingOverlayEnabled)
             log.info("Floating overlay enabled: \(newValue, privacy: .public)")
         }
+    }
+
+    /// Whether the user has seen the welcome onboarding modal at least once.
+    /// Used to decide between showing the friendly "welcome" message vs the
+    /// shorter "permission needed" guidance on subsequent launches.
+    var onboardingCompleted: Bool {
+        get { defaults.bool(forKey: Keys.onboardingCompleted) }
+        set { defaults.set(newValue, forKey: Keys.onboardingCompleted) }
     }
 
     private init() {}

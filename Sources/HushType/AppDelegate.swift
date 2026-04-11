@@ -60,6 +60,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.hideOverlay()
         }
 
+        // Onboarding: if accessibility permission is missing, show our friendly
+        // flow BEFORE we ever call CGEvent.tapCreate. If onboarding is needed,
+        // it blocks via NSAlert and either quits or relaunches the app — in
+        // either case the rest of startup never runs.
+        if OnboardingManager.runIfNeeded() {
+            return
+        }
+
         // Start hotkey listener
         hotkeyManager.start()
 

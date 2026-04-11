@@ -27,7 +27,15 @@ bundle: build
 	@cp Resources/HushType.icns "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@cp scripts/ios_server.py "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@$(MAKE) bundle-opencc
-	@echo "Bundle created: $(BUNDLE_DIR)"
+	@# Sign the entire bundle with an explicit stable identifier so macOS TCC
+	@# tracks accessibility permission by identifier (constant across builds)
+	@# instead of cdhash (which changes every build). Without this, every
+	@# `make install` revokes the user's previously-granted permission.
+	@# --deep is required because Mach-O binaries inside a bundle can't be
+	@# signed independently — codesign always treats them as part of the
+	@# enclosing bundle.
+	@codesign --force --deep --sign - --identifier "com.felix.hushtype" "$(BUNDLE_DIR)"
+	@echo "Bundle created: $(BUNDLE_DIR) (signed as com.felix.hushtype)"
 
 bundle-opencc:
 	@echo "Bundling OpenCC..."
