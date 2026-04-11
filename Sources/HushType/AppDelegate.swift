@@ -94,18 +94,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // If AI Cleanup was already enabled from a previous session and the
-        // OS supports it, pre-warm the FoundationModels cleanup session in
-        // parallel with model loading. First real transcription avoids the
-        // ~3.6s cold-start penalty. Runs best-effort — any failure is logged
-        // by FoundationModelsCleaner and the feature still works on demand.
-        if AppConfig.shared.aiCleanupEnabled {
-            Task.detached {
-                if #available(macOS 26.0, *) {
-                    await FoundationModelsCleaner.warmup()
-                }
-            }
-        }
+        // Intentionally NOT warming up FoundationModels at launch, even if
+        // aiCleanupEnabled is persistently true. Early warmup contended with
+        // the Qwen3-ASR model load on the main actor during the sensitive
+        // post-onboarding relaunch window and caused the loading state to
+        // stall. FoundationModels is now only touched in two places:
+        //   1. When the user toggles AI Cleanup on via the menu (validate + warm)
+        //   2. During an actual transcription call (AICleaner.clean)
+        // Tradeoff: after a quit/relaunch with AI Cleanup persisted on, the
+        // first transcription pays a ~3 second cold-start penalty. Acceptable.
     }
 
     func applicationWillTerminate(_ notification: Notification) {
