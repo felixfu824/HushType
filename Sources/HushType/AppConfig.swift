@@ -14,6 +14,7 @@ final class AppConfig {
         static let chineseConversionEnabled = "hushtype.chineseConversionEnabled"
         static let floatingOverlayEnabled = "hushtype.floatingOverlayEnabled"
         static let onboardingCompleted = "hushtype.onboardingCompleted"
+        static let aiCleanupEnabled = "hushtype.aiCleanupEnabled"
     }
 
     /// Language for transcription. nil = auto-detect.
@@ -63,6 +64,20 @@ final class AppConfig {
     var onboardingCompleted: Bool {
         get { defaults.bool(forKey: Keys.onboardingCompleted) }
         set { defaults.set(newValue, forKey: Keys.onboardingCompleted) }
+    }
+
+    /// Whether to run Apple FoundationModels over each transcription to clean
+    /// up filler words, convert Chinese numerals to Arabic digits, collapse
+    /// repetitions, and resolve speaker self-corrections. Requires macOS 26+
+    /// with Apple Intelligence enabled. Opt-in (off by default) because the
+    /// feature changes transcription content and users should consciously
+    /// enable semantic rewriting.
+    var aiCleanupEnabled: Bool {
+        get { defaults.bool(forKey: Keys.aiCleanupEnabled) }
+        set {
+            defaults.set(newValue, forKey: Keys.aiCleanupEnabled)
+            log.info("AI cleanup enabled: \(newValue, privacy: .public)")
+        }
     }
 
     private init() {}

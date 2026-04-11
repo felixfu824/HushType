@@ -18,6 +18,7 @@ final class StatusBarController: NSObject {
     private var languageItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
     private var floatingOverlayMenuItem: NSMenuItem!
+    private var aiCleanupMenuItem: NSMenuItem!
     let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
@@ -100,6 +101,16 @@ final class StatusBarController: NSObject {
         floatingOverlayMenuItem.state = AppConfig.shared.floatingOverlayEnabled ? .on : .off
         menu.addItem(floatingOverlayMenuItem)
 
+        // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
+        aiCleanupMenuItem = NSMenuItem(
+            title: "AI Cleanup",
+            action: #selector(toggleAICleanup),
+            keyEquivalent: ""
+        )
+        aiCleanupMenuItem.target = self
+        aiCleanupMenuItem.state = AppConfig.shared.aiCleanupEnabled ? .on : .off
+        menu.addItem(aiCleanupMenuItem)
+
         menu.addItem(.separator())
 
         // About
@@ -135,6 +146,84 @@ final class StatusBarController: NSObject {
         let newValue = !AppConfig.shared.floatingOverlayEnabled
         AppConfig.shared.floatingOverlayEnabled = newValue
         floatingOverlayMenuItem.state = newValue ? .on : .off
+    }
+
+    @objc private func toggleAICleanup() {
+        // Turning OFF — simple flip.
+        if AppConfig.shared.aiCleanupEnabled {
+            AppConfig.shared.aiCleanupEnabled = false
+            aiCleanupMenuItem.state = .off
+            if #available(macOS 26.0, *) {
+                Task { @MainActor in
+                    FoundationModelsCleaner.releaseSession()
+                }
+            }
+            return
+        }
+
+        // Turning ON — platform check first.
+        guard #available(macOS 26.0, *) else {
+            let version = ProcessInfo.processInfo.operatingSystemVersionString
+            showAICleanupAlert(
+                title: "macOS 26 or later required",
+                message: """
+                    AI Cleanup uses Apple's on-device Foundation Models framework, \
+                    which requires macOS 26 (Tahoe) or later.
+
+                    Your current version: \(version)
+                    """
+            )
+            return
+        }
+
+        // Validate asynchronously. Disable the menu item during the round-trip
+        // test so a double-click can't start two validations at once.
+        aiCleanupMenuItem.isEnabled = false
+        let originalTitle = aiCleanupMenuItem.title
+        aiCleanupMenuItem.title = "AI Cleanup (validating…)"
+
+        Task { @MainActor in
+            let result = await FoundationModelsCleaner.validate()
+            self.aiCleanupMenuItem.isEnabled = true
+            self.aiCleanupMenuItem.title = originalTitle
+
+            switch result {
+            case .ok:
+                AppConfig.shared.aiCleanupEnabled = true
+                self.aiCleanupMenuItem.state = .on
+                // Warm up the cleanup session in the background so the first
+                // real transcription doesn't hit cold-start latency. We're
+                // already inside the outer `guard #available(macOS 26.0, *)`,
+                // so no nested availability check needed here.
+                Task.detached {
+                    await FoundationModelsCleaner.warmup()
+                }
+            case .unavailable(let reason):
+                self.showAICleanupAlert(
+                    title: "AI Cleanup unavailable",
+                    message: """
+                        Could not start Apple Foundation Models:
+                        \(reason)
+
+                        Common causes:
+                        • This device does not support Apple Intelligence
+                        • Apple Intelligence is not enabled in System Settings
+                        • The on-device model is still downloading
+                        """
+                )
+            }
+        }
+    }
+
+    private func showAICleanupAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .warning
+        alert.icon = NSImage(named: "AppIcon")
+            ?? NSImage(systemSymbolName: "sparkles", accessibilityDescription: nil)
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     @objc private func aboutClicked() {

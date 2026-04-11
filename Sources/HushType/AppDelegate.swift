@@ -93,6 +93,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+
+        // If AI Cleanup was already enabled from a previous session and the
+        // OS supports it, pre-warm the FoundationModels cleanup session in
+        // parallel with model loading. First real transcription avoids the
+        // ~3.6s cold-start penalty. Runs best-effort — any failure is logged
+        // by FoundationModelsCleaner and the feature still works on demand.
+        if AppConfig.shared.aiCleanupEnabled {
+            Task.detached {
+                if #available(macOS 26.0, *) {
+                    await FoundationModelsCleaner.warmup()
+                }
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {

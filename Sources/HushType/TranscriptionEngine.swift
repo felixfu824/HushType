@@ -62,7 +62,15 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
             log.info("After conversion: \(convertedText)")
         }
 
-        return convertedText
+        // Apply AI Cleanup if enabled. No-op when disabled, when running on
+        // macOS < 26, or when FoundationModels errors — in all those cases
+        // the input is returned unchanged.
+        let cleanedText = await AICleaner.clean(convertedText)
+        if cleanedText != convertedText {
+            log.info("After AI cleanup: \(cleanedText)")
+        }
+
+        return cleanedText
     }
 
     func unload() {
