@@ -3,33 +3,44 @@ import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "statusbar")
 
-final class StatusBarController: NSObject {
+final class StatusBarController: NSObject, NSMenuDelegate {
     enum State {
         case loading(Double) // progress 0.0–1.0
         case idle
         case recording
         case transcribing
         case error(String)
+        case unloaded
     }
 
     private let statusItem: NSStatusItem
     private let statusMenuItem: NSMenuItem
+    private let memoryMenuItem: NSMenuItem
     private let languageMenu: NSMenu
     private var languageItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
     private var floatingOverlayMenuItem: NSMenuItem!
     private var aiCleanupMenuItem: NSMenuItem!
+    private var textTranslationMenuItem: NSMenuItem!
+    private var translationSubtitleItem: NSMenuItem!
+    private var translateToItem: NSMenuItem!
+    private var translationHintItem: NSMenuItem!
+    private var unloadMenuItem: NSMenuItem!
     let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
     var onQuit: (() -> Void)?
+    var onUnloadModel: (() -> Void)?
+    var onReloadModel: (() -> Void)?
 
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusMenuItem = NSMenuItem(title: "Loading...", action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
+        memoryMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        memoryMenuItem.isEnabled = false
 
-        languageMenu = NSMenu(title: "Language")
+        languageMenu = NSMenu(title: "Speech-to-Text Language")
 
         super.init()
 
@@ -42,20 +53,34 @@ final class StatusBarController: NSObject {
         DispatchQueue.main.async {
             self.updateIcon(for: state)
             self.updateStatusText(for: state)
+            self.updateUnloadMenuItem(for: state)
         }
+    }
+
+    // MARK: - NSMenuDelegate
+
+    func menuWillOpen(_ menu: NSMenu) {
+        // Refresh memory display each time the menu opens
+        memoryMenuItem.title = "Memory used: \(MemoryUtils.formattedMemory())"
     }
 
     // MARK: - Private
 
     private func setupMenu() {
         let menu = NSMenu()
+        menu.delegate = self
 
         // Status line
         menu.addItem(statusMenuItem)
+
+        // Memory display
+        memoryMenuItem.title = "Memory used: \(MemoryUtils.formattedMemory())"
+        menu.addItem(memoryMenuItem)
+
         menu.addItem(.separator())
 
         // Language submenu
-        let languageItem = NSMenuItem(title: "Language", action: nil, keyEquivalent: "")
+        let languageItem = NSMenuItem(title: "Speech-to-Text Language", action: nil, keyEquivalent: "")
         languageItem.submenu = languageMenu
 
         let languages: [(title: String, value: String?)] = [
@@ -98,7 +123,7 @@ final class StatusBarController: NSObject {
             keyEquivalent: ""
         )
         floatingOverlayMenuItem.target = self
-        floatingOverlayMenuItem.state = AppConfig.shared.floatingOverlayEnabled ? .on : .off
+        updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: AppConfig.shared.floatingOverlayEnabled)
         menu.addItem(floatingOverlayMenuItem)
 
         // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
@@ -108,8 +133,91 @@ final class StatusBarController: NSObject {
             keyEquivalent: ""
         )
         aiCleanupMenuItem.target = self
-        aiCleanupMenuItem.state = AppConfig.shared.aiCleanupEnabled ? .on : .off
+        updateToggleAppearance(aiCleanupMenuItem, title: "AI Cleanup", checked: AppConfig.shared.aiCleanupEnabled)
         menu.addItem(aiCleanupMenuItem)
+
+        // AI Cleanup subtitle
+        let aiSubtitle = NSMenuItem(title: "    via Apple Foundation Models", action: nil, keyEquivalent: "")
+        aiSubtitle.isEnabled = false
+        let aiSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor
+        ]
+        aiSubtitle.attributedTitle = NSAttributedString(string: "    via Apple Foundation Models", attributes: aiSubAttrs)
+        menu.addItem(aiSubtitle)
+
+        // Text Translation toggle
+        textTranslationMenuItem = NSMenuItem(
+            title: "Text Translation",
+            action: #selector(toggleTextTranslation),
+            keyEquivalent: ""
+        )
+        textTranslationMenuItem.target = self
+        updateToggleAppearance(textTranslationMenuItem, title: "Text Translation", checked: AppConfig.shared.textTranslationEnabled)
+        menu.addItem(textTranslationMenuItem)
+
+        // Text Translation subtitle
+        translationSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        translationSubtitleItem.isEnabled = false
+        let transSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor
+        ]
+        translationSubtitleItem.attributedTitle = NSAttributedString(
+            string: "    via Apple Translation Framework",
+            attributes: transSubAttrs
+        )
+        menu.addItem(translationSubtitleItem)
+
+        // Translate-to submenu (indented)
+        translateToItem = NSMenuItem(title: "    Translate to", action: nil, keyEquivalent: "")
+        let translateToMenu = NSMenu(title: "Translate to")
+        let translateTargets: [(title: String, value: String?)] = [
+            ("Auto", nil),
+            ("English", "en"),
+            ("繁體中文", "zh-Hant-TW"),
+            ("日本語", "ja"),
+            ("한국어", "ko"),
+            ("Français", "fr"),
+            ("Deutsch", "de"),
+            ("Español", "es"),
+        ]
+        for (title, value) in translateTargets {
+            let item = NSMenuItem(title: title, action: #selector(translateTargetSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = value
+            translateToMenu.addItem(item)
+        }
+        translateToItem.submenu = translateToMenu
+        updateTranslateToCheckmarks()
+        menu.addItem(translateToItem)
+
+        // Translation hotkey hint
+        translationHintItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        translationHintItem.isEnabled = false
+        let hintAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.tertiaryLabelColor
+        ]
+        translationHintItem.attributedTitle = NSAttributedString(
+            string: "    Tap Right ⌥ to translate selection",
+            attributes: hintAttrs
+        )
+        menu.addItem(translationHintItem)
+
+        // Show/hide translation sub-items based on toggle state
+        updateTranslationSubItems()
+
+        menu.addItem(.separator())
+
+        // Unload / Reload model
+        unloadMenuItem = NSMenuItem(title: "Unload Speech-to-Text Model", action: #selector(unloadOrReloadModel), keyEquivalent: "")
+        unloadMenuItem.target = self
+        let unloadAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.systemOrange
+        ]
+        unloadMenuItem.attributedTitle = NSAttributedString(string: "Unload Speech-to-Text Model", attributes: unloadAttrs)
+        menu.addItem(unloadMenuItem)
 
         menu.addItem(.separator())
 
@@ -126,6 +234,8 @@ final class StatusBarController: NSObject {
         statusItem.menu = menu
     }
 
+    // MARK: - Language
+
     @objc private func languageSelected(_ sender: NSMenuItem) {
         let value = sender.representedObject as? String
         AppConfig.shared.language = value
@@ -133,6 +243,8 @@ final class StatusBarController: NSObject {
         onLanguageChanged?(value)
         log.info("Language changed to: \(value ?? "auto")")
     }
+
+    // MARK: - iOS Server
 
     @objc private func toggleIOSServer() {
         if iosServerManager.isRunning {
@@ -142,17 +254,21 @@ final class StatusBarController: NSObject {
         }
     }
 
+    // MARK: - Floating Overlay
+
     @objc private func toggleFloatingOverlay() {
         let newValue = !AppConfig.shared.floatingOverlayEnabled
         AppConfig.shared.floatingOverlayEnabled = newValue
-        floatingOverlayMenuItem.state = newValue ? .on : .off
+        updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: newValue)
     }
+
+    // MARK: - AI Cleanup
 
     @objc private func toggleAICleanup() {
         // Turning OFF — simple flip.
         if AppConfig.shared.aiCleanupEnabled {
             AppConfig.shared.aiCleanupEnabled = false
-            aiCleanupMenuItem.state = .off
+            updateToggleAppearance(aiCleanupMenuItem, title: "AI Cleanup", checked: false)
             if #available(macOS 26.0, *) {
                 Task { @MainActor in
                     FoundationModelsCleaner.releaseSession()
@@ -164,7 +280,7 @@ final class StatusBarController: NSObject {
         // Turning ON — platform check first.
         guard #available(macOS 26.0, *) else {
             let version = ProcessInfo.processInfo.operatingSystemVersionString
-            showAICleanupAlert(
+            showAlert(
                 title: "macOS 26 or later required",
                 message: """
                     AI Cleanup uses Apple's on-device Foundation Models framework, \
@@ -176,8 +292,7 @@ final class StatusBarController: NSObject {
             return
         }
 
-        // Validate asynchronously. Disable the menu item during the round-trip
-        // test so a double-click can't start two validations at once.
+        // Validate asynchronously.
         aiCleanupMenuItem.isEnabled = false
         let originalTitle = aiCleanupMenuItem.title
         aiCleanupMenuItem.title = "AI Cleanup (validating…)"
@@ -190,16 +305,12 @@ final class StatusBarController: NSObject {
             switch result {
             case .ok:
                 AppConfig.shared.aiCleanupEnabled = true
-                self.aiCleanupMenuItem.state = .on
-                // Warm up the cleanup session in the background so the first
-                // real transcription doesn't hit cold-start latency. We're
-                // already inside the outer `guard #available(macOS 26.0, *)`,
-                // so no nested availability check needed here.
+                self.updateToggleAppearance(self.aiCleanupMenuItem, title: "AI Cleanup", checked: true)
                 Task.detached {
                     await FoundationModelsCleaner.warmup()
                 }
             case .unavailable(let reason):
-                self.showAICleanupAlert(
+                self.showAlert(
                     title: "AI Cleanup unavailable",
                     message: """
                         Could not start Apple Foundation Models:
@@ -215,7 +326,94 @@ final class StatusBarController: NSObject {
         }
     }
 
-    private func showAICleanupAlert(title: String, message: String) {
+    // MARK: - Text Translation
+
+    @objc private func toggleTextTranslation() {
+        let newValue = !AppConfig.shared.textTranslationEnabled
+        AppConfig.shared.textTranslationEnabled = newValue
+        updateToggleAppearance(textTranslationMenuItem, title: "Text Translation", checked: newValue)
+        updateTranslationSubItems()
+    }
+
+    @objc private func translateTargetSelected(_ sender: NSMenuItem) {
+        let value = sender.representedObject as? String
+        AppConfig.shared.translateTargetLanguage = value
+        updateTranslateToCheckmarks()
+    }
+
+    private func updateTranslationSubItems() {
+        let enabled = AppConfig.shared.textTranslationEnabled
+        translateToItem.isHidden = !enabled
+        translationHintItem.isHidden = !enabled
+    }
+
+    private func updateTranslateToCheckmarks() {
+        guard let menu = translateToItem.submenu else { return }
+        let current = AppConfig.shared.translateTargetLanguage
+        for item in menu.items {
+            let itemValue = item.representedObject as? String
+            item.state = (itemValue == current) ? .on : .off
+        }
+    }
+
+    // MARK: - Unload / Reload Model
+
+    @objc private func unloadOrReloadModel() {
+        // Check current title to decide action
+        if unloadMenuItem.title.contains("Unload") || (unloadMenuItem.attributedTitle?.string.contains("Unload") ?? false) {
+            onUnloadModel?()
+        } else {
+            onReloadModel?()
+        }
+    }
+
+    /// Called by AppDelegate after successful unload to update menu state.
+    func setModelUnloaded() {
+        statusMenuItem.title = "Model unloaded"
+
+        let reloadAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.systemGreen
+        ]
+        unloadMenuItem.title = "Reload Speech-to-Text Model"
+        unloadMenuItem.attributedTitle = NSAttributedString(string: "Reload Speech-to-Text Model", attributes: reloadAttrs)
+    }
+
+    /// Called by AppDelegate after successful reload to restore menu state.
+    func setModelLoaded() {
+        let unloadAttrs: [NSAttributedString.Key: Any] = [
+            .foregroundColor: NSColor.systemOrange
+        ]
+        unloadMenuItem.title = "Unload Speech-to-Text Model"
+        unloadMenuItem.attributedTitle = NSAttributedString(string: "Unload Speech-to-Text Model", attributes: unloadAttrs)
+    }
+
+    // MARK: - Helpers
+
+    /// Update a toggle menu item to show a green ✓ instead of the system checkmark.
+    private func updateToggleAppearance(_ item: NSMenuItem, title: String, checked: Bool) {
+        item.state = .off  // never use system checkmark
+        item.view = nil    // ensure no custom view blocks click handling
+
+        if checked {
+            let str = NSMutableAttributedString(
+                string: title + "  ",
+                attributes: [.font: NSFont.menuFont(ofSize: 14)]
+            )
+            str.append(NSAttributedString(
+                string: "✓",
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+                    .foregroundColor: NSColor.systemGreen,
+                ]
+            ))
+            item.attributedTitle = str
+        } else {
+            item.attributedTitle = nil
+            item.title = title
+        }
+    }
+
+    private func showAlert(title: String, message: String) {
         let alert = NSAlert()
         alert.messageText = title
         alert.informativeText = message
@@ -274,6 +472,8 @@ final class StatusBarController: NSObject {
             symbolName = "ellipsis.circle"
         case .error:
             symbolName = "exclamationmark.triangle"
+        case .unloaded:
+            symbolName = "mic.slash"
         }
 
         button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "HushType")
@@ -292,6 +492,22 @@ final class StatusBarController: NSObject {
             statusMenuItem.title = "Transcribing..."
         case .error(let msg):
             statusMenuItem.title = "Error: \(msg)"
+        case .unloaded:
+            statusMenuItem.title = "Model unloaded"
+        }
+    }
+
+    private func updateUnloadMenuItem(for state: State) {
+        switch state {
+        case .idle:
+            unloadMenuItem.isEnabled = true
+        case .unloaded:
+            unloadMenuItem.isEnabled = true
+            setModelUnloaded()
+        case .loading:
+            unloadMenuItem.isEnabled = false
+        default:
+            unloadMenuItem.isEnabled = false
         }
     }
 }

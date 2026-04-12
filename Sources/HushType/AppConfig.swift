@@ -15,6 +15,8 @@ final class AppConfig {
         static let floatingOverlayEnabled = "hushtype.floatingOverlayEnabled"
         static let onboardingCompleted = "hushtype.onboardingCompleted"
         static let aiCleanupEnabled = "hushtype.aiCleanupEnabled"
+        static let textTranslationEnabled = "hushtype.textTranslationEnabled"
+        static let translateTargetLanguage = "hushtype.translateTargetLanguage"
     }
 
     /// Language for transcription. nil = auto-detect.
@@ -77,6 +79,25 @@ final class AppConfig {
         set {
             defaults.set(newValue, forKey: Keys.aiCleanupEnabled)
             log.info("AI cleanup enabled: \(newValue, privacy: .public)")
+        }
+    }
+
+    /// Whether the text-translation hotkey (tap Right ⌥) is active.
+    /// Uses Apple Translation Framework (macOS 14+). Off by default.
+    var textTranslationEnabled: Bool {
+        get { defaults.bool(forKey: Keys.textTranslationEnabled) }
+        set {
+            defaults.set(newValue, forKey: Keys.textTranslationEnabled)
+            log.info("Text translation enabled: \(newValue, privacy: .public)")
+        }
+    }
+
+    /// Target language for translation. nil = auto (smart direction).
+    var translateTargetLanguage: String? {
+        get { defaults.string(forKey: Keys.translateTargetLanguage) }
+        set {
+            defaults.set(newValue, forKey: Keys.translateTargetLanguage)
+            log.info("Translate target: \(newValue ?? "auto", privacy: .public)")
         }
     }
 
