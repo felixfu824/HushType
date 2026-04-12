@@ -5,7 +5,7 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  macOS 與 iOS 的本地語音轉文字工具。<br>
+  macOS 與 iOS 的本地語音轉文字與翻譯工具。<br>
   隨意混用語言說話，文字即刻出現在游標位置。無雲端、無訂閱。
 </p>
 
@@ -25,6 +25,8 @@
 
 **輕量。** 約 675 MB 儲存空間、約 2.2 GB 尖峰記憶體。任何 Apple Silicon Mac 都能在正常工作的同時輕鬆運行。10 秒的語音約 1 秒即可完成轉錄。
 
+**即時文字翻譯。** 選取任何文字，輕按 Right Option，翻譯結果即刻顯示在浮動卡片中。使用 Apple 裝置端的 Translation Framework（macOS 14+）——不需要 API 金鑰、不經雲端。智慧語言方向：中文自動翻成英文，其他語言翻成繁體中文。支援約 20 種語言組合。
+
 ### 使用情境
 
 **與 AI 助手對話：** 要給 Claude 或 ChatGPT 一段詳細的 prompt——需求、限制、背景脈絡——打字要 5 分鐘，用說的只要 30 秒。在 iPhone 的 HushType 鍵盤上按麥克風，自然地說出來（可混用語言），按停止——文字立刻出現在聊天輸入框中。
@@ -37,7 +39,8 @@
 
 ```
 macOS（獨立運作——不需要網路）：
-  按住 Right Option → 說話 → 放開 → 文字出現在游標位置
+  按住 Right Option（≥0.3 秒）→ 說話 → 放開 → 文字出現在游標位置
+  輕按 Right Option（<0.3 秒）+ 選取文字 → 翻譯卡片
   流程：麥克風 → Qwen3-ASR（MLX，裝置端推論）→ OpenCC s2twp → 貼上
 
 iOS（透過你的 Mac 作為伺服器）：
@@ -167,14 +170,43 @@ make install
 
 ### 步驟 3：使用
 
-- **按住 Right Option** — 開始錄音。螢幕底部會出現一個半透明的「Listening」指示條，顯示即時的音量條。
+- **按住 Right Option（≥0.3 秒）** — 開始錄音。螢幕底部會出現一個半透明的「Listening」指示條，顯示即時的音量條。
 - **放開** — 指示條切換為脈動的「Transcribing」狀態，語音辨識完成後，文字貼到游標位置，同時也保留在剪貼簿中可再次貼上。
+- **輕按 Right Option（<0.3 秒）** — 選取文字後輕按，即刻翻譯並在浮動卡片中顯示結果。翻譯自動複製到剪貼簿。詳見下方[文字翻譯](#選用功能文字翻譯macos-14)。
 - **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）
 - **選單列 > Language** — 切換 Auto / English / 中文 / 日本語
 - **選單列 > Show Floating Indicator** — 切換底部浮動指示條（預設開啟）
+- **選單列 > Text Translation** — 啟用/停用輕按翻譯功能（需要 macOS 14+）。詳見下方。
 - **選單列 > AI Cleanup** — 透過 Apple Foundation Models 的選用後處理（需要 macOS 26+）。詳見下方。
+- **選單列 > Unload Speech-to-Text Model** — 釋放約 2 GB 記憶體。點擊「Reload Speech-to-Text Model」可重新載入（約 3 秒冷啟動）。
 
 macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
+
+### 選用功能：文字翻譯（macOS 14+）
+
+HushType v0.4 新增了裝置端文字翻譯功能，使用 Apple Translation Framework。在任何 App 中選取文字，輕按 Right Option（快速按壓，<0.3 秒），即會跳出半透明浮動卡片顯示翻譯結果。翻譯同時自動複製到剪貼簿。
+
+**智慧語言方向：**
+- 中文 → 英文
+- 其他語言 → 繁體中文
+- 可在選單列或透過 `defaults write` 覆寫目標語言
+
+**需求：**
+- macOS 14（Sonoma）或更新版本
+- Apple Silicon 或 Intel Mac（Translation Framework 使用 Apple 的裝置端模型）
+
+**如何啟用：**
+1. 選單列 → 點 HushType 圖示 → 點 **Text Translation**
+2. 出現勾勾即代表啟用
+3. 在任何 App 中選取文字 → 輕按 Right Option → 翻譯卡片出現
+4. 隨時可從同一選單關閉
+
+**使用方式：**
+1. 選取想翻譯的文字（任何 App 都可以——Safari、備忘錄、郵件等）
+2. 快速輕按 Right Option（<0.3 秒）——不要按住
+3. 半透明浮動卡片出現，顯示翻譯結果
+4. 翻譯自動複製到剪貼簿
+5. 點擊任意處或按 Escape 關閉卡片
 
 ### 選用功能：AI Cleanup（beta，macOS 26+）
 
@@ -341,6 +373,18 @@ defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
 # 底部浮動「Listening / Transcribing」指示條（預設：true）
 defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
+
+# 透過 Apple Foundation Models 的 AI 清理（預設：false，需要 macOS 26+）
+# 建議從選單列切換——選單會驗證 FoundationModels 可用性，
+# 若 Apple Intelligence 未啟用會顯示清楚的錯誤訊息。
+defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
+
+# 透過 Apple Translation Framework 的文字翻譯（預設：false，需要 macOS 14+）
+defaults write com.felix.hushtype hushtype.textTranslationEnabled -bool true
+
+# 翻譯目標語言（預設：nil = 自動——中文→英文，其他→繁體中文）
+# 設定特定語言代碼可覆寫（例："en"、"zh-Hant"、"ja"）
+defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 ```
 
 ### iOS

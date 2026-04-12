@@ -5,7 +5,7 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  Local voice-to-text for macOS and iOS.<br>
+  Local voice-to-text and translation for macOS and iOS.<br>
   Speak in any language mix — text appears at your cursor. No cloud. No subscription.
 </p>
 
@@ -38,6 +38,12 @@ is highly competitive with models 3x its size.
 **Lightweight.** ~675 MB storage, ~2.2 GB peak memory. Runs on any Apple Silicon
 Mac alongside your normal workload. ~1 second to transcribe 10 seconds of audio.
 
+**Instant text translation.** Select any text, tap Right Option, and get a
+translation in a floating card. Uses Apple's on-device Translation Framework
+(macOS 14+) — no API key, no cloud. Smart direction: Chinese text translates
+to English, other languages translate to Traditional Chinese. Supports ~20
+language pairs.
+
 ### Use Cases
 
 **Talking to AI agents:** Giving Claude or ChatGPT a detailed prompt takes 5
@@ -55,7 +61,8 @@ transcribes in ~1 second, text appears.
 
 ```
 macOS (standalone — zero network required):
-  Hold Right Option → speak → release → text at cursor
+  Hold Right Option (≥0.3s) → speak → release → text at cursor
+  Tap Right Option (<0.3s) with text selected → translation card
   Pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → paste
 
 iOS (via your Mac as server):
@@ -185,14 +192,43 @@ make install
 
 ### Step 3: Use it
 
-- **Hold Right Option** — start recording. A translucent "Listening" pill appears at the bottom of the screen with a live audio level meter.
+- **Hold Right Option (≥0.3s)** — start recording. A translucent "Listening" pill appears at the bottom of the screen with a live audio level meter.
 - **Release** — the pill switches to a pulsing "Transcribing" state while ASR runs, then the transcribed text is pasted at your cursor and also left on the clipboard for re-pasting.
+- **Tap Right Option (<0.3s)** — with text selected, translates the selection and shows the result in a floating card. Auto-copies the translation to clipboard. See [Text Translation](#optional-text-translation-macos-14) below.
 - **Menu bar icon** — shows status (idle / recording / transcribing)
 - **Menu bar > Language** — switch between Auto / English / Chinese / Japanese
 - **Menu bar > Show Floating Indicator** — toggle the bottom-of-screen pill (default on)
+- **Menu bar > Text Translation** — enable/disable the tap-to-translate feature (requires macOS 14+). See below.
 - **Menu bar > AI Cleanup** — optional post-processing via Apple Foundation Models (requires macOS 26+). See below.
+- **Menu bar > Unload Speech-to-Text Model** — frees ~2 GB RAM when you don't need voice input. Click "Reload Speech-to-Text Model" to re-enable (~3s cold start).
 
 That's it for macOS. No server, no network, no configuration needed.
+
+### Optional: Text Translation (macOS 14+)
+
+HushType v0.4 adds on-device text translation via Apple's Translation Framework. Select any text in any app, tap Right Option (quick press, <0.3s), and a translucent floating card appears with the translation. The translation is also auto-copied to your clipboard.
+
+**Smart language direction:**
+- Chinese text → English
+- All other languages → Traditional Chinese (繁體中文)
+- Override the target language in the menu bar or via `defaults write`
+
+**Requirements:**
+- macOS 14 (Sonoma) or later
+- Apple Silicon or Intel Mac (Translation Framework uses Apple's on-device models)
+
+**How to enable:**
+1. Menu bar → click the HushType icon → click **Text Translation**
+2. The checkmark appears and translation is active
+3. Select text in any app → tap Right Option → translation card appears
+4. Toggle off any time from the same menu
+
+**How to use:**
+1. Select text you want to translate (in any app — Safari, Notes, Mail, etc.)
+2. Tap Right Option quickly (<0.3s) — don't hold it
+3. A floating translucent card appears with the translation
+4. The translation is automatically copied to your clipboard
+5. Click anywhere or press Escape to dismiss the card
 
 ### Optional: AI Cleanup (beta, macOS 26+)
 
@@ -364,6 +400,13 @@ defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
 # Prefer toggling from the menu bar — the menu validates FoundationModels
 # availability and shows a clear error if Apple Intelligence isn't enabled.
 defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
+
+# Text Translation via Apple Translation Framework (default: false, requires macOS 14+)
+defaults write com.felix.hushtype hushtype.textTranslationEnabled -bool true
+
+# Translation target language (default: nil = auto — Chinese→English, other→繁體中文)
+# Set to a specific language code to override (e.g., "en", "zh-Hant", "ja")
+defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 ```
 
 ### iOS
@@ -406,6 +449,10 @@ HushType/
 │   ├── AICleaner.swift                Non-gated façade over FoundationModels cleanup
 │   ├── FoundationModelsCleaner.swift  macOS 26+ gated Apple FM wrapper
 │   ├── CleanupPrompt.swift            Locked Path C hybrid system prompt
+│   ├── TranslationManager.swift       Apple Translation Framework integration
+│   ├── TranslationCardWindow.swift    Floating translation card NSPanel
+│   ├── TranslationCardView.swift      SwiftUI translation card view
+│   ├── MemoryUtils.swift              Process memory reading utilities
 │   └── AppConfig.swift                UserDefaults wrapper
 ├── scripts/
 │   ├── ios_server.py                  FastAPI proxy: mlx-audio + OpenCC
