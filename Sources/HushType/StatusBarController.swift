@@ -26,6 +26,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var translateToItem: NSMenuItem!
     private var translationHintItem: NSMenuItem!
     private var unloadMenuItem: NSMenuItem!
+    private var dictionaryMenuItem: NSMenuItem!
+    private var dictionarySubtitleItem: NSMenuItem!
     let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
@@ -62,6 +64,16 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     func menuWillOpen(_ menu: NSMenu) {
         // Refresh memory display each time the menu opens
         memoryMenuItem.title = "Memory used: \(MemoryUtils.formattedMemory())"
+
+        // Refresh dictionary subtitle (entry count may change if user edited file externally)
+        let dictSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        dictionarySubtitleItem.attributedTitle = NSAttributedString(
+            string: "    \(dictionarySubtitleText())",
+            attributes: dictSubAttrs
+        )
     }
 
     // MARK: - Private
@@ -113,6 +125,30 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 self?.iosServerMenuItem.title = running ? "Stop iOS Server (port 8000)" : "Start iOS Server"
             }
         }
+
+        menu.addItem(.separator())
+
+        // Edit Customized Dictionary
+        dictionaryMenuItem = NSMenuItem(
+            title: "Edit Customized Dictionary",
+            action: #selector(editDictionary),
+            keyEquivalent: ""
+        )
+        dictionaryMenuItem.target = self
+        menu.addItem(dictionaryMenuItem)
+
+        // Dictionary subtitle (entry count or "no file")
+        dictionarySubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        dictionarySubtitleItem.isEnabled = false
+        let dictSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        dictionarySubtitleItem.attributedTitle = NSAttributedString(
+            string: "    \(dictionarySubtitleText())",
+            attributes: dictSubAttrs
+        )
+        menu.addItem(dictionarySubtitleItem)
 
         menu.addItem(.separator())
 
@@ -356,6 +392,39 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
     }
 
+    // MARK: - Customized Dictionary
+
+    /// Returns the subtitle text shown beneath "Edit Customized Dictionary".
+    /// Reads from `DictionaryReplacer` so it always reflects the current file
+    /// state — including external edits between menu opens.
+    private func dictionarySubtitleText() -> String {
+        if !DictionaryReplacer.fileExists {
+            return "No dictionary file"
+        }
+        let count = DictionaryReplacer.entryCount
+        return count == 1 ? "1 entry loaded" : "\(count) entries loaded"
+    }
+
+    @objc private func editDictionary() {
+        // Create the file with the friendly template if it doesn't exist yet,
+        // so first-time users immediately see the format documented inline.
+        DictionaryReplacer.createTemplateIfMissing()
+
+        let url = AppConfig.dictionaryFileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            // Template creation failed — show error
+            showAlert(
+                title: "Could not open dictionary",
+                message: "Failed to create the dictionary file at:\n\(url.path)"
+            )
+            return
+        }
+
+        // Open in the user's default text editor
+        NSWorkspace.shared.open(url)
+        log.info("Opened dictionary file in default editor")
+    }
+
     // MARK: - Unload / Reload Model
 
     @objc private func unloadOrReloadModel() {
@@ -439,6 +508,106 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             github.com/felixfu824/HushType
             """
         alert.icon = NSImage(named: "AppIcon") ?? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
+        // First button is the default (Return key). Order matters for keyboard handling.
+        alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "Check for Updates")
+
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            checkForUpdates()
+        }
+    }
+
+    // MARK: - Version Check
+
+    /// Two-stage flow: explicit consent dialog → if approved, fetch + show
+    /// result. The consent dialog is asked EVERY time and defaults to Cancel
+    /// (privacy-conservative). No persistent "remember my choice" — see
+    /// SPEC_version-check.md for rationale.
+    private func checkForUpdates() {
+        let consent = NSAlert()
+        consent.messageText = "Connect to GitHub?"
+        consent.informativeText = """
+            HushType will connect to GitHub to check for new releases.
+
+            No personal data is sent — only a public API call to compare version numbers.
+            """
+        consent.alertStyle = .informational
+        consent.icon = NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
+        // Cancel is the FIRST button so it becomes the default button (Return key).
+        // This is the privacy-conservative default — user must explicitly choose to connect.
+        consent.addButton(withTitle: "Cancel")
+        consent.addButton(withTitle: "Check Now")
+
+        guard consent.runModal() == .alertSecondButtonReturn else {
+            log.info("User declined version check consent")
+            return
+        }
+
+        log.info("User approved version check — fetching")
+
+        Task { @MainActor in
+            do {
+                let result = try await VersionChecker.check()
+                if result.isUpToDate {
+                    self.showUpToDate(version: result.currentVersion)
+                } else {
+                    self.showUpdateAvailable(version: result.latestVersion, url: result.releaseURL)
+                }
+            } catch {
+                self.showCheckError(error)
+            }
+        }
+    }
+
+    private func showUpToDate(version: String) {
+        let alert = NSAlert()
+        alert.messageText = "Up to Date"
+        alert.informativeText = "You're running the latest version (v\(version))."
+        alert.alertStyle = .informational
+        alert.icon = NSImage(systemSymbolName: "checkmark.circle.fill", accessibilityDescription: nil)
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func showUpdateAvailable(version: String, url: URL?) {
+        let alert = NSAlert()
+        alert.messageText = "Update Available"
+        alert.informativeText = """
+            A new version is available: v\(version)
+
+            You can download it from the GitHub Releases page.
+            """
+        alert.alertStyle = .informational
+        alert.icon = NSImage(systemSymbolName: "arrow.up.circle.fill", accessibilityDescription: nil)
+        // First button = default (View on GitHub) — most users want to see the release
+        alert.addButton(withTitle: "View on GitHub")
+        alert.addButton(withTitle: "Later")
+
+        if alert.runModal() == .alertFirstButtonReturn {
+            if let url {
+                NSWorkspace.shared.open(url)
+            } else {
+                // Fallback to releases page if specific URL is missing
+                if let fallback = URL(string: "https://github.com/felixfu824/HushType/releases") {
+                    NSWorkspace.shared.open(fallback)
+                }
+            }
+        }
+    }
+
+    private func showCheckError(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = "Could Not Check for Updates"
+        alert.alertStyle = .warning
+        alert.icon = NSImage(systemSymbolName: "exclamationmark.triangle.fill", accessibilityDescription: nil)
+        alert.informativeText = """
+            Unable to connect to GitHub.
+
+            \(error.localizedDescription)
+
+            Check your internet connection and try again.
+            """
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }

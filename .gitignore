@@ -14,6 +14,23 @@ xcuserdata/
 HANDOVER.md
 CLAUDE.md
 
+# Workstream folders and docs (local planning, not for public repo)
+Product_WS/
+GtM_WS/
+GTM/
+GTM_WORKSTREAM.md
+PRODUCT_WORKSTREAM.md
+
+# Agent config (local only)
+.claude/
+
+# Design / scratch files
+*.excalidraw
+excalidraw.log
+
+# Python cache
+__pycache__/
+
 # DMG builds (local distribution only)
 *.dmg
 

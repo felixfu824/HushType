@@ -70,7 +70,14 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
             log.info("After AI cleanup: \(cleanedText)")
         }
 
-        return cleanedText
+        // Apply user customized dictionary as the final post-processing step.
+        // No-op if the dictionary file doesn't exist or is empty.
+        let dictText = DictionaryReplacer.apply(cleanedText)
+        if dictText != cleanedText {
+            log.info("After dictionary: \(dictText)")
+        }
+
+        return dictText
     }
 
     func unload() {
