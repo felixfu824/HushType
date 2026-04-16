@@ -108,7 +108,12 @@ enum FoundationModelsCleaner {
         let initMs = Int((CFAbsoluteTimeGetCurrent() - tInit) * 1000)
 
         let options = GenerationOptions(temperature: 0.0)
-        let userPrompt = "輸入：\(text)\n輸出："
+        // Wrap input in <transcript>...</transcript> so the model treats it as
+        // data, not instructions. Prevents FoundationModels from answering
+        // question-shaped dictations instead of cleaning them. The system
+        // prompt (CleanupPrompt.systemPrompt) contains the matching anti-
+        // injection clause.
+        let userPrompt = "輸入：<transcript>\(text)</transcript>\n輸出："
 
         let tRespond = CFAbsoluteTimeGetCurrent()
         do {
