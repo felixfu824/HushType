@@ -25,7 +25,8 @@ struct TranslationCardView: View {
 
             // Source text
             Text(sourceText)
-                .font(.callout)
+                .font(.system(size: 16))
+                .lineSpacing(4)
                 .foregroundStyle(.secondary)
                 .lineLimit(6)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -35,13 +36,13 @@ struct TranslationCardView: View {
             // Translated text (scrollable for long content)
             ScrollView {
                 Text(translatedText)
-                    .font(.body)
-                    .fontWeight(.regular)
+                    .font(.system(size: 22, weight: .regular))
+                    .lineSpacing(6)
                     .foregroundStyle(.primary)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .textSelection(.enabled)
             }
-            .frame(maxHeight: 300)
+            .frame(maxHeight: 380)
 
             // Footer
             HStack(alignment: .bottom) {
@@ -57,8 +58,8 @@ struct TranslationCardView: View {
                     .multilineTextAlignment(.trailing)
             }
         }
-        .padding(20)
-        .frame(width: 560)
+        .padding(24)
+        .frame(width: 660)
         .fixedSize(horizontal: false, vertical: true)
         .background(.ultraThinMaterial)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))

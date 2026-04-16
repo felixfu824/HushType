@@ -20,13 +20,41 @@ private class KeyPanel: NSPanel {
     override var canBecomeMain: Bool { false }
 }
 
+/// Hosting view that notifies on mouse enter / exit so the translation card
+/// can pause its auto-dismiss countdown while the user is hovering to read.
+private final class HoverTrackingHostingView<V: View>: NSHostingView<V> {
+    var onMouseEntered: (() -> Void)?
+    var onMouseExited: (() -> Void)?
+
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        for area in trackingAreas { removeTrackingArea(area) }
+        let area = NSTrackingArea(
+            rect: bounds,
+            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(area)
+    }
+
+    override func mouseEntered(with event: NSEvent) { onMouseEntered?() }
+    override func mouseExited(with event: NSEvent) { onMouseExited?() }
+}
+
 /// Floating panel that shows translation results in a centered card.
 ///
 /// Dismisses on Esc key press or click outside the panel.
 final class TranslationCardWindow {
 
+    /// Auto-dismiss the card after this many seconds of no hover interaction.
+    /// Countdown pauses while the pointer is inside the card (read-mode),
+    /// restarts from zero when the pointer leaves.
+    private static let autoDismissSeconds: TimeInterval = 10
+
     private var panel: KeyPanel?
     private var globalClickMonitor: Any?
+    private var autoDismissTimer: Timer?
 
     /// Show the translation card centered on the main screen.
     func show(sourceLanguage: String, sourceText: String, translatedText: String) {
@@ -56,8 +84,10 @@ final class TranslationCardWindow {
             sourceText: sourceText,
             translatedText: translatedText
         )
-        let hostingView = NSHostingView(rootView: cardView)
+        let hostingView = HoverTrackingHostingView(rootView: cardView)
         hostingView.translatesAutoresizingMaskIntoConstraints = false
+        hostingView.onMouseEntered = { [weak self] in self?.cancelAutoDismiss() }
+        hostingView.onMouseExited = { [weak self] in self?.scheduleAutoDismiss() }
         panel.contentView = hostingView
 
         // Let SwiftUI determine the size, then center on screen.
@@ -86,12 +116,36 @@ final class TranslationCardWindow {
             self?.dismiss()
         }
 
+        // Start the auto-dismiss countdown. If the pointer is already inside
+        // the card, the HoverTrackingHostingView will fire mouseEntered
+        // momentarily and cancel this timer.
+        scheduleAutoDismiss()
+
         log.info("Translation card shown")
+    }
+
+    // MARK: - Auto-dismiss
+
+    private func scheduleAutoDismiss() {
+        autoDismissTimer?.invalidate()
+        autoDismissTimer = Timer.scheduledTimer(
+            withTimeInterval: Self.autoDismissSeconds,
+            repeats: false
+        ) { [weak self] _ in
+            self?.dismiss()
+        }
+    }
+
+    private func cancelAutoDismiss() {
+        autoDismissTimer?.invalidate()
+        autoDismissTimer = nil
     }
 
     /// Fade out and dismiss the card.
     func dismiss() {
         guard let panel = panel else { return }
+
+        cancelAutoDismiss()
 
         if let monitor = globalClickMonitor {
             NSEvent.removeMonitor(monitor)
