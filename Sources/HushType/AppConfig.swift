@@ -14,6 +14,7 @@ final class AppConfig {
         static let chineseConversionEnabled = "hushtype.chineseConversionEnabled"
         static let floatingOverlayEnabled = "hushtype.floatingOverlayEnabled"
         static let onboardingCompleted = "hushtype.onboardingCompleted"
+        static let numberConversionEnabled = "hushtype.numberConversionEnabled"
         static let aiCleanupEnabled = "hushtype.aiCleanupEnabled"
         static let textTranslationEnabled = "hushtype.textTranslationEnabled"
         static let translateTargetLanguage = "hushtype.translateTargetLanguage"
@@ -66,6 +67,23 @@ final class AppConfig {
     var onboardingCompleted: Bool {
         get { defaults.bool(forKey: Keys.onboardingCompleted) }
         set { defaults.set(newValue, forKey: Keys.onboardingCompleted) }
+    }
+
+    /// Whether to run deterministic ITN (inverse text normalization) over each
+    /// transcription to convert Chinese numerals to Arabic digits in context.
+    /// Runs between OpenCC and AI Cleanup in the pipeline. On by default;
+    /// reversible from the Number Conversion menu toggle.
+    var numberConversionEnabled: Bool {
+        get {
+            if defaults.object(forKey: Keys.numberConversionEnabled) == nil {
+                return true // Default: enabled
+            }
+            return defaults.bool(forKey: Keys.numberConversionEnabled)
+        }
+        set {
+            defaults.set(newValue, forKey: Keys.numberConversionEnabled)
+            log.info("Number conversion enabled: \(newValue, privacy: .public)")
+        }
     }
 
     /// Whether to run Apple FoundationModels over each transcription to clean

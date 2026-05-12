@@ -62,10 +62,25 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
             log.info("After conversion: \(convertedText)")
         }
 
+        // Apply number conversion (ITN) if enabled. Deterministic regex-based
+        // pass that converts Chinese numerals to Arabic digits. Runs before
+        // AI Cleanup so the cleanup prompt doesn't need to handle numbers.
+        let itnResult: NumberNormalizer.Result
+        if AppConfig.shared.numberConversionEnabled {
+            itnResult = NumberNormalizer.normalize(convertedText)
+            if itnResult.applied {
+                log.info("After ITN: \(itnResult.text, privacy: .public) [\(itnResult.note, privacy: .public)]")
+            } else if itnResult.note != "no-op" {
+                log.debug("ITN skipped: \(itnResult.note, privacy: .public)")
+            }
+        } else {
+            itnResult = NumberNormalizer.Result(text: convertedText, applied: false, note: "disabled")
+        }
+
         // Apply AI Cleanup if enabled. No-op when disabled, when running on
         // macOS < 26, or when FoundationModels errors — in all those cases
         // the input is returned unchanged.
-        let cleanup = await AICleaner.cleanWithTiming(convertedText)
+        let cleanup = await AICleaner.cleanWithTiming(itnResult.text)
         if cleanup.text != convertedText {
             log.info("After AI cleanup: \(cleanup.text)")
         }
@@ -84,7 +99,8 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
         let totalMs = Int(totalElapsed * 1000)
         let stateLabel = cleanup.state.rawValue
 
-        log.info("timings asr=\(asrMs, privacy: .public)ms cleanup_init=\(cleanup.initMs, privacy: .public)ms cleanup_respond=\(cleanup.respondMs, privacy: .public)ms cleanup_state=\(stateLabel, privacy: .public) cleanup_entries=\(cleanup.transcriptEntries, privacy: .public) total=\(totalMs, privacy: .public)ms in=\(inCh, privacy: .public)ch out=\(outCh, privacy: .public)ch")
+        let itnLabel = itnResult.applied ? "applied" : itnResult.note
+        log.info("timings asr=\(asrMs, privacy: .public)ms itn=\(itnLabel, privacy: .public) cleanup_init=\(cleanup.initMs, privacy: .public)ms cleanup_respond=\(cleanup.respondMs, privacy: .public)ms cleanup_state=\(stateLabel, privacy: .public) cleanup_entries=\(cleanup.transcriptEntries, privacy: .public) total=\(totalMs, privacy: .public)ms in=\(inCh, privacy: .public)ch out=\(outCh, privacy: .public)ch")
 
         return dictText
     }
