@@ -18,12 +18,51 @@ import Foundation
 ///
 /// Never throws, never blocks the caller on a hard error.
 enum AICleaner {
+    enum CleanupState: String {
+        case disabled
+        case fresh
+        case prewarmed
+    }
+
+    struct CleanupTiming {
+        let text: String
+        let initMs: Int
+        let respondMs: Int
+        let state: CleanupState
+        let transcriptEntries: Int
+    }
+
     static func clean(_ text: String) async -> String {
-        guard AppConfig.shared.aiCleanupEnabled else { return text }
+        await cleanWithTiming(text).text
+    }
+
+    static func cleanWithTiming(_ text: String) async -> CleanupTiming {
+        guard AppConfig.shared.aiCleanupEnabled else {
+            return CleanupTiming(
+                text: text,
+                initMs: 0,
+                respondMs: 0,
+                state: .disabled,
+                transcriptEntries: 0
+            )
+        }
 
         if #available(macOS 26.0, *) {
-            return await FoundationModelsCleaner.clean(text)
+            let result = await FoundationModelsCleaner.cleanWithTiming(text)
+            return CleanupTiming(
+                text: result.text,
+                initMs: result.initMs,
+                respondMs: result.respondMs,
+                state: result.state,
+                transcriptEntries: result.transcriptEntries
+            )
         }
-        return text
+        return CleanupTiming(
+            text: text,
+            initMs: 0,
+            respondMs: 0,
+            state: .disabled,
+            transcriptEntries: 0
+        )
     }
 }
