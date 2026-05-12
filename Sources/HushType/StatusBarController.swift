@@ -20,6 +20,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var languageItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
     private var floatingOverlayMenuItem: NSMenuItem!
+    private var numberConversionMenuItem: NSMenuItem!
     private var aiCleanupMenuItem: NSMenuItem!
     private var textTranslationMenuItem: NSMenuItem!
     private var translationSubtitleItem: NSMenuItem!
@@ -162,6 +163,29 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: AppConfig.shared.floatingOverlayEnabled)
         menu.addItem(floatingOverlayMenuItem)
 
+        // Number Conversion toggle (deterministic ITN)
+        numberConversionMenuItem = NSMenuItem(
+            title: "Number Conversion",
+            action: #selector(toggleNumberConversion),
+            keyEquivalent: ""
+        )
+        numberConversionMenuItem.target = self
+        updateToggleAppearance(numberConversionMenuItem, title: "Number Conversion", checked: AppConfig.shared.numberConversionEnabled)
+        menu.addItem(numberConversionMenuItem)
+
+        // Number Conversion subtitle
+        let numSubtitle = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        numSubtitle.isEnabled = false
+        let numSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        numSubtitle.attributedTitle = NSAttributedString(
+            string: "    Chinese numerals \u{2192} Arabic digits",
+            attributes: numSubAttrs
+        )
+        menu.addItem(numSubtitle)
+
         // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
         aiCleanupMenuItem = NSMenuItem(
             title: "AI Cleanup",
@@ -296,6 +320,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let newValue = !AppConfig.shared.floatingOverlayEnabled
         AppConfig.shared.floatingOverlayEnabled = newValue
         updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: newValue)
+    }
+
+    // MARK: - Number Conversion
+
+    @objc private func toggleNumberConversion() {
+        let newValue = !AppConfig.shared.numberConversionEnabled
+        AppConfig.shared.numberConversionEnabled = newValue
+        updateToggleAppearance(numberConversionMenuItem, title: "Number Conversion", checked: newValue)
     }
 
     // MARK: - AI Cleanup
