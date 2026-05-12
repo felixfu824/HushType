@@ -5,55 +5,52 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  Local voice-to-text and translation for macOS and iOS.<br>
-  Speak in any language mix — text appears at your cursor. No cloud. No subscription.
+  Local voice-to-text for all Apple Silicon macOS users.<br>
+  Private. Memory-friendly. Steady Traditional Chinese output.
 </p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
-> **HushType** is a free, open-source, offline speech-to-text app for macOS and iOS. It uses [Qwen3-ASR](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) running locally on Apple Silicon (MLX) to transcribe voice input in English, Chinese, and Japanese — including mixed-language sentences. Outputs Traditional Chinese (繁體中文) via OpenCC. A privacy-first alternative to cloud dictation services and Whisper-based tools.
+> **HushType** is a free, open-source, offline speech-to-text app for macOS and iOS. It uses Qwen3-ASR ([macOS](https://huggingface.co/aufklarer/Qwen3-ASR-0.6B-MLX-4bit) / [iOS](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) mirrors) running locally on Apple Silicon (MLX) to transcribe voice input in English, Chinese, and Japanese — including mixed-language sentences. Delivers steady Traditional Chinese (繁體中文) output via OpenCC. A privacy-first alternative to cloud dictation services and Whisper-based tools (higher RAM consumption, tendency to output Simplified Chinese), built to be lightweight enough to coexist with all the applications you're already running.
 
 ---
 
 ## Why HushType
 
-**Private and secure by design.** Your voice never leaves your network. The
-speech model runs on your Mac's GPU — no cloud, no account, no data collection.
-iPhone audio travels to YOUR Mac over Tailscale (WireGuard-encrypted) or local
-WiFi. No third party ever touches your data.
+**Private and local-first.** Your voice never leaves your machine. The speech model runs on your Mac's GPU — no cloud, no account, no telemetry, no data collection. The only network call is the one-time model download (~675 MB) on first launch; after that the app runs fully offline. iPhone audio travels to YOUR Mac over Tailscale (WireGuard-encrypted) or local WiFi. Pre-download the model folder on another machine and HushType is fully air-gappable.
 
-**Traditional Chinese that actually works.** OpenAI's Whisper only offers a
-single "zh" code — it defaults to Simplified with no reliable way to force
-Traditional. Open-source models often mix Simplified characters or use Mainland
-phrasing. HushType uses Qwen3-ASR for recognition, then OpenCC (s2twp) for
-consistent Traditional output with Taiwan-specific vocabulary (e.g., 軟體 not 软件).
+**Memory-friendly — coexists with your agents.** HushType is built for how Apple Silicon owners actually use their Macs in 2026: two or three coding agents running (Claude Code, Cursor, Codex), a browser, normal workload. Qwen3-ASR-0.6B 4-bit (~675 MB on disk — less than half the ~1.6 GB of Whisper Large v3 Turbo) is competitive with models 3× its size, small enough for an entry-level 8 / 16 GB M-series Mac to host comfortably alongside everything else. One click in the menu bar unloads the model and frees ~2 GB on demand; it auto-reloads on the next Right ⌥ hold (~3s cold start).
 
-**Multilingual code-switching.** Mix English and Mandarin in one sentence —
-HushType handles it in a single pass. Apple dictation requires manual language
-switching mid-sentence. Qwen3-ASR was trained for code-switching natively and
-is highly competitive with models 3x its size.
+**Traditional Chinese that actually works.** Whisper only offers a single `zh` code that defaults to Simplified with no reliable way to force Traditional. Most open-source models mix Simplified characters or use Mainland phrasing (软件 not 軟體). HushType chains Qwen3-ASR for recognition with OpenCC `s2twp` for Taiwan-specific Traditional output — 軟體 not 软件, 滑鼠 not 鼠标, 品質 not 质量. Qwen3-ASR also handles English / Mandarin code-switching in one pass — mix the two in a single sentence and you get one clean transcription, no manual language toggle mid-sentence. An optional deterministic ITN layer converts Chinese numerals to Arabic digits in context (`一零一大樓` → `101 大樓`, `三點一四` → `3.14`), on by default and reversible from the menu.
 
-**Lightweight.** ~675 MB storage, ~2.2 GB peak memory. Runs on any Apple Silicon
-Mac alongside your normal workload. ~1 second to transcribe 10 seconds of audio.
+---
 
-**Instant text translation.** Select any text, tap Right Option, and get a
-translation in a floating card. Uses Apple's on-device Translation Framework
-(macOS 14+) — no API key, no cloud. Smart direction: Chinese text translates
-to English, other languages translate to Traditional Chinese. Supports ~20
-language pairs.
+## Key Features
 
-### Use Cases
+| Feature | Default | Requirement |
+|---|---|---|
+| Hold Right ⌥ to dictate (macOS) | ON | macOS 15+ |
+| Tap Right ⌥ to translate selected text | OFF | macOS 14+ |
+| EN / ZH / JA + native code-switching | ON | — |
+| 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | — |
+| 阿拉伯數字 conversion (deterministic ITN) | **ON** | — |
+| AI Cleanup — filler removal, self-correction resolution | **OFF** (opt-in beta) | macOS 26 + Apple Intelligence |
+| Customized dictionary (proper nouns / jargon) | File-driven | — |
+| Floating "Listening / Transcribing" pill | ON | — |
+| Unload speech-to-text model | One-click | — |
+| iOS app + custom keyboard (Mac as server) | Optional | iOS 17+, Python on Mac |
 
-**Talking to AI agents:** Giving Claude or ChatGPT a detailed prompt takes 5
-minutes to type, 30 seconds to say. Tap mic on the HushType keyboard, speak
-your entire prompt (mixing languages as needed), tap stop — text appears in
-the chat input.
+---
 
-**Voice notes on the go:** On the subway, Mac at home. Tap "Start Listening"
-on iPhone, switch to Notes, tap mic. Audio travels over Tailscale to your Mac,
-transcribes in ~1 second, text appears.
+## Use Cases
+
+**Talking to AI agents.** Giving Claude or ChatGPT a detailed prompt takes 5 minutes to type, 30 seconds to say. Hold Right ⌥, speak your entire prompt (mixing languages as needed), release — text appears in the chat input. Local transcription means your prompts never leave your machine even if you're driving cloud-hosted agents.
+
+**Voice notes on the go.** On the subway, Mac at home. Tap "Start Listening" on iPhone, switch to Notes, tap the mic button on the HushType keyboard. Audio travels over Tailscale to your Mac, transcribes in ~1 second, text appears.
+
+**Reading in another language.** Select any text in Safari, Mail, Notes — anywhere — and tap Right ⌥. A translucent card pops up with the translation via Apple's on-device Translation Framework. Auto-dismisses after 10s, pauses on hover. No API key, no cloud.
 
 ---
 
@@ -63,7 +60,7 @@ transcribes in ~1 second, text appears.
 macOS (standalone — zero network required):
   Hold Right Option (≥0.3s) → speak → release → text at cursor
   Tap Right Option (<0.3s) with text selected → translation card
-  Pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → paste
+  Pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → ITN → paste
 
 iOS (via your Mac as server):
   Open HushType → Start Listening → switch to any app → HushType keyboard → tap mic
@@ -77,7 +74,7 @@ iOS (via your Mac as server):
   │ iPhone       │ ──── HTTP POST ──►│  ios_server.py (port 8000)       │
   │ HushType KB  │◄── JSON result ───│    ↓                             │
   └──────────────┘                   │  mlx-audio (port 8199)           │
-                                     │    → Qwen3-ASR 0.6B (MLX/Metal) │
+                                     │    → Qwen3-ASR 0.6B (MLX/Metal)  │
                                      │    → OpenCC s2twp                │
                                      │                                  │
                                      │  HushType.app (menu bar)         │
@@ -132,7 +129,7 @@ macOS apps don't have a Windows-style uninstaller — updating just means **repl
 1. Quit HushType
 2. Drag `/Applications/HushType.app` to the Trash
 3. *(Optional)* Remove preferences: `defaults delete com.felix.hushtype`
-4. *(Optional)* Remove the downloaded model: `rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
+4. *(Optional)* Remove the downloaded model: `rm -rf ~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR* ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
 5. *(Optional)* Remove the Accessibility entry: System Settings → Privacy & Security → Accessibility → select HushType → click the `-` button
 
 ---
@@ -195,12 +192,14 @@ make install
 - **Hold Right Option (≥0.3s)** — start recording. A translucent "Listening" pill appears at the bottom of the screen with a live audio level meter.
 - **Release** — the pill switches to a pulsing "Transcribing" state while ASR runs, then the transcribed text is pasted at your cursor and also left on the clipboard for re-pasting.
 - **Tap Right Option (<0.3s)** — with text selected, translates the selection and shows the result in a floating card. Auto-copies the translation to clipboard. See [Text Translation](#optional-text-translation-macos-14) below.
-- **Menu bar icon** — shows status (idle / recording / transcribing)
+- **Menu bar icon** — shows status (idle / recording / transcribing) and live RAM usage
 - **Menu bar > Language** — switch between Auto / English / Chinese / Japanese
 - **Menu bar > Show Floating Indicator** — toggle the bottom-of-screen pill (default on)
+- **Menu bar > Number Conversion** — toggle the deterministic Chinese-numeral → Arabic-digit pass (default on)
 - **Menu bar > Text Translation** — enable/disable the tap-to-translate feature (requires macOS 14+). See below.
-- **Menu bar > AI Cleanup** — optional post-processing via Apple Foundation Models (requires macOS 26+). See below.
+- **Menu bar > AI Cleanup** — optional post-processing via Apple Foundation Models (requires macOS 26+, off by default). See below.
 - **Menu bar > Unload Speech-to-Text Model** — frees ~2 GB RAM when you don't need voice input. Click "Reload Speech-to-Text Model" to re-enable (~3s cold start).
+- **Menu bar > Edit Customized Dictionary** — open a plain-text file at `~/Library/Application Support/HushType/dictionary.txt` for proper nouns and jargon (`source -> target`, one rule per line). Hot-reloads on save.
 
 That's it for macOS. No server, no network, no configuration needed.
 
@@ -227,35 +226,19 @@ HushType v0.4 adds on-device text translation via Apple's Translation Framework.
 1. Select text you want to translate (in any app — Safari, Notes, Mail, etc.)
 2. Tap Right Option quickly (<0.3s) — don't hold it
 3. A floating translucent card appears with the translation
-4. The translation is automatically copied to your clipboard
-5. Click anywhere or press Escape to dismiss the card
+4. The translation is automatically copied to your clipboard and auto-dismisses after 10 seconds. Hover over the card to pause the countdown; click anywhere or press Escape to dismiss instantly.
 
-### Optional: AI Cleanup (beta, macOS 26+)
+### Optional: AI Cleanup (opt-in beta, macOS 26+)
 
-HushType v0.3 adds an opt-in AI Cleanup pass that runs each transcription through Apple's on-device Foundation Models framework. When enabled, the LLM does three things:
+HushType ships with AI Cleanup **off by default**. When enabled, each transcription is passed through Apple's on-device Foundation Models framework, which (1) strips leading filler words (`um`, `uh`, `嗯`, `那個`), (2) collapses immediate duplicates while preserving emphatic repetitions, and (3) resolves explicit self-corrections (`I'll send it Wednesday no actually Friday` → `I'll send it Friday`).
 
-1. **Sentence-level cleanup** — removes leading filler words (`um`, `uh`, `hmm`, 嗯, 啊, 那個, 就是…) and collapses immediate duplicates (`I I I think` → `I think`, `我我我覺得` → `我覺得`). Leaves emphatic repetitions alone (`對對對`, `yes yes yes`).
-2. **Speaker self-correction resolution** — when you correct yourself mid-sentence with an explicit marker (`no actually`, `I mean`, `不對`, `我是說`, `應該是`), it keeps only the corrected version. `I'll send it Wednesday no actually Friday` → `I'll send it Friday`. `我想約禮拜三不對禮拜五` → `我想約禮拜五`.
-3. **Chinese numeral conversion** — converts Chinese numerals to Arabic digits in context: `一零一大樓` → `101 大樓`, `三本書` → `3 本書`, `三點一四` → `3.14`. Leaves fixed phrases alone (`想一下`, `一直`, `一些`).
+**Why off by default:** AI Cleanup rewrites your transcription content. The deterministic ITN layer (Chinese numeral → Arabic digit) is on by default because it's reversible and bounded; AI Cleanup is opt-in because semantic rewriting is a stronger commitment.
 
-**Requirements:**
-- macOS 26 (Tahoe) or later
-- Apple Intelligence enabled in System Settings (the on-device model must be available)
-- Apple Silicon Mac
+**Requirements:** macOS 26 (Tahoe) + Apple Intelligence enabled + Apple Silicon.
 
-**How to enable:**
-1. Menu bar → click the HushType icon → click **AI Cleanup**
-2. HushType runs a quick round-trip test against the on-device model. If Apple Intelligence isn't available, you'll see an error explaining why.
-3. On success, the checkmark appears and future transcriptions are cleaned up automatically.
-4. Toggle off any time — the menu item flips cleanly back to the raw OpenCC-only pipeline.
+**How to enable:** Menu bar → AI Cleanup. HushType runs a quick round-trip test against the on-device model; if Apple Intelligence isn't available, you get a clear error and the toggle stays off. On success, future transcriptions are cleaned automatically. If the on-device model errors mid-transcription, HushType silently falls back to the uncleaned text — you never see a broken result.
 
-**Failure mode:** if the on-device model errors mid-transcription (safety filter, transient issue), HushType silently falls back to the uncleaned text. You never see a broken transcription; the worst case is no cleanup on that one call.
-
-**Known limitations (beta):**
-- Occasional over-pruning of Chinese adverbs (e.g., `我一直都在` may become `我一直在`).
-- Trailing particles may leak through after self-correction resolution (`禮拜三哦不對禮拜五` → `禮拜五哦`).
-- English numerals inside Chinese context get converted (`我買了 five 本書` → `我買了 5 本書`). Product-accepted behavior.
-- Language coverage is primarily validated on Chinese and English. Japanese input is tested minimally.
+**Known limitations (beta):** Occasional over-pruning of Chinese adverbs (`我一直都在` may become `我一直在`); trailing particles may leak through after self-correction resolution; English numerals inside Chinese context get converted (`我買了 five 本書` → `我買了 5 本書`, accepted behavior); Japanese is tested minimally.
 
 ---
 
@@ -387,11 +370,15 @@ defaults read com.felix.hushtype
 # Language: nil=auto, "english", "chinese", "japanese"
 defaults write com.felix.hushtype hushtype.language -string "chinese"
 
-# Model: default 0.6B-4bit, alternative 1.7B for better quality
+# Model: default "aufklarer/Qwen3-ASR-0.6B-MLX-4bit" on macOS;
+# alternative "mlx-community/Qwen3-ASR-1.7B-8bit" for better quality.
 defaults write com.felix.hushtype hushtype.modelId -string "mlx-community/Qwen3-ASR-1.7B-8bit"
 
 # Traditional Chinese conversion (default: true)
 defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
+
+# Number conversion / ITN — Chinese numeral → Arabic digit (default: true)
+defaults write com.felix.hushtype hushtype.numberConversionEnabled -bool false
 
 # Floating "Listening / Transcribing" indicator (default: true)
 defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
@@ -405,7 +392,7 @@ defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
 defaults write com.felix.hushtype hushtype.textTranslationEnabled -bool true
 
 # Translation target language (default: nil = auto — Chinese→English, other→繁體中文)
-# Set to a specific language code to override (e.g., "en", "zh-Hant", "ja")
+# Set to a specific language code to override (e.g., "en", "zh-Hant-TW", "ja")
 defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 ```
 
@@ -426,6 +413,16 @@ Common keycodes: Right Option (61), Right Command (54), Left Option (58), Left C
 
 ---
 
+## Privacy & Security
+
+- **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk — not on macOS, not on the iOS server.
+- **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
+- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift).
+- **iOS audio stays on your network.** iPhone audio travels directly to your Mac over local WiFi or Tailscale (WireGuard-encrypted). No third-party server is involved.
+- **Fully air-gappable.** Pre-download the model folder on another machine (`~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/` for the macOS app, `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/` for the iOS server) and copy it over — the app will never need internet.
+
+---
+
 ## Project Structure
 
 ```
@@ -442,6 +439,8 @@ HushType/
 │   ├── AudioCaptureService.swift      AVAudioEngine mic capture (16kHz mono, RMS publisher)
 │   ├── TranscriptionEngine.swift      Protocol + Qwen3ASR wrapper (MLX)
 │   ├── ChineseConverter.swift         OpenCC s2twp (Simplified → Traditional)
+│   ├── NumberNormalizer.swift         Deterministic Chinese-numeral → Arabic-digit ITN
+│   ├── DictionaryReplacer.swift       Customized dictionary (final post-processing step)
 │   ├── TextInserter.swift             Clipboard + Cmd+V paste (result persists on clipboard)
 │   ├── InputSourceManager.swift       CJK input method detection
 │   ├── FloatingOverlayWindow.swift    Borderless NSPanel for the listening pill
@@ -478,6 +477,7 @@ HushType/
     │   └── Resources/silence.wav      Background audio fallback
     └── VoxKeyKeyboard/                Custom keyboard extension
         └── KeyboardViewController.swift  Mic, space, backspace, return, globe
+```
 
 ## Customizing for Your Own Setup
 
@@ -527,16 +527,6 @@ lsof -ti :8000 :8199 | xargs kill
 
 ---
 
-## Privacy & Security
-
-- **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk — not on macOS, not on the iOS server.
-- **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
-- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift).
-- **iOS audio stays on your network.** iPhone audio travels directly to your Mac over local WiFi or Tailscale (WireGuard-encrypted). No third-party server is involved.
-- **Fully air-gappable.** Pre-download the model folder (`~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`) on another machine and copy it over — the app will never need internet.
-
----
-
 ## Known Limitations
 
 - iOS requires Mac to be on and server running (no cloud fallback)
@@ -544,4 +534,3 @@ lsof -ti :8000 :8199 | xargs kill
 - Session timeout is fixed at 5 minutes (no UI to change yet)
 - Mac must be reachable from iPhone (same WiFi or Tailscale)
 - DMG is ad-hoc signed (not notarized) — macOS Gatekeeper will warn on first launch. Right-click → Open to bypass.
-

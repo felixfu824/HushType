@@ -5,33 +5,52 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  macOS 與 iOS 的本地語音轉文字與翻譯工具。<br>
-  隨意混用語言說話，文字即刻出現在游標位置。無雲端、無訂閱。
+  專為 Apple Silicon macOS 使用者打造的本地語音轉文字工具。<br>
+  隱私至上。省記憶體。穩定的繁體中文輸出。
 </p>
 
 <p align="center">
   <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
+> **HushType** 是一款免費、開源、離線的 macOS 與 iOS 語音轉文字 App。使用 Qwen3-ASR（[macOS](https://huggingface.co/aufklarer/Qwen3-ASR-0.6B-MLX-4bit) / [iOS](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) 映像）在 Apple Silicon（MLX）上本地執行，可辨識英文、中文、日文的語音輸入——包含混用多語的句子。透過 OpenCC 提供穩定的繁體中文輸出。是雲端聽寫服務與 Whisper 衍生工具（記憶體用量較高、傾向輸出簡體中文）的隱私優先替代方案，足夠輕量，能與你已在運行的所有應用程式共存。
+
 ---
 
 ## 為什麼選擇 HushType
 
-**隱私與安全。** 你的語音永遠不會離開你的網路。語音模型完全在你 Mac 的 GPU 上運行——無雲端 API、無帳號、無資料蒐集。iPhone 的音訊透過 Tailscale（WireGuard 加密）或區域網路傳送到你自己的 Mac，沒有任何第三方能接觸到你的資料。
+**隱私與本地優先。** 你的語音永遠不會離開你的機器。語音模型完全在你 Mac 的 GPU 上執行——無雲端、無帳號、無遙測、無資料蒐集。唯一的網路連線是首次啟動時的一次性模型下載（約 675 MB）；之後 App 完全離線運行。iPhone 的音訊透過 Tailscale（WireGuard 加密）或區域網路 WiFi 傳送到你自己的 Mac。事先在另一台機器下載好模型資料夾再複製過來，HushType 就能完全離網運作。
 
-**真正能用的繁體中文。** OpenAI 的 Whisper 只提供單一的 "zh" 語言代碼，預設輸出簡體中文，且沒有可靠的方法強制輸出繁體。開源模型常常混雜簡體字或使用大陸用語。HushType 使用 Qwen3-ASR 進行語音辨識，再透過 OpenCC（s2twp）進行簡繁轉換，確保穩定的繁體輸出與台灣在地用語（例如「軟體」而非「软件」）。
+**記憶體友善——與你的 AI 助手共存。** HushType 是為了 2026 年 Apple Silicon 使用者真實的使用情境而設計：同時開著兩三個程式助手（Claude Code、Cursor、Codex）、瀏覽器、加上日常工作。Qwen3-ASR-0.6B 4-bit 磁碟空間約 675 MB，不到 Whisper Large v3 Turbo（約 1.6 GB）的一半，效能可媲美體積大三倍的模型，小到讓入門級 8 / 16 GB M 系列 Mac 也能在跑其他應用程式的同時舒服地裝載。在選單列點一下即可卸載模型，立刻釋放約 2 GB 記憶體；下次按住 Right ⌥ 時會自動重新載入（冷啟動約 3 秒）。
 
-**多語言混用。** 在同一句話中混用英文和中文——HushType 一次搞定。Apple 內建聽寫需要手動切換語言。Qwen3-ASR 原生支援語言混用，且效能可媲美體積大三倍的模型。
+**真正能用的繁體中文。** Whisper 只提供單一的 `zh` 語言代碼，預設輸出簡體中文，且沒有可靠的方法強制輸出繁體。大多數開源模型常混雜簡體字或使用大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 進行語音辨識，再透過 OpenCC `s2twp` 進行台灣在地的繁體輸出——軟體 而非 软件、滑鼠 而非 鼠标、品質 而非 质量。Qwen3-ASR 也原生支援英文/中文混用辨識——在同一句話混說兩種語言，一次轉錄就能搞定，不需要中途切換語言。另有選用的確定性 ITN 階層，可依語境將中文數字轉成阿拉伯數字（`一零一大樓` → `101 大樓`、`三點一四` → `3.14`），預設開啟，可從選單列關閉。
 
-**輕量。** 約 675 MB 儲存空間、約 2.2 GB 尖峰記憶體。任何 Apple Silicon Mac 都能在正常工作的同時輕鬆運行。10 秒的語音約 1 秒即可完成轉錄。
+---
 
-**即時文字翻譯。** 選取任何文字，輕按 Right Option，翻譯結果即刻顯示在浮動卡片中。使用 Apple 裝置端的 Translation Framework（macOS 14+）——不需要 API 金鑰、不經雲端。智慧語言方向：中文自動翻成英文，其他語言翻成繁體中文。支援約 20 種語言組合。
+## 主要功能
 
-### 使用情境
+| 功能 | 預設 | 系統需求 |
+|---|---|---|
+| 按住 Right ⌥ 進行語音輸入（macOS）| ON | macOS 15+ |
+| 輕按 Right ⌥ 翻譯選取的文字 | OFF | macOS 14+ |
+| 英文 / 中文 / 日文 + 原生混用 | ON | — |
+| 簡體 → 繁體 後處理（OpenCC `s2twp`）| **ON** | — |
+| 阿拉伯數字轉換（確定性 ITN）| **ON** | — |
+| AI Cleanup——清除贅字、自我修正解析 | **OFF**（opt-in beta）| macOS 26 + Apple Intelligence |
+| 自訂字典（專有名詞 / 行話）| 檔案驅動 | — |
+| 浮動「Listening / Transcribing」指示條 | ON | — |
+| 卸載語音轉文字模型 | 一鍵 | — |
+| iOS App + 自訂鍵盤（以 Mac 為伺服器）| 選用 | iOS 17+、Mac 上需有 Python |
 
-**與 AI 助手對話：** 要給 Claude 或 ChatGPT 一段詳細的 prompt——需求、限制、背景脈絡——打字要 5 分鐘，用說的只要 30 秒。在 iPhone 的 HushType 鍵盤上按麥克風，自然地說出來（可混用語言），按停止——文字立刻出現在聊天輸入框中。
+---
 
-**通勤時的語音筆記：** 在捷運上，Mac 在家裡。在 iPhone 上按「開始聆聽」，切到備忘錄，按麥克風。語音透過 Tailscale 傳回你的 Mac，約 1 秒完成轉錄，文字出現。
+## 使用情境
+
+**與 AI 助手對話。** 給 Claude 或 ChatGPT 一段詳細的 prompt，打字要 5 分鐘，用說的只要 30 秒。按住 Right ⌥，自然地說完整段 prompt（可任意混用語言）、放開——文字立刻出現在聊天輸入框中。本地轉錄意味著：即使你正在使用雲端託管的 AI 助手，你的 prompt 也不會離開你的機器。
+
+**通勤時的語音筆記。** 在捷運上，Mac 留在家裡。在 iPhone 上點「Start Listening」，切到備忘錄，按 HushType 鍵盤上的麥克風按鈕。語音透過 Tailscale 傳回你的 Mac，約 1 秒完成轉錄，文字出現。
+
+**閱讀其他語言。** 在 Safari、Mail、備忘錄等任何 App 中選取文字，輕按 Right ⌥。半透明卡片即跳出翻譯結果，使用 Apple 裝置端 Translation Framework。10 秒後自動關閉、游標停留會暫停倒數。無 API 金鑰、無雲端。
 
 ---
 
@@ -41,7 +60,7 @@
 macOS（獨立運作——不需要網路）：
   按住 Right Option（≥0.3 秒）→ 說話 → 放開 → 文字出現在游標位置
   輕按 Right Option（<0.3 秒）+ 選取文字 → 翻譯卡片
-  流程：麥克風 → Qwen3-ASR（MLX，裝置端推論）→ OpenCC s2twp → 貼上
+  流程：麥克風 → Qwen3-ASR（MLX、裝置端推論）→ OpenCC s2twp → ITN → 貼上
 
 iOS（透過你的 Mac 作為伺服器）：
   開啟 HushType → 開始聆聽 → 切到任何 App → HushType 鍵盤 → 按麥克風
@@ -55,7 +74,7 @@ iOS（透過你的 Mac 作為伺服器）：
   │ iPhone       │ ──── HTTP POST ──►│  ios_server.py (port 8000)       │
   │ HushType KB  │◄── JSON result ───│    ↓                             │
   └──────────────┘                   │  mlx-audio (port 8199)           │
-                                     │    → Qwen3-ASR 0.6B (MLX/Metal) │
+                                     │    → Qwen3-ASR 0.6B (MLX/Metal)  │
                                      │    → OpenCC s2twp                │
                                      │                                  │
                                      │  HushType.app (選單列)            │
@@ -103,15 +122,15 @@ macOS 沒有 Windows 那種「解除安裝程式」的概念——更新一個 A
 
 **從原始碼編譯的使用者：** 直接 `git pull && make install` 就搞定。新編譯出的 binary 會有新的程式碼雜湊，所以一樣需要重新授權輔助使用一次。
 
-**為什麼每次更新都要重新授權？** HushType 目前是 ad-hoc 簽章（沒有 Notarization）。macOS 的權限資料庫對 ad-hoc 簽章的 App 是用 **程式碼雜湊值（cdhash）** 來追蹤的，而 cdhash 在每次重新編譯後都會改變。正式的 Developer ID 簽章（需要付費 Apple Developer 帳號）可以解決這個問題。在那之前，HushType 會在啟動時自動清理舊的 entry，讓你只要重按一次開關就好，不用手動去找哪個是舊的、哪個是新的。
+**為什麼每次更新都要重新授權？** HushType 目前是 ad-hoc 簽章（沒有 Notarization）。macOS 的權限資料庫對 ad-hoc 簽章的 App 是用**程式碼雜湊值（cdhash）**來追蹤的，而 cdhash 在每次重新編譯後都會改變。正式的 Developer ID 簽章（需要付費 Apple Developer 帳號）可以解決這個問題。在那之前，HushType 會在啟動時自動清理舊的 entry，讓你只要重按一次開關就好，不用手動去找哪個是舊的、哪個是新的。
 
 **完全解除安裝 HushType：**
 
 1. 退出 HushType
 2. 把 `/Applications/HushType.app` 拖到垃圾桶
-3. *(可選)* 移除偏好設定：`defaults delete com.felix.hushtype`
-4. *(可選)* 移除下載的模型：`rm -rf ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
-5. *(可選)* 移除輔助使用權限紀錄：系統設定 → 隱私權與安全性 → 輔助使用 → 選 HushType → 點 `-` 按鈕
+3. *（可選）* 移除偏好設定：`defaults delete com.felix.hushtype`
+4. *（可選）* 移除下載的模型：`rm -rf ~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR* ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
+5. *（可選）* 移除輔助使用權限紀錄：系統設定 → 隱私權與安全性 → 輔助使用 → 選 HushType → 點 `-` 按鈕
 
 ---
 
@@ -173,12 +192,14 @@ make install
 - **按住 Right Option（≥0.3 秒）** — 開始錄音。螢幕底部會出現一個半透明的「Listening」指示條，顯示即時的音量條。
 - **放開** — 指示條切換為脈動的「Transcribing」狀態，語音辨識完成後，文字貼到游標位置，同時也保留在剪貼簿中可再次貼上。
 - **輕按 Right Option（<0.3 秒）** — 選取文字後輕按，即刻翻譯並在浮動卡片中顯示結果。翻譯自動複製到剪貼簿。詳見下方[文字翻譯](#選用功能文字翻譯macos-14)。
-- **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）
+- **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）及即時記憶體用量
 - **選單列 > Language** — 切換 Auto / English / 中文 / 日本語
 - **選單列 > Show Floating Indicator** — 切換底部浮動指示條（預設開啟）
+- **選單列 > Number Conversion** — 切換中文數字 → 阿拉伯數字的確定性轉換（預設開啟）
 - **選單列 > Text Translation** — 啟用/停用輕按翻譯功能（需要 macOS 14+）。詳見下方。
-- **選單列 > AI Cleanup** — 透過 Apple Foundation Models 的選用後處理（需要 macOS 26+）。詳見下方。
+- **選單列 > AI Cleanup** — 透過 Apple Foundation Models 的選用後處理（需要 macOS 26+，預設關閉）。詳見下方。
 - **選單列 > Unload Speech-to-Text Model** — 釋放約 2 GB 記憶體。點擊「Reload Speech-to-Text Model」可重新載入（約 3 秒冷啟動）。
+- **選單列 > Edit Customized Dictionary** — 開啟位於 `~/Library/Application Support/HushType/dictionary.txt` 的純文字檔，用於專有名詞與行話（`source -> target`，一行一條規則）。儲存後自動熱重載。
 
 macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
 
@@ -205,35 +226,19 @@ HushType v0.4 新增了裝置端文字翻譯功能，使用 Apple Translation Fr
 1. 選取想翻譯的文字（任何 App 都可以——Safari、備忘錄、郵件等）
 2. 快速輕按 Right Option（<0.3 秒）——不要按住
 3. 半透明浮動卡片出現，顯示翻譯結果
-4. 翻譯自動複製到剪貼簿
-5. 點擊任意處或按 Escape 關閉卡片
+4. 翻譯自動複製到剪貼簿，並會在 10 秒後自動關閉。游標停留在卡片上會暫停倒數；點擊任意處或按 Escape 可立即關閉。
 
-### 選用功能：AI Cleanup（beta，macOS 26+）
+### 選用功能：AI Cleanup（opt-in beta,macOS 26+）
 
-HushType v0.3 新增了一個 opt-in 的 AI Cleanup 後處理流程，使用 Apple 裝置內建的 Foundation Models 框架清理每一段轉錄文字。啟用後，LLM 會做三件事：
+HushType **預設關閉 AI Cleanup**。啟用後，每段轉錄會經過 Apple 裝置端 Foundation Models 框架做三件事：（1） 清除句首贅字（`um`、`uh`、`嗯`、`那個`),(2) 收縮連續重複但保留強調式重複，（3） 解析明確的自我修正（`I'll send it Wednesday no actually Friday` → `I'll send it Friday`）。
 
-1. **句子層級清理** — 刪除句首贅字（`um`、`uh`、`hmm`、嗯、啊、那個、就是…）並收縮連續重複（`I I I think` → `I think`、`我我我覺得` → `我覺得`）。保留強調式重複（`對對對`、`yes yes yes`）。
-2. **自我修正解析** — 當你在句中明確更正自己（使用 `no actually`、`I mean`、不對、我是說、應該是 等標記），只保留修正後的版本。`I'll send it Wednesday no actually Friday` → `I'll send it Friday`。`我想約禮拜三不對禮拜五` → `我想約禮拜五`。
-3. **中文數字轉換** — 將中文數字轉成阿拉伯數字：`一零一大樓` → `101 大樓`、`三本書` → `3 本書`、`三點一四` → `3.14`。保留固定詞（`想一下`、`一直`、`一些`）。
+**為什麼預設關閉：** AI Cleanup 會改寫你的轉錄內容。確定性的 ITN 階層（中文數字 → 阿拉伯數字）預設開啟，因為它可逆且範圍有界；AI Cleanup 則是 opt-in，因為語意層級的改寫是更強的承諾。
 
-**需求：**
-- macOS 26（Tahoe）或更新版本
-- 系統設定中已啟用 Apple Intelligence（on-device 模型必須可用）
-- Apple Silicon Mac
+**需求：** macOS 26（Tahoe）+ 已啟用 Apple Intelligence + Apple Silicon。
 
-**如何啟用：**
-1. 選單列 → 點 HushType 圖示 → 點 **AI Cleanup**
-2. HushType 會對 on-device 模型執行一次快速 round-trip 測試。如果 Apple Intelligence 不可用，會顯示錯誤說明原因。
-3. 成功後會出現勾勾，之後的轉錄都會自動清理。
-4. 隨時可以關掉 — 選單項目會乾淨地切回只有 OpenCC 的原始流程。
+**如何啟用：** 選單列 → AI Cleanup。HushType 會對裝置端模型做一次快速 round-trip 測試；若 Apple Intelligence 不可用，會跳出清楚的錯誤訊息，開關保持關閉。成功後，之後的轉錄都會自動清理。若裝置端模型在轉錄途中出錯，HushType 會靜默回退到未清理的文字——你不會看到壞掉的結果。
 
-**失敗處理**：如果 on-device 模型在轉錄途中出錯（safety filter 觸發、暫時性問題），HushType 會靜默回退到未清理的文字。你不會看到壞掉的轉錄結果，最糟的情況只是這一次沒清理。
-
-**已知限制（beta）：**
-- 偶爾會過度修剪中文副詞（例：`我一直都在` 可能變成 `我一直在`）。
-- 自我修正解析後，尾部助詞可能殘留（`禮拜三哦不對禮拜五` → `禮拜五哦`）。
-- 中文語境下的英文數字會被轉換（`我買了 five 本書` → `我買了 5 本書`）。這是產品接受的行為。
-- 語言覆蓋主要驗證中文與英文，日文測試有限。
+**已知限制（beta）：** 偶爾會過度修剪中文副詞（`我一直都在` 可能變成 `我一直在`）；自我修正解析後尾部助詞可能殘留；中文語境下的英文數字會被轉換（`我買了 five 本書` → `我買了 5 本書`，這是產品接受的行為）；語言覆蓋主要驗證中文與英文，日文測試有限。
 
 ---
 
@@ -254,13 +259,13 @@ brew install opencc xcodegen
 ### 步驟 2：取得 Mac 的 IP 位址
 
 ```bash
-# 使用 Tailscale（隨處皆可連線）：
+# 使用 Tailscale（隨處皆可連線）:
 tailscale ip -4
-# 範例輸出：100.x.x.x
+# 範例輸出:100.x.x.x
 
-# 僅使用區域網路（同一 WiFi）：
+# 僅使用區域網路（同一 WiFi）:
 ipconfig getifaddr en0
-# 範例輸出：192.168.50.50
+# 範例輸出:192.168.50.50
 ```
 
 記下這個 IP，稍後會在 iPhone 上輸入。
@@ -281,7 +286,7 @@ python3 scripts/ios_server.py
 驗證伺服器是否運行：
 ```bash
 curl http://localhost:8000/
-# 應回傳：{"status":"ok","service":"HushType iOS Server","opencc":true}
+# 應回傳:{"status":"ok","service":"HushType iOS Server","opencc":true}
 ```
 
 ### 步驟 4：編譯並安裝 iOS App
@@ -343,7 +348,7 @@ open HushType.xcodeproj
 
 ### 設定完成後：日常使用
 
-每天只需重複步驟 3 + 6-7：
+每天只需重複步驟 3 + 6-7:
 1. 確認 Mac 上的 iOS 伺服器已啟動（選單列 → "Start iOS Server"）
 2. 在 iPhone 開啟 HushType → Start Listening
 3. 切到你的 App → 使用鍵盤
@@ -362,28 +367,32 @@ USB 線只在安裝/更新 App 時需要。日常使用完全無線。
 # 檢視所有設定
 defaults read com.felix.hushtype
 
-# 語言：nil=自動, "english", "chinese", "japanese"
+# 語言:nil=自動, "english", "chinese", "japanese"
 defaults write com.felix.hushtype hushtype.language -string "chinese"
 
-# 模型：預設 0.6B-4bit，可選 1.7B 以獲得更好品質
+# 模型:macOS 預設 "aufklarer/Qwen3-ASR-0.6B-MLX-4bit";
+# 可選 "mlx-community/Qwen3-ASR-1.7B-8bit" 以獲得更好品質。
 defaults write com.felix.hushtype hushtype.modelId -string "mlx-community/Qwen3-ASR-1.7B-8bit"
 
-# 繁體中文轉換（預設：true）
+# 繁體中文轉換（預設:true）
 defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
-# 底部浮動「Listening / Transcribing」指示條（預設：true）
+# 中文數字轉阿拉伯數字（ITN,預設:true）
+defaults write com.felix.hushtype hushtype.numberConversionEnabled -bool false
+
+# 底部浮動「Listening / Transcribing」指示條（預設:true）
 defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
 
-# 透過 Apple Foundation Models 的 AI 清理（預設：false，需要 macOS 26+）
-# 建議從選單列切換——選單會驗證 FoundationModels 可用性，
+# 透過 Apple Foundation Models 的 AI Cleanup（預設:false,需要 macOS 26+）
+# 建議從選單列切換——選單會驗證 FoundationModels 可用性,
 # 若 Apple Intelligence 未啟用會顯示清楚的錯誤訊息。
 defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
 
-# 透過 Apple Translation Framework 的文字翻譯（預設：false，需要 macOS 14+）
+# 透過 Apple Translation Framework 的文字翻譯（預設:false,需要 macOS 14+）
 defaults write com.felix.hushtype hushtype.textTranslationEnabled -bool true
 
-# 翻譯目標語言（預設：nil = 自動——中文→英文，其他→繁體中文）
-# 設定特定語言代碼可覆寫（例："en"、"zh-Hant"、"ja"）
+# 翻譯目標語言（預設:nil = 自動——中文→英文,其他→繁體中文）
+# 設定特定語言代碼可覆寫（例:"en"、"zh-Hant-TW"、"ja"）
 defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 ```
 
@@ -395,45 +404,12 @@ defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 
 ### 更改快捷鍵（macOS）
 
-編輯 `Sources/HushType/HotkeyManager.swift`：
+編輯 `Sources/HushType/HotkeyManager.swift`:
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
 
-常用鍵碼：Right Option (61)、Right Command (54)、Left Option (58)、Left Control (59)、Fn/Globe (63)。
-
----
-
-## 疑難排解
-
-**macOS：「MLX error: Failed to load the default metallib」**
-執行：`bash scripts/build_mlx_metallib.sh release`
-
-**macOS：快捷鍵沒反應**
-檢查系統設定 → 隱私權與安全性 → 輔助使用。HushType 必須在清單中且開關要打開。如果你剛授予權限但快捷鍵仍然沒反應，請退出並重新啟動 HushType — macOS 會在 process 層級快取權限檢查結果，授予權限後必須重啟才會生效。首次啟動的 onboarding 流程會自動處理這個步驟，但如果你是透過其他方式到達這個狀態，就需要手動重啟。
-
-**iOS：「App Transport Security」錯誤**
-Info.plist 中必須有 `NSAllowsArbitraryLoads = true`，且**不能**同時有 `NSExceptionDomains`——兩者衝突時 iOS 會忽略全域允許。
-
-**iOS：按麥克風沒反應**
-最常見的原因：**沒有啟用「允許完整取用」**。前往設定 > 一般 > 鍵盤 > 鍵盤 > HushType > 開啟「允許完整取用」。
-
-**iOS：鍵盤卡在「Transcribing...」**
-主 App 沒有收到指令。請確認：
-1. HushType App 正在運行且顯示「Listening」（有橘色麥克風指示燈）
-2. Mac 伺服器正在運行（`curl http://<mac-ip>:8000/`）
-3. App Group 容器可用（在 Xcode 主控台檢查 "App Group container: /path..."）
-
-**iOS：「Open HushType app first」**
-主 App 未運行或聆聽時間已到期（5 分鐘）。開啟 HushType App 並再次點擊「Start Listening」。
-
-**iOS：App 7 天後無法開啟**
-免費佈署的簽署已過期。重新接上 USB → Xcode → Cmd+R 重新安裝。設定會保留。
-
-**伺服器：Port 已被占用**
-```bash
-lsof -ti :8000 :8199 | xargs kill
-```
+常用鍵碼：Right Option （61）、Right Command （54）、Left Option （58）、Left Control （59）、Fn/Globe （63）。
 
 ---
 
@@ -443,7 +419,7 @@ lsof -ti :8000 :8199 | xargs kill
 - **設定完成後不需要網路。** 唯一需要連網的是首次啟動時下載模型（約 675 MB）。之後，App 與模型完全離線運行，零對外連線。
 - **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）外，不包含任何網路程式碼。
 - **iOS 音訊留在你的網路中。** iPhone 音訊直接傳送到你的 Mac，透過區域網路 WiFi 或 Tailscale（WireGuard 加密）。不經過任何第三方伺服器。
-- **可完全離網運作。** 在另一台電腦上預先下載模型資料夾（`~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`），複製過來即可——App 將永遠不需要網路。
+- **可完全離網運作。** 事先在另一台機器下載模型資料夾（macOS App 為 `~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/`,iOS 伺服器為 `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`）再複製過來——App 將永遠不需要網路。
 
 ---
 
@@ -454,4 +430,3 @@ lsof -ti :8000 :8199 | xargs kill
 - 聆聽時間固定為 5 分鐘（尚無介面可調整）
 - Mac 必須是 iPhone 可連線的（同一 WiFi 或 Tailscale）
 - DMG 使用臨時簽章（未經 Apple 公證）——首次啟動時 macOS Gatekeeper 會發出警告，需右鍵 → 打開來略過
-
