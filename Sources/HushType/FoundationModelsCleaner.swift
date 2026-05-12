@@ -13,7 +13,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "fm-cleaner"
 /// Responsibilities:
 ///   1. Runtime availability check (`SystemLanguageModel.default.availability`)
 ///   2. Round-trip validation on toggle-ON (`validate()`)
-///   3. Shared session caching to avoid cold-start on every cleanup call
+///   3. Prompt-aware prewarm bookkeeping without transcript reuse
 ///   4. Graceful fallback on any generation error: returns input unchanged
 ///
 /// Thread model: the whole enum is `@MainActor`. All session state lives on
@@ -27,10 +27,10 @@ enum FoundationModelsCleaner {
         case unavailable(reason: String)
     }
 
-    /// Shared session created on first successful validate/clean call and
-    /// reused across subsequent cleanups. Without caching, every cleanup
-    /// would pay a ~3.6s cold-start penalty on the first inference.
-    private static var sharedSession: LanguageModelSession?
+    /// Prompt fingerprint last passed through `prewarm()`. Cleanup itself
+    /// remains stateless: every cleanup call builds a fresh session so
+    /// transcript history cannot accumulate across dictations.
+    private static var prewarmedPromptFingerprint: Int?
 
     // MARK: - Validation
 
@@ -67,29 +67,25 @@ enum FoundationModelsCleaner {
 
     // MARK: - Session lifecycle
 
-    /// Pre-create the shared cleanup session and run a priming call. Called
-    /// after a successful `validate()` and on app launch when AI Cleanup is
-    /// already enabled. Makes the first real transcription fast.
+    /// Prewarm the active prompt. Called after a successful `validate()` and
+    /// on app launch when AI Cleanup is already enabled. Uses `prewarm()` so
+    /// warmup does not create transcript history that could leak into future
+    /// cleanups.
     static func warmup() async {
-        if sharedSession == nil {
-            sharedSession = LanguageModelSession(instructions: CleanupPrompt.systemPrompt)
-        }
-        guard let session = sharedSession else { return }
+        let prompt = CleanupPrompt.activePrompt()
+        let fingerprint = prompt.hashValue
 
-        let options = GenerationOptions(temperature: 0.0)
-        do {
-            _ = try await session.respond(to: "輸入：ok\n輸出：", options: options)
-            log.info("Warmup complete")
-        } catch {
-            log.warning("Warmup failed (non-fatal): \(error.localizedDescription, privacy: .public)")
-        }
+        let session = LanguageModelSession(instructions: prompt)
+        session.prewarm()
+        prewarmedPromptFingerprint = fingerprint
+        log.info("Warmup complete")
     }
 
-    /// Tear down the shared session. Called when the user toggles AI Cleanup
-    /// off so we don't keep model state around needlessly.
+    /// Clear prompt-level warmup bookkeeping. Called when the user toggles
+    /// AI Cleanup off so the next enable starts from a known state.
     static func releaseSession() {
-        sharedSession = nil
-        log.info("Shared session released")
+        prewarmedPromptFingerprint = nil
+        log.info("AI Cleanup warmup state released")
     }
 
     // MARK: - Cleanup
@@ -99,20 +95,33 @@ enum FoundationModelsCleaner {
     /// timeout, runtime error) returns the input unchanged — callers don't
     /// need to handle errors.
     static func clean(_ text: String) async -> String {
-        if sharedSession == nil {
-            sharedSession = LanguageModelSession(instructions: CleanupPrompt.systemPrompt)
-        }
-        guard let session = sharedSession else { return text }
+        return await cleanWithTiming(text).text
+    }
+
+    static func cleanWithTiming(_ text: String) async -> (text: String, initMs: Int, respondMs: Int, state: AICleaner.CleanupState, transcriptEntries: Int) {
+        let prompt = CleanupPrompt.activePrompt()
+        let fingerprint = prompt.hashValue
+        let state: AICleaner.CleanupState = (prewarmedPromptFingerprint == fingerprint) ? .prewarmed : .fresh
+
+        let tInit = CFAbsoluteTimeGetCurrent()
+        let session = LanguageModelSession(instructions: prompt)
+        let initMs = Int((CFAbsoluteTimeGetCurrent() - tInit) * 1000)
 
         let options = GenerationOptions(temperature: 0.0)
         let userPrompt = "輸入：\(text)\n輸出："
 
+        let tRespond = CFAbsoluteTimeGetCurrent()
         do {
             let response = try await session.respond(to: userPrompt, options: options)
-            return stripPrefix(response.content)
+            let respondMs = Int((CFAbsoluteTimeGetCurrent() - tRespond) * 1000)
+            let cleaned = stripPrefix(response.content)
+            let transcriptEntries = response.transcriptEntries.count
+            log.debug("Cleanup response fingerprint=\(fingerprint, privacy: .public) state=\(state.rawValue, privacy: .public) transcript_entries=\(transcriptEntries, privacy: .public)")
+            return (cleaned, initMs, respondMs, state, transcriptEntries)
         } catch {
+            let respondMs = Int((CFAbsoluteTimeGetCurrent() - tRespond) * 1000)
             log.warning("Cleanup failed, returning original text: \(error.localizedDescription, privacy: .public)")
-            return text
+            return (text, initMs, respondMs, state, 0)
         }
     }
 

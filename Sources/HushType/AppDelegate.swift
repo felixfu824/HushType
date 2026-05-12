@@ -100,6 +100,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     self?.statusBar.setState(.idle)
                     log.info("HushType ready")
                 }
+
+                if AppConfig.shared.aiCleanupEnabled {
+                    if #available(macOS 26.0, *) {
+                        Task { @MainActor in
+                            log.info("Scheduling AI Cleanup prewarm after launch")
+                            await FoundationModelsCleaner.warmup()
+                        }
+                    }
+                }
             } catch {
                 log.error("Failed to load model: \(error.localizedDescription)")
                 await MainActor.run {
@@ -109,15 +118,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
 
-        // Intentionally NOT warming up FoundationModels at launch, even if
-        // aiCleanupEnabled is persistently true. Early warmup contended with
-        // the Qwen3-ASR model load on the main actor during the sensitive
-        // post-onboarding relaunch window and caused the loading state to
-        // stall. FoundationModels is now only touched in two places:
-        //   1. When the user toggles AI Cleanup on via the menu (validate + warm)
-        //   2. During an actual transcription call (AICleaner.clean)
-        // Tradeoff: after a quit/relaunch with AI Cleanup persisted on, the
-        // first transcription pays a ~3 second cold-start penalty. Acceptable.
+        // FoundationModels prewarm is deferred until after Qwen3-ASR finishes
+        // loading and the app reaches `.idle`. This keeps the sensitive
+        // post-onboarding launch path predictable while still letting users
+        // benefit from `prewarm()` on relaunch when AI Cleanup is already on.
     }
 
     func applicationWillTerminate(_ notification: Notification) {

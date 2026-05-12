@@ -53,8 +53,8 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
             language: language
         )
 
-        let elapsed = CFAbsoluteTimeGetCurrent() - startTime
-        log.info("Raw transcription (\(String(format: "%.2f", elapsed))s): \(rawText)")
+        let asrElapsed = CFAbsoluteTimeGetCurrent() - startTime
+        log.info("Raw transcription (\(String(format: "%.2f", asrElapsed))s): \(rawText)")
 
         // Apply Traditional Chinese conversion
         let convertedText = ChineseConverter.convert(rawText)
@@ -65,17 +65,26 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
         // Apply AI Cleanup if enabled. No-op when disabled, when running on
         // macOS < 26, or when FoundationModels errors — in all those cases
         // the input is returned unchanged.
-        let cleanedText = await AICleaner.clean(convertedText)
-        if cleanedText != convertedText {
-            log.info("After AI cleanup: \(cleanedText)")
+        let cleanup = await AICleaner.cleanWithTiming(convertedText)
+        if cleanup.text != convertedText {
+            log.info("After AI cleanup: \(cleanup.text)")
         }
 
         // Apply user customized dictionary as the final post-processing step.
         // No-op if the dictionary file doesn't exist or is empty.
-        let dictText = DictionaryReplacer.apply(cleanedText)
-        if dictText != cleanedText {
+        let dictText = DictionaryReplacer.apply(cleanup.text)
+        if dictText != cleanup.text {
             log.info("After dictionary: \(dictText)")
         }
+
+        let totalElapsed = CFAbsoluteTimeGetCurrent() - startTime
+        let inCh = rawText.count
+        let outCh = dictText.count
+        let asrMs = Int(asrElapsed * 1000)
+        let totalMs = Int(totalElapsed * 1000)
+        let stateLabel = cleanup.state.rawValue
+
+        log.info("timings asr=\(asrMs, privacy: .public)ms cleanup_init=\(cleanup.initMs, privacy: .public)ms cleanup_respond=\(cleanup.respondMs, privacy: .public)ms cleanup_state=\(stateLabel, privacy: .public) cleanup_entries=\(cleanup.transcriptEntries, privacy: .public) total=\(totalMs, privacy: .public)ms in=\(inCh, privacy: .public)ch out=\(outCh, privacy: .public)ch")
 
         return dictText
     }

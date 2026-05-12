@@ -122,5 +122,14 @@ final class AppConfig {
             .appendingPathComponent("dictionary.txt")
     }
 
+    static var cleanupPromptOverrideURL: URL {
+        FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        .appendingPathComponent("HushType", isDirectory: true)
+        .appendingPathComponent("cleanup_prompt.txt")
+    }
+
     private init() {}
 }

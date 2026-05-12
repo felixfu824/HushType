@@ -105,4 +105,10 @@ Examples:
 輸入：I have five books on my desk
 輸出：I have five books on my desk
 """
+
+    /// Returns the override prompt if `cleanup_prompt.txt` exists and is
+    /// non-empty, otherwise the baked-in Path C prompt above.
+    static func activePrompt() -> String {
+        CleanupPromptOverride.currentPrompt() ?? systemPrompt
+    }
 }
