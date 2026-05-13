@@ -110,6 +110,15 @@ final class AppConfig {
         }
     }
 
+    /// Whether live caption mode is currently active. SESSION-ONLY — NOT
+    /// persisted to UserDefaults. Always `false` on launch. Live caption is
+    /// a privacy-sensitive always-on-mic mode; auto-resuming after relaunch
+    /// would surprise the user and violates the explicit-enter/exit mental
+    /// model. Flips of this flag MUST go through `LiveCaptionManager.start()`
+    /// / `stop()` — never direct mutation — so the manager's `onStateChanged`
+    /// callback drives the menu checkmark.
+    var liveCaptionEnabled: Bool = false
+
     /// Target language for translation. nil = auto (smart direction).
     var translateTargetLanguage: String? {
         get { defaults.string(forKey: Keys.translateTargetLanguage) }

@@ -22,6 +22,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var floatingOverlayMenuItem: NSMenuItem!
     private var numberConversionMenuItem: NSMenuItem!
     private var aiCleanupMenuItem: NSMenuItem!
+    private var liveCaptionMenuItem: NSMenuItem!
+    private var liveCaptionSubtitleItem: NSMenuItem!
     private var textTranslationMenuItem: NSMenuItem!
     private var translationSubtitleItem: NSMenuItem!
     private var translateToItem: NSMenuItem!
@@ -35,6 +37,16 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     var onQuit: (() -> Void)?
     var onUnloadModel: (() -> Void)?
     var onReloadModel: (() -> Void)?
+    /// Fires when the user clicks the Live Caption menu item. AppDelegate
+    /// wires this to start/stop the manager (and beeps if the manager isn't
+    /// constructed yet because the ASR model is still loading).
+    var onLiveCaptionToggle: (() -> Void)?
+
+    /// Tracked here so the click handlers for the two mutually-exclusive
+    /// modes (iOS Server, Live Caption) can show an NSAlert explaining why
+    /// the click was rejected instead of silently disabling the menu item.
+    private var iosServerActive: Bool = false
+    private var liveCaptionActive: Bool = false
 
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -124,6 +136,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         iosServerManager.onStatusChanged = { [weak self] running in
             DispatchQueue.main.async {
                 self?.iosServerMenuItem.title = running ? "Stop iOS Server (port 8000)" : "Start iOS Server"
+                self?.setIOSServerActive(running)
             }
         }
 
@@ -205,6 +218,29 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         ]
         aiSubtitle.attributedTitle = NSAttributedString(string: "    via Apple Foundation Models", attributes: aiSubAttrs)
         menu.addItem(aiSubtitle)
+
+        // Live Caption toggle (session-only, default off)
+        liveCaptionMenuItem = NSMenuItem(
+            title: "Live Caption",
+            action: #selector(toggleLiveCaption),
+            keyEquivalent: ""
+        )
+        liveCaptionMenuItem.target = self
+        updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
+        menu.addItem(liveCaptionMenuItem)
+
+        // Live Caption subtitle
+        liveCaptionSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        liveCaptionSubtitleItem.isEnabled = false
+        let liveSubAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        liveCaptionSubtitleItem.attributedTitle = NSAttributedString(
+            string: "    Always-on captions for meetings & calls",
+            attributes: liveSubAttrs
+        )
+        menu.addItem(liveCaptionSubtitleItem)
 
         // Text Translation toggle
         textTranslationMenuItem = NSMenuItem(
@@ -309,9 +345,59 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func toggleIOSServer() {
         if iosServerManager.isRunning {
             iosServerManager.stop()
-        } else {
-            iosServerManager.start(port: 8000)
+            return
         }
+        // Mutex: can't start iOS server while live caption is active.
+        if liveCaptionActive {
+            showMutexAlert(
+                title: "Stop Live Caption first",
+                message: "Live Caption is running. Stop it before starting the iOS Server — they share GPU memory."
+            )
+            return
+        }
+        iosServerManager.start(port: 8000)
+    }
+
+    // MARK: - Live Caption
+
+    @objc private func toggleLiveCaption() {
+        // Toggling OFF: always allowed.
+        if liveCaptionActive {
+            onLiveCaptionToggle?()
+            return
+        }
+        // Mutex: can't start live caption while iOS server is active.
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveCaptionToggle?()
+    }
+
+    /// Called from `LiveCaptionManager.onStateChanged`. Updates the menu
+    /// checkmark and tracks state for the iOS Server mutex check.
+    func setLiveCaptionActive(_ active: Bool) {
+        liveCaptionActive = active
+        guard let item = liveCaptionMenuItem else { return }
+        updateToggleAppearance(item, title: "Live Caption", checked: active)
+    }
+
+    /// Called from the existing `iosServerManager.onStatusChanged` closure.
+    /// Tracks state for the Live Caption mutex check.
+    func setIOSServerActive(_ active: Bool) {
+        iosServerActive = active
+    }
+
+    private func showMutexAlert(title: String, message: String) {
+        let alert = NSAlert()
+        alert.messageText = title
+        alert.informativeText = message
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
     }
 
     // MARK: - Floating Overlay

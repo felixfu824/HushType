@@ -25,6 +25,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var audioCapture: AudioCaptureService!
     private var transcriptionEngine: Qwen3TranscriptionEngine!
     private var translationManager: TranslationManager!
+    private var liveCaptionManager: LiveCaptionManager?
+
+    /// Wall-clock at which the user pressed Right ⌥. Set on press, read on
+    /// release for tap-vs-hold disambiguation (<0.3s = tap → translate).
+    /// Used only when live caption is active and we gate the dictation path.
+    private var liveCaptionGatePressTimestamp: Date?
 
     // Floating overlay (created lazily on first use)
     private let overlayState = OverlayStateModel()
@@ -75,6 +81,32 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.reloadModel()
         }
 
+        // Wire Live Caption toggle. The manager is constructed AFTER the ASR
+        // model finishes loading (see Task.detached block below); during that
+        // ~3s window the menu item beeps instead of acting.
+        statusBar.onLiveCaptionToggle = { [weak self] in
+            guard let self else { return }
+            guard let manager = self.liveCaptionManager else {
+                NSSound.beep()
+                return
+            }
+            if manager.isActive {
+                manager.stop()
+            } else {
+                Task { @MainActor in
+                    do {
+                        try await manager.start()
+                    } catch {
+                        log.error("LiveCaption start failed: \(error.localizedDescription, privacy: .public)")
+                    }
+                }
+            }
+        }
+
+        #if DEBUG
+        _ = FillerFilter.runSelfTests()
+        #endif
+
         // Onboarding: if accessibility permission is missing, show our friendly
         // flow BEFORE we ever call CGEvent.tapCreate. If onboarding is needed,
         // it blocks via NSAlert and either quits or relaunches the app — in
@@ -96,8 +128,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     }
                 }
                 await MainActor.run {
-                    self?.state = .idle
-                    self?.statusBar.setState(.idle)
+                    guard let self else { return }
+                    self.state = .idle
+                    self.statusBar.setState(.idle)
+                    // Construct the live caption manager now that the ASR model
+                    // is loaded. Force-unwrap is safe — we just succeeded.
+                    if let model = self.transcriptionEngine.loadedModel {
+                        let manager = LiveCaptionManager(
+                            asrModel: model,
+                            captureService: self.audioCapture
+                        )
+                        manager.onStateChanged = { [weak self] active in
+                            self?.statusBar.setLiveCaptionActive(active)
+                        }
+                        self.liveCaptionManager = manager
+                    }
                     log.info("HushType ready")
                 }
 
@@ -152,6 +197,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Hotkey Handlers
 
     private func handleHotkeyPress() {
+        // Gate dictation if live caption is active (§7.1 mutual exclusion).
+        // Record press timestamp for tap/hold disambiguation on release; do
+        // NOT start recording. The listening pill is intentionally not shown.
+        if AppConfig.shared.liveCaptionEnabled {
+            liveCaptionGatePressTimestamp = Date()
+            return
+        }
+
         // If model is unloaded and user holds Right ⌥, auto-reload
         if state == .unloaded {
             print("[HushType] Model unloaded — auto-reloading...")
@@ -177,6 +230,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleHotkeyRelease() {
+        // Live caption gate: if active, never went into .recording on press.
+        // Decide tap-vs-hold using the press timestamp and either translate
+        // (tap + translation enabled) or flash the panel header (hold).
+        if AppConfig.shared.liveCaptionEnabled {
+            let elapsed = liveCaptionGatePressTimestamp.map { Date().timeIntervalSince($0) } ?? 0
+            liveCaptionGatePressTimestamp = nil
+            if elapsed < 0.3 && AppConfig.shared.textTranslationEnabled {
+                handleTranslation()
+            } else {
+                Task { @MainActor [weak self] in
+                    self?.liveCaptionManager?.flashGatedMessage()
+                }
+            }
+            return
+        }
+
         guard state == .recording else {
             print("[HushType] Ignoring release — state is \(state)")
             return
@@ -347,6 +416,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // §7 order: stop live caption first (drops its Qwen3ASRModel reference
+        // + clears the menu checkmark via onStateChanged), THEN unload the
+        // engine, THEN show the modal alert. `unloadModel` is always invoked
+        // from the menu action, which runs on the main thread, so the
+        // MainActor.assumeIsolated bridge is sound.
+        var wasLiveCaptionActive = false
+        if let manager = liveCaptionManager {
+            MainActor.assumeIsolated {
+                if manager.isActive {
+                    wasLiveCaptionActive = true
+                    manager.stop()
+                    self.liveCaptionManager = nil
+                }
+            }
+        }
+
         transcriptionEngine.unload()
 
         // Also release AI Cleanup session if active
@@ -362,10 +447,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.setState(.unloaded)
         print("[HushType] Model unloaded — memory freed")
 
-        // Show confirmation alert with cold-start warning
+        // Show confirmation alert with cold-start warning. If live caption
+        // was active, the message changes to direct the user accordingly.
         let alert = NSAlert()
-        alert.messageText = "Model Unloaded"
-        alert.informativeText = "The speech recognition model has been removed from memory.\n\nVoice input will require a cold start (~3 seconds) the next time you press Right ⌥."
+        if wasLiveCaptionActive {
+            alert.messageText = "Live Caption Stopped"
+            alert.informativeText = "The speech-to-text model was unloaded. Re-enable Live Caption from the menu after reloading the model."
+        } else {
+            alert.messageText = "Model Unloaded"
+            alert.informativeText = "The speech recognition model has been removed from memory.\n\nVoice input will require a cold start (~3 seconds) the next time you press Right ⌥."
+        }
         alert.alertStyle = .informational
         alert.icon = NSImage(systemSymbolName: "memorychip", accessibilityDescription: nil)
         alert.addButton(withTitle: "OK")
@@ -390,8 +481,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     }
                 }
                 await MainActor.run {
-                    self?.state = .idle
-                    self?.statusBar.setState(.idle)
+                    guard let self else { return }
+                    self.state = .idle
+                    self.statusBar.setState(.idle)
+                    if let model = self.transcriptionEngine.loadedModel {
+                        if self.liveCaptionManager == nil {
+                            let manager = LiveCaptionManager(
+                                asrModel: model,
+                                captureService: self.audioCapture
+                            )
+                            manager.onStateChanged = { [weak self] active in
+                                self?.statusBar.setLiveCaptionActive(active)
+                            }
+                            self.liveCaptionManager = manager
+                        }
+                    }
                     log.info("Model reloaded")
                 }
             } catch {

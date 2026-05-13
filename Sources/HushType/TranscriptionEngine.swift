@@ -19,6 +19,11 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
 
     var isLoaded: Bool { model != nil }
 
+    /// Read-only handle for the live-caption pipeline. Returns the loaded
+    /// model instance so `LiveCaptionManager` can call `transcribe()` directly
+    /// without going through the dictation post-processing chain.
+    var loadedModel: Qwen3ASRModel? { model }
+
     func load(progressHandler: ((Double, String) -> Void)? = nil) async throws {
         let modelId = AppConfig.shared.modelId
         log.info("Loading model: \(modelId)")

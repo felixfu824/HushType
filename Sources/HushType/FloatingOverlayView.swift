@@ -126,21 +126,3 @@ private struct AudioBarsView: View {
     }
 }
 
-// MARK: - NSVisualEffectView wrapper for translucent background
-
-private struct VisualEffectBlur: NSViewRepresentable {
-    let material: NSVisualEffectView.Material
-
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = .behindWindow
-        view.state = .active
-        view.isEmphasized = true
-        return view
-    }
-
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-    }
-}
