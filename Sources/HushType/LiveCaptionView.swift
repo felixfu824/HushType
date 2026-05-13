@@ -29,14 +29,14 @@ struct LiveCaptionView: View {
     var body: some View {
         VStack(spacing: 0) {
             header
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 8)
 
             Divider().opacity(0.2)
 
             body_
-                .padding(.horizontal, 24)
-                .padding(.vertical, 16)
+                .padding(.horizontal, 18)
+                .padding(.vertical, 10)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .background(VisualEffectBlur(material: .hudWindow))
@@ -106,7 +106,7 @@ struct LiveCaptionView: View {
             HStack {
                 Spacer()
                 Text("Listening…")
-                    .font(.system(size: 16, weight: .regular))
+                    .font(.system(size: 13, weight: .regular))
                     .foregroundStyle(.tertiary)
                 Spacer()
             }
@@ -114,11 +114,12 @@ struct LiveCaptionView: View {
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 8) {
+                    LazyVStack(alignment: .leading, spacing: 4) {
                         ForEach(Array(model.segments.enumerated()), id: \.element.id) { (index, entry) in
                             let isCurrent = (index == model.segments.count - 1)
                             Text(entry.text)
-                                .font(.system(size: isCurrent ? 22 : 16, weight: .regular))
+                                .font(.system(size: isCurrent ? 17 : 13, weight: .regular))
+                                .lineSpacing(1)
                                 .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)

@@ -2,7 +2,6 @@ import Foundation
 import AudioCommon
 import SpeechVAD
 import Qwen3ASR
-import MLX
 import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaptionWorker")
@@ -124,8 +123,6 @@ actor LiveCaptionWorker {
         sliceBaseSample += samplesBuffer.count
         samplesBuffer.removeAll(keepingCapacity: true)
         currentSpeechStartTime = Date()  // re-anchor for next force-split window
-
-        MLX.Memory.clearCache()
     }
 
     /// Wall-clock time of the currently-active speech segment, if any. Used
@@ -175,10 +172,5 @@ actor LiveCaptionWorker {
         samplesBuffer.removeFirst(endIdx)
         sliceBaseSample += endIdx
         currentSpeechStartTime = nil
-
-        // Release MLX's buffer pool after every transcribe. Without this the
-        // pool retains decoder KV-cache buffers between calls and unified
-        // memory can climb hundreds of MB across a meeting.
-        MLX.Memory.clearCache()
     }
 }

@@ -14,7 +14,7 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     private let viewModel: LiveCaptionViewModel
     private let onStop: () -> Void
 
-    private static let defaultSize = NSSize(width: 700, height: 180)
+    private static let defaultSize = NSSize(width: 1000, height: 160)
     private static let panelFrameKey = "hushtype.liveCaption.panelFrame"
 
     private var saveFrameWork: DispatchWorkItem?
@@ -45,8 +45,8 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
         isMovableByWindowBackground = true
         ignoresMouseEvents = false
 
-        minSize = NSSize(width: 400, height: 100)
-        maxSize = NSSize(width: 1200, height: 400)
+        minSize = NSSize(width: 500, height: 90)
+        maxSize = NSSize(width: 1600, height: 500)
 
         let hostingView = NSHostingView(
             rootView: LiveCaptionView(model: viewModel, onStop: onStop)
@@ -68,11 +68,17 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
         let defaults = UserDefaults.standard
         if let saved = defaults.string(forKey: Self.panelFrameKey), !saved.isEmpty {
             let restored = NSRectFromString(saved)
-            if restored.size.width > 0 && restored.size.height > 0 && isOnAnyScreen(restored) {
+            // Reject saved frames smaller than the current minSize so a width
+            // change in this build doesn't strand the user on a too-narrow
+            // pre-existing frame.
+            let fitsBounds = restored.size.width >= minSize.width
+                && restored.size.height >= minSize.height
+            if restored.size.width > 0 && restored.size.height > 0
+                && fitsBounds && isOnAnyScreen(restored) {
                 setFrame(restored, display: false)
                 return
             } else {
-                log.warning("LiveCaption: stored panel frame off-screen, snapping back to default")
+                log.warning("LiveCaption: stored panel frame off-screen or below minSize, snapping back to default")
             }
         }
 

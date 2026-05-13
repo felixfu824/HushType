@@ -76,11 +76,14 @@ final class LiveCaptionManager {
         log.info("LiveCaption start requested")
 
         // Bound MLX's buffer pool so a continuous-speech meeting can't push
-        // unified memory off a cliff. 128 MB is generous for the
-        // Qwen3-ASR-0.6B 4-bit decoder's transient buffers while still
-        // keeping a hard ceiling on cumulative growth. The cache limit is
-        // global to the process; setting it on every start() is idempotent.
-        MLX.Memory.cacheLimit = 128 * 1024 * 1024
+        // unified memory off a cliff, but leave enough headroom that the
+        // pool can serve back-to-back transcribes from cache. 128MB was too
+        // tight — the decoder's transient buffers thrashed against the
+        // limit and every transcribe paid a cold-allocation tax. 1GB is
+        // generous on Apple Silicon (system unified memory is 8–96GB) yet
+        // still bounds cumulative growth across a long meeting. The limit
+        // is global; setting it on every start() is idempotent.
+        MLX.Memory.cacheLimit = 1024 * 1024 * 1024
 
         // Pre-flight: mic permission (mirror OnboardingManager.alert pattern).
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
