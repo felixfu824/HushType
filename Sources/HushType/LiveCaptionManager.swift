@@ -49,18 +49,12 @@ final class LiveCaptionManager {
     /// lock today, so we serialize.
     private let postProcessingQueue = DispatchQueue(label: "hushtype.liveCaption.postProcessing")
 
-    /// Spec §4 originally proposed 4096 to avoid truncation on dense single-
-    /// utterance transcripts. In practice, the Qwen3-ASR-0.6B decoder
-    /// allocates a KV cache proportional to `maxTokens`, and the cache is
-    /// retained across calls by MLX's GPU buffer pool. At 4096 tokens we
-    /// observed unified-memory pressure severe enough to hang the machine
-    /// during a continuous-speech meeting — far before Test 3's 15-min budget.
-    /// 448 is speech-swift's default, validated stable in Test 3, and EOS
-    /// terminates well before the limit for normal utterances.
-    private static let maxTokens: Int = 448
-
     /// Rolling segments buffer cap — §9.b "last 50 segments".
     private static let segmentBufferCap: Int = 50
+
+    /// Tuning knobs loaded from `~/Library/Application Support/HushType/live_caption.json`
+    /// at every `start()` so the user can edit and toggle to apply.
+    private var tuning: LiveCaptionTuning = .init()
 
     init(asrModel: Qwen3ASRModel, captureService: AudioCaptureService) {
         self.asrModel = asrModel
@@ -75,15 +69,16 @@ final class LiveCaptionManager {
         guard !isActive else { return }
         log.info("LiveCaption start requested")
 
+        // Reload tuning at every start so editing the JSON file and toggling
+        // off → on is the simple feedback loop for tweaks.
+        tuning = LiveCaptionTuning.load()
+        log.info("Tuning: maxTokens=\(self.tuning.maxTokens, privacy: .public) cacheLimitMB=\(self.tuning.mlxCacheLimitMB, privacy: .public) vadOnset=\(self.tuning.vadOnset, privacy: .public) backpressure=\(self.tuning.backpressureMaxPending, privacy: .public)")
+
         // Bound MLX's buffer pool so a continuous-speech meeting can't push
-        // unified memory off a cliff, but leave enough headroom that the
-        // pool can serve back-to-back transcribes from cache. 128MB was too
-        // tight — the decoder's transient buffers thrashed against the
-        // limit and every transcribe paid a cold-allocation tax. 1GB is
-        // generous on Apple Silicon (system unified memory is 8–96GB) yet
-        // still bounds cumulative growth across a long meeting. The limit
-        // is global; setting it on every start() is idempotent.
-        MLX.Memory.cacheLimit = 1024 * 1024 * 1024
+        // unified memory off a cliff. Live caption uses the loaded tuning;
+        // 1024 MB is the default. The cache limit is global, so setting it
+        // on every start() is idempotent.
+        MLX.Memory.cacheLimit = tuning.mlxCacheLimitMB * 1024 * 1024
 
         // Pre-flight: mic permission (mirror OnboardingManager.alert pattern).
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -118,6 +113,7 @@ final class LiveCaptionManager {
         if panel == nil {
             panel = LiveCaptionWindow(
                 viewModel: vm,
+                tuning: tuning,
                 onStop: { [weak self] in
                     Task { @MainActor in self?.stop() }
                 }
@@ -153,7 +149,7 @@ final class LiveCaptionManager {
             vadModel: vadModel,
             segmentContinuation: cont,
             language: language,
-            maxTokens: Self.maxTokens
+            tuning: tuning
         )
         self.worker = worker
 
@@ -172,7 +168,7 @@ final class LiveCaptionManager {
         // Tasks that each retain a sample buffer. Plain NSLock-guarded
         // counters — IO thread mutates rarely and contention is negligible.
         let pendingFrames = BackpressureCounter()
-        let maxPendingFrames = 50      // ~2s at ~43ms/buffer
+        let maxPendingFrames = tuning.backpressureMaxPending
         let source = MicAudioSource(service: captureService)
         source.onSamples = { [weak worker] samples in
             // Fires on CoreAudio IO thread.
@@ -338,7 +334,7 @@ final class LiveCaptionManager {
         guard let worker else { return }
         guard let startedAt = await worker.activeSpeechStartedAt() else { return }
         let elapsed = Date().timeIntervalSince(startedAt)
-        if elapsed >= 10.0 {
+        if elapsed >= tuning.forceSplitSeconds {
             log.info("Force-split firing after \(elapsed, privacy: .public)s of in-flight speech")
             await worker.forceSplit()
         }

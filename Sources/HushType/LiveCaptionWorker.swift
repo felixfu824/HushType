@@ -4,6 +4,21 @@ import SpeechVAD
 import Qwen3ASR
 import os
 
+extension VADConfig {
+    /// Build a config from Silero defaults but with onset/offset/duration
+    /// overrides from the user-editable `LiveCaptionTuning` file.
+    static func fromTuning(_ t: LiveCaptionTuning) -> VADConfig {
+        VADConfig(
+            onset: t.vadOnset,
+            offset: t.vadOffset,
+            minSpeechDuration: t.vadMinSpeechSeconds,
+            minSilenceDuration: t.vadMinSilenceSeconds,
+            windowDuration: VADConfig.sileroDefault.windowDuration,
+            stepRatio: VADConfig.sileroDefault.stepRatio
+        )
+    }
+}
+
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaptionWorker")
 
 /// Result of an ASR transcription emitted by `LiveCaptionWorker`.
@@ -43,13 +58,16 @@ actor LiveCaptionWorker {
         vadModel: SileroVADModel,
         segmentContinuation: AsyncStream<LiveCaptionSegment>.Continuation,
         language: String?,
-        maxTokens: Int
+        tuning: LiveCaptionTuning
     ) {
         self.asrModel = asrModel
-        self.vadProcessor = StreamingVADProcessor(model: vadModel, config: .sileroDefault)
+        self.vadProcessor = StreamingVADProcessor(
+            model: vadModel,
+            config: .fromTuning(tuning)
+        )
         self.segmentContinuation = segmentContinuation
         self.language = language
-        self.maxTokens = maxTokens
+        self.maxTokens = tuning.maxTokens
     }
 
     /// Feed a buffer of 16kHz mono samples. Appends to the rolling buffer,

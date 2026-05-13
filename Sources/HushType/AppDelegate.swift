@@ -417,6 +417,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        // Snapshot resident memory at each step so a user reporting "memory
+        // didn't release" can post the numbers and we can see exactly which
+        // step held the bytes. Output appears in Console.app /
+        // `log show --predicate 'subsystem == "com.felix.hushtype"'`.
+        func snapshot(_ tag: String) {
+            let resident = MemoryUtils.residentMemoryMB()
+            let mlxActive = MLX.Memory.activeMemory / (1024 * 1024)
+            let mlxCache  = MLX.Memory.cacheMemory  / (1024 * 1024)
+            log.info("unload step=\(tag, privacy: .public) resident=\(resident, privacy: .public)MB mlxActive=\(mlxActive, privacy: .public)MB mlxCache=\(mlxCache, privacy: .public)MB")
+        }
+        snapshot("0_begin")
+
         // §7 order: stop live caption first (drops its Qwen3ASRModel reference
         // + clears the menu checkmark via onStateChanged), THEN unload the
         // engine, THEN show the modal alert. `unloadModel` is always invoked
@@ -438,8 +450,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
             self.liveCaptionManager = nil
         }
+        snapshot("1_manager_nil")
 
         transcriptionEngine.unload()
+        snapshot("2_engine_unload")
 
         // Also release AI Cleanup session if active
         if AppConfig.shared.aiCleanupEnabled {
@@ -456,6 +470,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // not currently in flight. Without this, hundreds of MB can linger
         // even after the model itself releases.
         MLX.Memory.clearCache()
+        snapshot("3_clearCache")
 
         state = .unloaded
         statusBar.setState(.unloaded)

@@ -14,17 +14,26 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     private let viewModel: LiveCaptionViewModel
     private let onStop: () -> Void
 
-    private static let defaultSize = NSSize(width: 1000, height: 160)
+    /// Loaded from `LiveCaptionTuning.panelDefault*` once per panel creation
+    /// so the JSON file can override the bundled default.
+    private let defaultSize: NSSize
     private static let panelFrameKey = "hushtype.liveCaption.panelFrame"
 
     private var saveFrameWork: DispatchWorkItem?
 
-    init(viewModel: LiveCaptionViewModel, onStop: @escaping () -> Void) {
+    init(viewModel: LiveCaptionViewModel, tuning: LiveCaptionTuning, onStop: @escaping () -> Void) {
         self.viewModel = viewModel
         self.onStop = onStop
+        self.defaultSize = NSSize(
+            width: tuning.panelDefaultWidth,
+            height: tuning.panelDefaultHeight
+        )
 
         super.init(
-            contentRect: NSRect(origin: .zero, size: Self.defaultSize),
+            contentRect: NSRect(origin: .zero, size: NSSize(
+                width: tuning.panelDefaultWidth,
+                height: tuning.panelDefaultHeight
+            )),
             styleMask: [.borderless, .nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
@@ -84,7 +93,7 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
 
         guard let screen = NSScreen.main else { return }
         let visible = screen.visibleFrame
-        let size = Self.defaultSize
+        let size = defaultSize
         let x = visible.midX - size.width / 2
         let y = visible.minY + 80
         setFrame(NSRect(origin: CGPoint(x: x, y: y), size: size), display: false)

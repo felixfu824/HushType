@@ -242,6 +242,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
         menu.addItem(liveCaptionSubtitleItem)
 
+        // Edit Live Caption Settings (opens the JSON tunables file in the
+        // user's default editor — mirrors the Edit Customized Dictionary
+        // pattern. Edits take effect on the next Live Caption toggle on.)
+        let liveCaptionSettingsItem = NSMenuItem(
+            title: "    Edit Live Caption Settings",
+            action: #selector(editLiveCaptionSettings),
+            keyEquivalent: ""
+        )
+        liveCaptionSettingsItem.target = self
+        let settingsAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        liveCaptionSettingsItem.attributedTitle = NSAttributedString(
+            string: "    Edit Live Caption Settings",
+            attributes: settingsAttrs
+        )
+        menu.addItem(liveCaptionSettingsItem)
+
         // Text Translation toggle
         textTranslationMenuItem = NSMenuItem(
             title: "Text Translation",
@@ -389,6 +408,24 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Tracks state for the Live Caption mutex check.
     func setIOSServerActive(_ active: Bool) {
         iosServerActive = active
+    }
+
+    @objc private func editLiveCaptionSettings() {
+        // Mirror the Edit Customized Dictionary flow: create the template on
+        // first use so the user sees the documented schema immediately, then
+        // open the file in their default text editor.
+        LiveCaptionTuning.createTemplateIfMissing()
+
+        let url = LiveCaptionTuning.fileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            showAlert(
+                title: "Could not open Live Caption settings",
+                message: "Failed to create the settings file at:\n\(url.path)"
+            )
+            return
+        }
+        NSWorkspace.shared.open(url)
+        log.info("Opened live_caption.json in default editor")
     }
 
     private func showMutexAlert(title: String, message: String) {

@@ -115,6 +115,12 @@ struct LiveCaptionView: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 4) {
+                        // ForEach identity is the entry UUID — stable across appends.
+                        // Do NOT also attach .id("current") on the last view; switching
+                        // a Text's .id between "current" and its UUID on each append
+                        // confuses SwiftUI's diff and causes the white-styled position
+                        // to render stale content. The scroll anchor below is a
+                        // separate invisible view so identity stays clean.
                         ForEach(Array(model.segments.enumerated()), id: \.element.id) { (index, entry) in
                             let isCurrent = (index == model.segments.count - 1)
                             Text(entry.text)
@@ -123,14 +129,16 @@ struct LiveCaptionView: View {
                                 .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
                                 .textSelection(.enabled)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .id(isCurrent ? "current" : entry.id.uuidString)
                         }
+                        Color.clear
+                            .frame(height: 1)
+                            .id("liveCaptionScrollAnchor")
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .onChange(of: model.segments.count) { _, _ in
                     withAnimation(.easeOut(duration: 0.18)) {
-                        proxy.scrollTo("current", anchor: .bottom)
+                        proxy.scrollTo("liveCaptionScrollAnchor", anchor: .bottom)
                     }
                 }
             }
