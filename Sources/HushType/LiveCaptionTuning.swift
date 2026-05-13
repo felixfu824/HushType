@@ -44,8 +44,14 @@ struct LiveCaptionTuning: Codable, Sendable {
 
     /// Default panel size. Persisted overrides from window drag/resize take
     /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame`.
-    var panelDefaultWidth: Double = 1000
+    var panelDefaultWidth: Double = 1300
     var panelDefaultHeight: Double = 160
+
+    /// One-shot signal: set to `true` in the JSON file to force the next
+    /// Live Caption start to ignore any persisted frame and re-apply
+    /// `panelDefaultWidth`/`panelDefaultHeight`. The app clears the persisted
+    /// frame and resets this flag back to `false` after applying.
+    var resetPanelOnNextStart: Bool = false
 
     // MARK: - File location
 
@@ -77,11 +83,32 @@ struct LiveCaptionTuning: Codable, Sendable {
             let stripped = try stripCommentKeys(from: data)
             let decoded = try JSONDecoder().decode(LiveCaptionTuning.self, from: stripped)
             log.info("Loaded live caption tuning from \(url.path, privacy: .public)")
+            // Forward-migrate: if a newer build added knobs that aren't in
+            // the user's file yet, write them in (with defaults) so the user
+            // can edit them in place without losing their other tweaks.
+            migrateMissingKeysIfNeeded(url: url, decoded: decoded)
             return decoded
         } catch {
             log.error("Failed to parse live_caption.json (\(error.localizedDescription, privacy: .public)) — falling back to defaults")
             return LiveCaptionTuning()
         }
+    }
+
+    /// Flip `resetPanelOnNextStart` back to `false` after the manager honored
+    /// the one-shot reset. Preserves `_comment_*` keys and other user edits
+    /// by doing a partial in-place rewrite.
+    static func clearResetFlag() {
+        let url = fileURL
+        guard
+            let data = try? Data(contentsOf: url),
+            var obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return }
+        obj["resetPanelOnNextStart"] = false
+        guard let out = try? JSONSerialization.data(
+            withJSONObject: obj,
+            options: [.prettyPrinted, .sortedKeys]
+        ) else { return }
+        try? out.write(to: url, options: .atomic)
     }
 
     /// Creates the JSON template with inline `_comment_*` annotations on
@@ -100,6 +127,37 @@ struct LiveCaptionTuning: Codable, Sendable {
     }
 
     // MARK: - Internals
+
+    private static func migrateMissingKeysIfNeeded(url: URL, decoded: LiveCaptionTuning) {
+        guard
+            let raw = try? Data(contentsOf: url),
+            var obj = try? JSONSerialization.jsonObject(with: raw) as? [String: Any]
+        else { return }
+
+        // Re-encode the decoded struct to a plain dictionary; whatever keys
+        // it has are the canonical set we know about. Anything missing from
+        // the user's file gets the default value written in. Existing user
+        // values (and any `_comment_*` keys) are preserved untouched.
+        guard
+            let encoded = try? JSONEncoder().encode(decoded),
+            let defaults = try? JSONSerialization.jsonObject(with: encoded) as? [String: Any]
+        else { return }
+
+        var dirty = false
+        for (key, value) in defaults {
+            if obj[key] == nil {
+                obj[key] = value
+                dirty = true
+            }
+        }
+        guard dirty else { return }
+        guard let out = try? JSONSerialization.data(
+            withJSONObject: obj,
+            options: [.prettyPrinted, .sortedKeys]
+        ) else { return }
+        try? out.write(to: url, options: .atomic)
+        log.info("Migrated live_caption.json — added new default keys")
+    }
 
     private static func stripCommentKeys(from data: Data) throws -> Data {
         guard var obj = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
@@ -137,8 +195,11 @@ struct LiveCaptionTuning: Codable, Sendable {
           "backpressureMaxPending": 50,
 
           "_comment_panel": "Default panel size (pixels). Window drag / resize values persist separately and override this on next launch.",
-          "panelDefaultWidth": 1000,
-          "panelDefaultHeight": 160
+          "panelDefaultWidth": 1300,
+          "panelDefaultHeight": 160,
+
+          "_comment_resetPanelOnNextStart": "Set to true to discard any persisted frame and re-apply panelDefaultWidth/Height the next time Live Caption is toggled on. The app flips it back to false after applying.",
+          "resetPanelOnNextStart": false
         }
         """
     }

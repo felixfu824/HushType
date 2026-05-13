@@ -74,6 +74,18 @@ final class LiveCaptionManager {
         tuning = LiveCaptionTuning.load()
         log.info("Tuning: maxTokens=\(self.tuning.maxTokens, privacy: .public) cacheLimitMB=\(self.tuning.mlxCacheLimitMB, privacy: .public) vadOnset=\(self.tuning.vadOnset, privacy: .public) backpressure=\(self.tuning.backpressureMaxPending, privacy: .public)")
 
+        // Honor a one-shot "reset panel" request from the tuning file: clear
+        // the persisted frame, drop the cached panel so it gets rebuilt with
+        // the fresh default size, and flip the flag back to false so this
+        // only fires once per opt-in.
+        if tuning.resetPanelOnNextStart {
+            UserDefaults.standard.removeObject(forKey: "hushtype.liveCaption.panelFrame")
+            panel?.close()
+            panel = nil
+            LiveCaptionTuning.clearResetFlag()
+            log.info("Panel frame reset on user request")
+        }
+
         // Bound MLX's buffer pool so a continuous-speech meeting can't push
         // unified memory off a cliff. Live caption uses the loaded tuning;
         // 1024 MB is the default. The cache limit is global, so setting it
