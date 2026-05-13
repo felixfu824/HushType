@@ -3,6 +3,7 @@ import AppKit
 import AVFoundation
 import SpeechVAD
 import Qwen3ASR
+import MLX
 import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaption")
@@ -48,10 +49,15 @@ final class LiveCaptionManager {
     /// lock today, so we serialize.
     private let postProcessingQueue = DispatchQueue(label: "hushtype.liveCaption.postProcessing")
 
-    /// Per §11/§4: live caption uses a more generous output budget than
-    /// dictation's 448-token default to avoid truncation on dense single-
-    /// utterance transcripts.
-    private static let maxTokens: Int = 4096
+    /// Spec §4 originally proposed 4096 to avoid truncation on dense single-
+    /// utterance transcripts. In practice, the Qwen3-ASR-0.6B decoder
+    /// allocates a KV cache proportional to `maxTokens`, and the cache is
+    /// retained across calls by MLX's GPU buffer pool. At 4096 tokens we
+    /// observed unified-memory pressure severe enough to hang the machine
+    /// during a continuous-speech meeting — far before Test 3's 15-min budget.
+    /// 448 is speech-swift's default, validated stable in Test 3, and EOS
+    /// terminates well before the limit for normal utterances.
+    private static let maxTokens: Int = 448
 
     /// Rolling segments buffer cap — §9.b "last 50 segments".
     private static let segmentBufferCap: Int = 50
@@ -68,6 +74,13 @@ final class LiveCaptionManager {
     func start() async throws {
         guard !isActive else { return }
         log.info("LiveCaption start requested")
+
+        // Bound MLX's buffer pool so a continuous-speech meeting can't push
+        // unified memory off a cliff. 128 MB is generous for the
+        // Qwen3-ASR-0.6B 4-bit decoder's transient buffers while still
+        // keeping a hard ceiling on cumulative growth. The cache limit is
+        // global to the process; setting it on every start() is idempotent.
+        MLX.Memory.cacheLimit = 128 * 1024 * 1024
 
         // Pre-flight: mic permission (mirror OnboardingManager.alert pattern).
         switch AVCaptureDevice.authorizationStatus(for: .audio) {
@@ -150,12 +163,28 @@ final class LiveCaptionManager {
             }
         }
 
-        // Audio source — mic for v1.
+        // Audio source — mic for v1. Backpressure: if the worker actor is
+        // more than ~2s of audio behind (e.g. during a slow first-cold
+        // transcribe), drop incoming frames instead of unboundedly queueing
+        // Tasks that each retain a sample buffer. Plain NSLock-guarded
+        // counters — IO thread mutates rarely and contention is negligible.
+        let pendingFrames = BackpressureCounter()
+        let maxPendingFrames = 50      // ~2s at ~43ms/buffer
         let source = MicAudioSource(service: captureService)
         source.onSamples = { [weak worker] samples in
             // Fires on CoreAudio IO thread.
             guard let worker else { return }
-            Task { await worker.feed(samples) }
+            if !pendingFrames.tryReserve(maxPending: maxPendingFrames) {
+                let dropped = pendingFrames.incrementDropped()
+                if dropped & 31 == 1 {
+                    log.warning("Live caption falling behind — dropped \(dropped, privacy: .public) audio buffers")
+                }
+                return
+            }
+            Task {
+                await worker.feed(samples)
+                pendingFrames.release()
+            }
         }
         source.onError = { [weak self] error in
             Task { @MainActor in
@@ -330,5 +359,39 @@ final class LiveCaptionManager {
         alert.informativeText = "Live Caption could not start: \(error.localizedDescription)"
         alert.addButton(withTitle: "OK")
         alert.runModal()
+    }
+}
+
+/// Lock-guarded counter shared between the audio IO thread (which reserves
+/// slots on `onSamples`) and the worker-task completion (which releases). The
+/// lock contention is negligible because each operation is a few instructions.
+final class BackpressureCounter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var inFlight: Int = 0
+    private var dropped: Int = 0
+
+    /// Atomically increments `inFlight` if it is under `maxPending`. Returns
+    /// `true` if a slot was reserved (caller should `release()` later),
+    /// `false` if backpressure should kick in (caller should drop the frame).
+    func tryReserve(maxPending: Int) -> Bool {
+        lock.lock()
+        defer { lock.unlock() }
+        if inFlight >= maxPending { return false }
+        inFlight += 1
+        return true
+    }
+
+    func release() {
+        lock.lock()
+        if inFlight > 0 { inFlight -= 1 }
+        lock.unlock()
+    }
+
+    @discardableResult
+    func incrementDropped() -> Int {
+        lock.lock()
+        defer { lock.unlock() }
+        dropped += 1
+        return dropped
     }
 }

@@ -2,6 +2,7 @@ import Foundation
 import AudioCommon
 import SpeechVAD
 import Qwen3ASR
+import MLX
 import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaptionWorker")
@@ -65,6 +66,39 @@ actor LiveCaptionWorker {
                 emitSegment(segment)
             }
         }
+        trimBufferIfNeeded()
+    }
+
+    /// Bound the rolling sample buffer so a long silent stretch (with no
+    /// `.speechEnded` events to drain it) doesn't grow without bound.
+    ///
+    /// - When VAD is in confirmed silence (`currentSpeechStartTime == nil`),
+    ///   trim to a small lookback window. The lookback must cover the
+    ///   `pendingSpeech` window (`minSpeechDuration = 0.25s` at sileroDefault)
+    ///   so a not-yet-confirmed speech start retains its leading audio.
+    ///   `LookbackSeconds = 2` is safely larger than that.
+    /// - When VAD is mid-speech (`currentSpeechStartTime != nil`), tolerate
+    ///   growth up to the §10 force-split watermark (2× the 10s window) so
+    ///   the force-split timer can still grab the full active utterance.
+    ///   If the buffer crosses the hard cap before force-split fires, we
+    ///   force-split immediately to drain.
+    private func trimBufferIfNeeded() {
+        let lookbackSamples = 2 * Self.sampleRate           // 2 s
+        let hardCapSamples  = 32 * Self.sampleRate          // 32 s
+
+        if currentSpeechStartTime == nil {
+            if samplesBuffer.count > lookbackSamples * 2 {
+                let drop = samplesBuffer.count - lookbackSamples
+                samplesBuffer.removeFirst(drop)
+                sliceBaseSample += drop
+            }
+            return
+        }
+
+        if samplesBuffer.count > hardCapSamples {
+            log.warning("samplesBuffer exceeded hard cap (\(self.samplesBuffer.count, privacy: .public) samples) — force-splitting")
+            forceSplit()
+        }
     }
 
     /// Force-split a long monologue: §10 algorithm. Transcribe whatever's in
@@ -90,6 +124,8 @@ actor LiveCaptionWorker {
         sliceBaseSample += samplesBuffer.count
         samplesBuffer.removeAll(keepingCapacity: true)
         currentSpeechStartTime = Date()  // re-anchor for next force-split window
+
+        MLX.Memory.clearCache()
     }
 
     /// Wall-clock time of the currently-active speech segment, if any. Used
@@ -139,5 +175,10 @@ actor LiveCaptionWorker {
         samplesBuffer.removeFirst(endIdx)
         sliceBaseSample += endIdx
         currentSpeechStartTime = nil
+
+        // Release MLX's buffer pool after every transcribe. Without this the
+        // pool retains decoder KV-cache buffers between calls and unified
+        // memory can climb hundreds of MB across a meeting.
+        MLX.Memory.clearCache()
     }
 }
