@@ -242,6 +242,18 @@ final class LiveCaptionManager {
         }
         worker = nil
 
+        // Drop the SileroVAD model — it's ~30MB of MLX-backed weights, and
+        // keeping it cached "for fast restart" makes the user think Live
+        // Caption is leaking memory after they toggle it off. Reload on the
+        // next start() is ~1s (file is already cached on disk; the cost is
+        // re-initializing MLX weights, not re-downloading).
+        vadModel = nil
+
+        // Flush any MLX intermediate buffers retained from the session's
+        // transcribes. Without this the unified-memory footprint sticks at
+        // the session peak even though the model and worker are gone.
+        MLX.Memory.clearCache()
+
         hidePanel()
 
         isActive = false

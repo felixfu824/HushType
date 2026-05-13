@@ -1,4 +1,5 @@
 import AppKit
+import MLX
 import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "app")
@@ -421,15 +422,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // engine, THEN show the modal alert. `unloadModel` is always invoked
         // from the menu action, which runs on the main thread, so the
         // MainActor.assumeIsolated bridge is sound.
+        //
+        // Critical: the manager holds a STRONG `let asrModel` reference, so
+        // unloading without dropping the manager leaves the ASR model
+        // retained even though the engine's own pointer is nil'd. We MUST
+        // nil out `liveCaptionManager` unconditionally — not only when it's
+        // currently active. Reload reconstructs it via `loadedModel`.
         var wasLiveCaptionActive = false
         if let manager = liveCaptionManager {
             MainActor.assumeIsolated {
                 if manager.isActive {
                     wasLiveCaptionActive = true
                     manager.stop()
-                    self.liveCaptionManager = nil
                 }
             }
+            self.liveCaptionManager = nil
         }
 
         transcriptionEngine.unload()
@@ -442,6 +449,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
+
+        // Drop any MLX buffers retained from prior transcribes — the model
+        // pointers are now gone, so cached intermediate tensors are dead
+        // weight. clearCache() walks MLX's buffer pool and frees everything
+        // not currently in flight. Without this, hundreds of MB can linger
+        // even after the model itself releases.
+        MLX.Memory.clearCache()
 
         state = .unloaded
         statusBar.setState(.unloaded)
