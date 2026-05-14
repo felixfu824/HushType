@@ -6,10 +6,11 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "hotkey")
 final class HotkeyManager {
     var onPress: (() -> Void)?
     var onRelease: (() -> Void)?
-    /// Fires on Right ⌘ + Shift + / (i.e., the "?" key). Single keyDown
-    /// event — caller should treat it as a toggle (start if off, stop if
-    /// running). Suppressed from propagation so it doesn't open the Help
-    /// menu in the focused app.
+    /// Fires on Right ⌘ + /. Single keyDown event — caller should treat it
+    /// as a toggle (start if off, stop if running). Suppressed from
+    /// propagation so the focused editor doesn't see it as a "toggle line
+    /// comment" — note we only fire on the *right* command bit, so left
+    /// ⌘ + / continues to work for editor comment-toggle as expected.
     var onLiveCaptionToggle: (() -> Void)?
 
     private var eventTap: CFMachPort?
@@ -80,11 +81,12 @@ final class HotkeyManager {
             return Unmanaged.passUnretained(event)
         }
 
-        // Live Caption toggle: Right ⌘ + Shift + / (= "?"). Single discrete
-        // keyDown event. We require the Right command bit specifically and
-        // forbid the Left command bit so users who comment-toggle with
-        // left-⌘+/ in an editor aren't disrupted, and global "?" Help menu
-        // shortcuts on left-⌘ also continue to work.
+        // Live Caption toggle: Right ⌘ + /. Single discrete keyDown. We
+        // require the Right command bit specifically and forbid the Left
+        // command bit so users who comment-toggle with left ⌘ + / in an
+        // editor aren't disrupted. Shift is explicitly disallowed too so
+        // "left ⌘ + ?" Help-menu and any "right ⌘ + ?" combos route
+        // normally — only the bare "right ⌘ + /" combo triggers LC toggle.
         if type == .keyDown {
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
             if keyCode == Self.slashKeyCode {
@@ -92,10 +94,10 @@ final class HotkeyManager {
                 let rightCmd = (flagsRaw & Self.rightCommandFlagBit) != 0
                 let leftCmd = (flagsRaw & Self.leftCommandFlagBit) != 0
                 let shift = event.flags.contains(.maskShift)
-                if rightCmd && !leftCmd && shift {
-                    log.debug("Live Caption hotkey (Right ⌘ + Shift + /)")
+                if rightCmd && !leftCmd && !shift {
+                    log.debug("Live Caption hotkey (Right ⌘ + /)")
                     onLiveCaptionToggle?()
-                    return nil // suppress — don't open Help menu in focused app
+                    return nil // suppress — don't let editors interpret as comment-toggle
                 }
             }
         }
