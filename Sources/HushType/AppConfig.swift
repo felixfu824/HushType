@@ -119,6 +119,14 @@ final class AppConfig {
     /// callback drives the menu checkmark.
     var liveCaptionEnabled: Bool = false
 
+    /// True only when Live Caption is active AND the source is `.mic`. Used
+    /// by `AppDelegate.handleHotkeyPress` (running on the CGEvent tap thread,
+    /// outside the main actor) to decide whether to gate dictation — system-
+    /// audio Live Caption doesn't compete with the mic, so dictation works
+    /// concurrently. Maintained by `LiveCaptionManager` alongside
+    /// `liveCaptionEnabled`.
+    var liveCaptionUsesMicSource: Bool = false
+
     /// Target language for translation. nil = auto (smart direction).
     var translateTargetLanguage: String? {
         get { defaults.string(forKey: Keys.translateTargetLanguage) }

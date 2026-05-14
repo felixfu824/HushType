@@ -8,6 +8,17 @@ import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaption")
 
+/// Which audio source feeds Live Caption.
+///
+/// `.mic` is the v1 default (`MicAudioSource` → `AVAudioEngine.inputNode`).
+/// `.system(bundleID)` captures a single running app's audio via ScreenCaptureKit
+/// (`SystemAudioSource`). The two sources are mutually exclusive — switching
+/// while active goes through `LiveCaptionManager.switchSource(to:)`.
+enum AudioSourceKind: Equatable, Sendable {
+    case mic
+    case system(bundleID: String)
+}
+
 /// Top-level coordinator for the live caption pipeline.
 ///
 /// Lifecycle: constructed by `AppDelegate` AFTER `Qwen3TranscriptionEngine.load()`
@@ -25,14 +36,16 @@ final class LiveCaptionManager {
     private let captureService: AudioCaptureService
 
     /// Called whenever the active state flips. AppDelegate forwards to
-    /// `statusBarController.setLiveCaptionActive(_:)` so the menu reflects
-    /// programmatic state changes (e.g. auto-stop on model unload).
-    var onStateChanged: ((Bool) -> Void)?
+    /// `statusBarController.setLiveCaptionActiveSource(_:)` so the submenu
+    /// reflects programmatic state changes (e.g. auto-stop on model unload,
+    /// auto-switch from one source to another). `nil` means Live Caption is off.
+    var onStateChanged: ((AudioSourceKind?) -> Void)?
 
     // MARK: - State
 
     private(set) var isActive: Bool = false
     private(set) var isPanelVisible: Bool = false
+    private(set) var currentSource: AudioSourceKind?
 
     private var vadModel: SileroVADModel?
     private var worker: LiveCaptionWorker?
@@ -63,11 +76,17 @@ final class LiveCaptionManager {
 
     // MARK: - Public API
 
-    /// Turn live caption on. Idempotent. Throws if mic permission is denied
-    /// or AVAudioEngine fails to start.
+    /// Turn live caption on with the default source (mic). Back-compat wrapper
+    /// around `start(source:)`. Idempotent.
     func start() async throws {
+        try await start(source: .mic)
+    }
+
+    /// Turn live caption on with the requested audio source. Idempotent.
+    /// Throws if permission is denied or the source fails to start.
+    func start(source requestedSource: AudioSourceKind) async throws {
         guard !isActive else { return }
-        log.info("LiveCaption start requested")
+        log.info("LiveCaption start requested (source=\(String(describing: requestedSource), privacy: .public))")
 
         // Reload tuning at every start so editing the JSON file and toggling
         // off → on is the simple feedback loop for tweaks.
@@ -92,27 +111,37 @@ final class LiveCaptionManager {
         // on every start() is idempotent.
         MLX.Memory.cacheLimit = tuning.mlxCacheLimitMB * 1024 * 1024
 
-        // Pre-flight: mic permission (mirror OnboardingManager.alert pattern).
-        switch AVCaptureDevice.authorizationStatus(for: .audio) {
-        case .authorized:
-            break
-        case .notDetermined:
-            // Trigger the system prompt; await synchronously via continuation.
-            let granted = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
-                AVCaptureDevice.requestAccess(for: .audio) { granted in
-                    cont.resume(returning: granted)
+        // Pre-flight: per-source permission check.
+        switch requestedSource {
+        case .mic:
+            // Mic permission (mirror OnboardingManager.alert pattern).
+            switch AVCaptureDevice.authorizationStatus(for: .audio) {
+            case .authorized:
+                break
+            case .notDetermined:
+                let granted = await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+                    AVCaptureDevice.requestAccess(for: .audio) { granted in
+                        cont.resume(returning: granted)
+                    }
                 }
-            }
-            if !granted {
+                if !granted {
+                    showMicDeniedAlert()
+                    throw NSError(domain: "LiveCaption", code: 10,
+                                  userInfo: [NSLocalizedDescriptionKey: "Microphone permission denied"])
+                }
+            case .denied, .restricted:
                 showMicDeniedAlert()
-                throw NSError(domain: "LiveCaption", code: 10,
+                throw NSError(domain: "LiveCaption", code: 11,
                               userInfo: [NSLocalizedDescriptionKey: "Microphone permission denied"])
+            @unknown default:
+                break
             }
-        case .denied, .restricted:
-            showMicDeniedAlert()
-            throw NSError(domain: "LiveCaption", code: 11,
-                          userInfo: [NSLocalizedDescriptionKey: "Microphone permission denied"])
-        @unknown default:
+        case .system:
+            // Screen-recording permission is gated upstream by
+            // `SystemAudioPermissionFlow.ensurePermission(then:)` (called from
+            // AppDelegate before this manager is invoked). We trust that gate
+            // here — `SCStream.startCapture()` below will throw if the gate
+            // was bypassed, surfacing the error via the regular error path.
             break
         }
 
@@ -131,8 +160,10 @@ final class LiveCaptionManager {
                 }
             )
         }
-        panel?.show()
-        isPanelVisible = true
+        if !isPanelVisible {
+            panel?.show()
+            isPanelVisible = true
+        }
 
         // Show loading state if we have to fetch SileroVAD on first run.
         if vadModel == nil {
@@ -174,16 +205,25 @@ final class LiveCaptionManager {
             }
         }
 
-        // Audio source — mic for v1. Backpressure: if the worker actor is
+        // Audio source — mic or system. Backpressure: if the worker actor is
         // more than ~2s of audio behind (e.g. during a slow first-cold
         // transcribe), drop incoming frames instead of unboundedly queueing
         // Tasks that each retain a sample buffer. Plain NSLock-guarded
         // counters — IO thread mutates rarely and contention is negligible.
         let pendingFrames = BackpressureCounter()
         let maxPendingFrames = tuning.backpressureMaxPending
-        let source = MicAudioSource(service: captureService)
+
+        let source: any AudioSource
+        switch requestedSource {
+        case .mic:
+            source = MicAudioSource(service: captureService)
+        case .system(let bundleID):
+            source = SystemAudioSource(bundleID: bundleID)
+        }
+
         source.onSamples = { [weak worker] samples in
-            // Fires on CoreAudio IO thread.
+            // Fires on the IO thread that produced the samples
+            // (CoreAudio for mic, SCStream sample queue for system).
             guard let worker else { return }
             if !pendingFrames.tryReserve(maxPending: maxPendingFrames) {
                 let dropped = pendingFrames.incrementDropped()
@@ -201,16 +241,22 @@ final class LiveCaptionManager {
             Task { @MainActor in
                 guard let self else { return }
                 log.error("AudioSource error: \(error.localizedDescription, privacy: .public)")
+                let wasSystem: Bool
+                if case .system = self.currentSource { wasSystem = true } else { wasSystem = false }
                 self.stop()
-                let alert = NSAlert()
-                alert.messageText = "Microphone unavailable"
-                alert.informativeText = "Live Caption was stopped: \(error.localizedDescription)"
-                alert.addButton(withTitle: "OK")
-                alert.runModal()
+                if wasSystem {
+                    SystemAudioPermissionFlow.showRevocationAlert()
+                } else {
+                    let alert = NSAlert()
+                    alert.messageText = "Microphone unavailable"
+                    alert.informativeText = "Live Caption was stopped: \(error.localizedDescription)"
+                    alert.addButton(withTitle: "OK")
+                    alert.runModal()
+                }
             }
         }
         do {
-            try source.start()
+            try await source.start()
             audioSource = source
         } catch {
             log.error("AudioSource start failed: \(error.localizedDescription, privacy: .public)")
@@ -219,15 +265,61 @@ final class LiveCaptionManager {
             self.worker = nil
             cont.finish()
             hidePanel()
+            // Surface the error so AppDelegate can show a clearer message —
+            // particularly for system-audio failures like "app not running".
+            if case .system = requestedSource {
+                showSystemAudioStartFailedAlert(error)
+            }
             throw error
         }
 
         startForceSplitTimer()
 
         isActive = true
+        currentSource = requestedSource
         AppConfig.shared.liveCaptionEnabled = true
-        onStateChanged?(true)
+        AppConfig.shared.liveCaptionUsesMicSource = (requestedSource == .mic)
+        onStateChanged?(requestedSource)
         log.info("LiveCaption started")
+    }
+
+    /// Stop the current source and start a different one without tearing down
+    /// the panel or reloading the VAD model. Caller is responsible for
+    /// arranging permission gating (mic check / `SystemAudioPermissionFlow`)
+    /// before invoking this — same contract as `start(source:)`.
+    func switchSource(to newSource: AudioSourceKind) async throws {
+        guard isActive else {
+            try await start(source: newSource)
+            return
+        }
+        guard currentSource != newSource else { return }
+        log.info("LiveCaption switching source \(String(describing: self.currentSource), privacy: .public) → \(String(describing: newSource), privacy: .public)")
+
+        // Tear down the source-specific bits but keep the panel visible.
+        forceSplitTimer?.cancel()
+        forceSplitTimer = nil
+
+        audioSource?.stop()
+        audioSource = nil
+
+        // Reset the worker so VAD/ASR state doesn't bleed across the swap.
+        if let worker {
+            await worker.reset()
+        }
+        // Worker can keep going; we'll re-attach to a fresh AsyncStream below.
+        segmentStreamTask?.cancel()
+        segmentStreamTask = nil
+
+        // Re-run the start path's "wire audio source onto a fresh worker +
+        // continuation" sub-block. Simpler to mark the manager inactive and
+        // call start(source:) which will skip the panel rebuild because panel
+        // is already non-nil and visible.
+        isActive = false
+        currentSource = nil
+        // Note: we do NOT clear viewModel.segments — the panel keeps showing
+        // prior captions across the swap.
+
+        try await start(source: newSource)
     }
 
     /// Turn live caption off. Idempotent. Safe to call from any thread via
@@ -268,8 +360,10 @@ final class LiveCaptionManager {
         hidePanel()
 
         isActive = false
+        currentSource = nil
         AppConfig.shared.liveCaptionEnabled = false
-        onStateChanged?(false)
+        AppConfig.shared.liveCaptionUsesMicSource = false
+        onStateChanged?(nil)
         log.info("LiveCaption stopped, source released")
     }
 
@@ -380,6 +474,14 @@ final class LiveCaptionManager {
         let alert = NSAlert()
         alert.messageText = "Failed to load voice-activity model"
         alert.informativeText = "Live Caption could not start: \(error.localizedDescription)"
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+
+    private func showSystemAudioStartFailedAlert(_ error: Error) {
+        let alert = NSAlert()
+        alert.messageText = "Couldn't Start System Audio Capture"
+        alert.informativeText = error.localizedDescription
         alert.addButton(withTitle: "OK")
         alert.runModal()
     }

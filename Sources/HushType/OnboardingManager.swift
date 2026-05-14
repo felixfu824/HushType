@@ -171,9 +171,14 @@ enum OnboardingManager {
     // MARK: - Relaunch helper
 
     /// Spawn a fresh instance of HushType.app via `open -n` and terminate the
-    /// current process. The new process gets a fresh accessibility permission
-    /// check from the kernel and should now see the user's grant.
-    private static func relaunchAndQuit() {
+    /// current process. The new process gets a fresh accessibility / screen-
+    /// recording permission check from the kernel and should now see the user's
+    /// grant.
+    ///
+    /// `internal` (not `private`) so `SystemAudioPermissionFlow` can reuse this
+    /// helper for Screen Recording grants — that permission has the same per-
+    /// process cache barrier as Accessibility.
+    static func relaunchAndQuit() {
         let bundleURL = Bundle.main.bundleURL
         log.info("Relaunching HushType from \(bundleURL.path, privacy: .public)")
 

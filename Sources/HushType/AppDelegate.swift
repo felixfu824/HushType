@@ -82,26 +82,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.reloadModel()
         }
 
-        // Wire Live Caption toggle. The manager is constructed AFTER the ASR
+        // Wire Live Caption submenu. The manager is constructed AFTER the ASR
         // model finishes loading (see Task.detached block below); during that
-        // ~3s window the menu item beeps instead of acting.
-        statusBar.onLiveCaptionToggle = { [weak self] in
-            guard let self else { return }
-            guard let manager = self.liveCaptionManager else {
-                NSSound.beep()
-                return
-            }
-            if manager.isActive {
-                manager.stop()
-            } else {
-                Task { @MainActor in
-                    do {
-                        try await manager.start()
-                    } catch {
-                        log.error("LiveCaption start failed: \(error.localizedDescription, privacy: .public)")
-                    }
-                }
-            }
+        // ~3s window the menu items beep instead of acting.
+        statusBar.onLiveCaptionStartMic = { [weak self] in
+            self?.startOrSwitchLiveCaption(to: .mic)
+        }
+        statusBar.onLiveCaptionStartSystem = { [weak self] in
+            self?.startSystemAudioLiveCaption(forcePicker: false)
+        }
+        statusBar.onLiveCaptionChangeSystemSource = { [weak self] in
+            self?.startSystemAudioLiveCaption(forcePicker: true)
+        }
+        statusBar.onLiveCaptionStop = { [weak self] in
+            self?.liveCaptionManager?.stop()
         }
 
         #if DEBUG
@@ -139,8 +133,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                             asrModel: model,
                             captureService: self.audioCapture
                         )
-                        manager.onStateChanged = { [weak self] active in
-                            self?.statusBar.setLiveCaptionActive(active)
+                        manager.onStateChanged = { [weak self] source in
+                            self?.statusBar.setLiveCaptionActiveSource(source)
                         }
                         self.liveCaptionManager = manager
                     }
@@ -198,10 +192,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - Hotkey Handlers
 
     private func handleHotkeyPress() {
-        // Gate dictation if live caption is active (§7.1 mutual exclusion).
-        // Record press timestamp for tap/hold disambiguation on release; do
-        // NOT start recording. The listening pill is intentionally not shown.
-        if AppConfig.shared.liveCaptionEnabled {
+        // Gate dictation only when Live Caption is active on the MIC source —
+        // both would compete for the mic. System-audio Live Caption uses
+        // ScreenCaptureKit (different audio path) so dictation works
+        // concurrently. Record press timestamp for tap/hold disambiguation
+        // on release; do NOT start recording. Pill stays hidden.
+        if AppConfig.shared.liveCaptionUsesMicSource {
             liveCaptionGatePressTimestamp = Date()
             return
         }
@@ -231,10 +227,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleHotkeyRelease() {
-        // Live caption gate: if active, never went into .recording on press.
-        // Decide tap-vs-hold using the press timestamp and either translate
-        // (tap + translation enabled) or flash the panel header (hold).
-        if AppConfig.shared.liveCaptionEnabled {
+        // Live caption mic-source gate: if mic-source Live Caption is active,
+        // we never went into .recording on press. Decide tap-vs-hold using the
+        // press timestamp and either translate (tap + translation enabled) or
+        // flash the panel header (hold). System-audio Live Caption does NOT
+        // gate dictation, so it never enters this branch.
+        if AppConfig.shared.liveCaptionUsesMicSource {
             let elapsed = liveCaptionGatePressTimestamp.map { Date().timeIntervalSince($0) } ?? 0
             liveCaptionGatePressTimestamp = nil
             if elapsed < 0.3 && AppConfig.shared.textTranslationEnabled {
@@ -409,6 +407,55 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    // MARK: - Live Caption helpers
+
+    /// Start Live Caption with the requested source, or switch sources in
+    /// place if Live Caption is already active. Caller is responsible for
+    /// permission gating (mic check for `.mic`, `SystemAudioPermissionFlow`
+    /// for `.system`) before invoking this.
+    @MainActor
+    private func startOrSwitchLiveCaption(to source: AudioSourceKind) {
+        guard let manager = self.liveCaptionManager else {
+            NSSound.beep()
+            return
+        }
+        Task { @MainActor in
+            do {
+                if manager.isActive {
+                    try await manager.switchSource(to: source)
+                } else {
+                    try await manager.start(source: source)
+                }
+            } catch {
+                log.error("LiveCaption start/switch failed: \(error.localizedDescription, privacy: .public)")
+            }
+        }
+    }
+
+    /// Resolve the system-audio bundle ID (from tuning file or via picker)
+    /// then start/switch Live Caption to that source. Gates on permission via
+    /// `SystemAudioPermissionFlow` first.
+    @MainActor
+    private func startSystemAudioLiveCaption(forcePicker: Bool) {
+        guard self.liveCaptionManager != nil else {
+            NSSound.beep()
+            return
+        }
+        SystemAudioPermissionFlow.ensurePermission { [weak self] in
+            // Permission cleared. Resolve bundle ID — saved or via picker.
+            guard let self else { return }
+            let tuning = LiveCaptionTuning.load()
+            if !forcePicker && !tuning.systemAudioBundleID.isEmpty {
+                self.startOrSwitchLiveCaption(to: .system(bundleID: tuning.systemAudioBundleID))
+                return
+            }
+            SystemAudioPicker.present { [weak self] bundleID in
+                guard let self, let bundleID else { return }
+                self.startOrSwitchLiveCaption(to: .system(bundleID: bundleID))
+            }
+        }
+    }
+
     // MARK: - Model Unload / Reload
 
     private func unloadModel() {
@@ -519,8 +566,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                 asrModel: model,
                                 captureService: self.audioCapture
                             )
-                            manager.onStateChanged = { [weak self] active in
-                                self?.statusBar.setLiveCaptionActive(active)
+                            manager.onStateChanged = { [weak self] source in
+                                self?.statusBar.setLiveCaptionActiveSource(source)
                             }
                             self.liveCaptionManager = manager
                         }

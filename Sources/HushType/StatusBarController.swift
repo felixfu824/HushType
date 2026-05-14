@@ -24,6 +24,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var aiCleanupMenuItem: NSMenuItem!
     private var liveCaptionMenuItem: NSMenuItem!
     private var liveCaptionSubtitleItem: NSMenuItem!
+    private var liveCaptionMicItem: NSMenuItem!
+    private var liveCaptionSystemItem: NSMenuItem!
+    private var liveCaptionChangeSourceItem: NSMenuItem!
     private var textTranslationMenuItem: NSMenuItem!
     private var translationSubtitleItem: NSMenuItem!
     private var translateToItem: NSMenuItem!
@@ -40,13 +43,38 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Fires when the user clicks the Live Caption menu item. AppDelegate
     /// wires this to start/stop the manager (and beeps if the manager isn't
     /// constructed yet because the ASR model is still loading).
+    /// Legacy back-compat: only fires for stop-while-active. New start paths
+    /// use `onLiveCaptionStartMic` and `onLiveCaptionStartSystem` so the menu
+    /// can offer two distinct entry points.
     var onLiveCaptionToggle: (() -> Void)?
+
+    /// Fired when the user clicks `From Microphone` while Live Caption is OFF
+    /// or active on a different source. AppDelegate routes to
+    /// `LiveCaptionManager.start(source: .mic)` or `.switchSource(to: .mic)`.
+    var onLiveCaptionStartMic: (() -> Void)?
+
+    /// Fired when the user clicks `From System Audio…`. AppDelegate routes
+    /// through `SystemAudioPermissionFlow` + picker → `start(source:)` or
+    /// `switchSource(to:)`.
+    var onLiveCaptionStartSystem: (() -> Void)?
+
+    /// Fired when the user clicks `Change System Audio Source…` to force the
+    /// picker even though a `systemAudioBundleID` is already saved.
+    var onLiveCaptionChangeSystemSource: (() -> Void)?
+
+    /// Fired when the user clicks the currently-active source (stops Live
+    /// Caption). Decoupled from `onLiveCaptionToggle` so AppDelegate doesn't
+    /// have to inspect manager state to know which path the user took.
+    var onLiveCaptionStop: (() -> Void)?
 
     /// Tracked here so the click handlers for the two mutually-exclusive
     /// modes (iOS Server, Live Caption) can show an NSAlert explaining why
     /// the click was rejected instead of silently disabling the menu item.
     private var iosServerActive: Bool = false
     private var liveCaptionActive: Bool = false
+    /// Tracks which source is active so radio-item checkmarks can be applied
+    /// independently of the parent's active checkmark.
+    private var liveCaptionActiveSource: AudioSourceKind?
 
     override init() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -219,13 +247,13 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         aiSubtitle.attributedTitle = NSAttributedString(string: "    via Apple Foundation Models", attributes: aiSubAttrs)
         menu.addItem(aiSubtitle)
 
-        // Live Caption toggle (session-only, default off)
+        // Live Caption parent (non-clickable header — shows ✓ when any source
+        // is active). The clickable entries are the radio sub-items below.
         liveCaptionMenuItem = NSMenuItem(
             title: "Live Caption",
-            action: #selector(toggleLiveCaption),
+            action: nil,
             keyEquivalent: ""
         )
-        liveCaptionMenuItem.target = self
         updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
         menu.addItem(liveCaptionMenuItem)
 
@@ -241,6 +269,43 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             attributes: liveSubAttrs
         )
         menu.addItem(liveCaptionSubtitleItem)
+
+        // Radio: From Microphone
+        liveCaptionMicItem = NSMenuItem(
+            title: "    From Microphone",
+            action: #selector(liveCaptionFromMicClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionMicItem.target = self
+        updateRadioAppearance(liveCaptionMicItem, title: "From Microphone", selected: false)
+        menu.addItem(liveCaptionMicItem)
+
+        // Radio: From System Audio
+        liveCaptionSystemItem = NSMenuItem(
+            title: "    From System Audio…",
+            action: #selector(liveCaptionFromSystemClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionSystemItem.target = self
+        updateRadioAppearance(liveCaptionSystemItem, title: "From System Audio…", selected: false)
+        menu.addItem(liveCaptionSystemItem)
+
+        // Change System Audio Source (forces picker)
+        liveCaptionChangeSourceItem = NSMenuItem(
+            title: "    Change System Audio Source…",
+            action: #selector(liveCaptionChangeSourceClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionChangeSourceItem.target = self
+        let changeSourceAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        liveCaptionChangeSourceItem.attributedTitle = NSAttributedString(
+            string: "    Change System Audio Source…",
+            attributes: changeSourceAttrs
+        )
+        menu.addItem(liveCaptionChangeSourceItem)
 
         // Edit Live Caption Settings (opens the JSON tunables file in the
         // user's default editor — mirrors the Edit Customized Dictionary
@@ -380,12 +445,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Live Caption
 
     @objc private func toggleLiveCaption() {
-        // Toggling OFF: always allowed.
+        // Legacy path — kept for any callers not yet migrated. New menu uses
+        // the radio sub-items, not this entry point.
         if liveCaptionActive {
-            onLiveCaptionToggle?()
+            onLiveCaptionStop?()
             return
         }
-        // Mutex: can't start live caption while iOS server is active.
         if iosServerActive {
             showMutexAlert(
                 title: "Stop iOS Server first",
@@ -396,12 +461,77 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         onLiveCaptionToggle?()
     }
 
-    /// Called from `LiveCaptionManager.onStateChanged`. Updates the menu
-    /// checkmark and tracks state for the iOS Server mutex check.
+    @objc private func liveCaptionFromMicClicked() {
+        // If mic is already active → toggle off.
+        if liveCaptionActive, case .mic = liveCaptionActiveSource {
+            onLiveCaptionStop?()
+            return
+        }
+        // Mutex: can't start (or switch) Live Caption while iOS server is up.
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveCaptionStartMic?()
+    }
+
+    @objc private func liveCaptionFromSystemClicked() {
+        if liveCaptionActive, case .system = liveCaptionActiveSource {
+            onLiveCaptionStop?()
+            return
+        }
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveCaptionStartSystem?()
+    }
+
+    @objc private func liveCaptionChangeSourceClicked() {
+        // No mutex gating — picking a different app doesn't change which
+        // permissions are in play.
+        onLiveCaptionChangeSystemSource?()
+    }
+
+    /// Legacy: only updates the parent's ✓ from a single boolean. Prefer
+    /// `setLiveCaptionActiveSource(_:)` so the radio items also reflect state.
     func setLiveCaptionActive(_ active: Bool) {
-        liveCaptionActive = active
-        guard let item = liveCaptionMenuItem else { return }
-        updateToggleAppearance(item, title: "Live Caption", checked: active)
+        setLiveCaptionActiveSource(active ? .mic : nil)
+    }
+
+    /// Called from `LiveCaptionManager.onStateChanged`. Updates the parent ✓
+    /// AND the source radio items, AND tracks state for the iOS Server mutex.
+    func setLiveCaptionActiveSource(_ source: AudioSourceKind?) {
+        liveCaptionActiveSource = source
+        liveCaptionActive = (source != nil)
+        guard let parent = liveCaptionMenuItem else { return }
+        updateToggleAppearance(parent, title: "Live Caption", checked: source != nil)
+
+        let micSelected: Bool
+        let systemSelected: Bool
+        switch source {
+        case .mic:
+            micSelected = true
+            systemSelected = false
+        case .system:
+            micSelected = false
+            systemSelected = true
+        case .none:
+            micSelected = false
+            systemSelected = false
+        }
+        if let micItem = liveCaptionMicItem {
+            updateRadioAppearance(micItem, title: "From Microphone", selected: micSelected)
+        }
+        if let systemItem = liveCaptionSystemItem {
+            updateRadioAppearance(systemItem, title: "From System Audio…", selected: systemSelected)
+        }
     }
 
     /// Called from the existing `iosServerManager.onStatusChanged` closure.
@@ -635,6 +765,32 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             item.attributedTitle = nil
             item.title = title
         }
+    }
+
+    /// Update a radio-style sub-menu item with the same 4-space indent + 12pt
+    /// secondary font used elsewhere in the menu. Selected radios get a green
+    /// ✓ suffix matching the toggle style.
+    private func updateRadioAppearance(_ item: NSMenuItem, title: String, selected: Bool) {
+        item.state = .off
+        item.view = nil
+
+        let baseAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 12),
+            .foregroundColor: NSColor.labelColor,
+        ]
+
+        let prefix = "    "  // 4-space indent under parent
+        let str = NSMutableAttributedString(string: prefix + title, attributes: baseAttrs)
+        if selected {
+            str.append(NSAttributedString(
+                string: "  ✓",
+                attributes: [
+                    .font: NSFont.systemFont(ofSize: 12, weight: .semibold),
+                    .foregroundColor: NSColor.systemGreen,
+                ]
+            ))
+        }
+        item.attributedTitle = str
     }
 
     private func showAlert(title: String, message: String) {

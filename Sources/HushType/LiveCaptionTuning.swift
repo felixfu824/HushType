@@ -53,6 +53,16 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// frame and resets this flag back to `false` after applying.
     var resetPanelOnNextStart: Bool = false
 
+    /// Audio source for Live Caption: `"mic"` or `"system"`.
+    /// Switch via the menu submenu or by editing here + toggling Live Caption
+    /// off → on. The menu always wins on conflict (last write).
+    var audioSource: String = "mic"
+
+    /// Last-picked app's bundle identifier for system-audio Live Caption.
+    /// Set automatically by `SystemAudioPicker`; can be hand-edited.
+    /// Empty string means "no app picked yet — show picker on next start".
+    var systemAudioBundleID: String = ""
+
     // MARK: - File location
 
     static var fileURL: URL {
@@ -98,12 +108,29 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// the one-shot reset. Preserves `_comment_*` keys and other user edits
     /// by doing a partial in-place rewrite.
     static func clearResetFlag() {
+        writeKey("resetPanelOnNextStart", value: false)
+    }
+
+    /// Persist a new audio source ("mic" | "system") chosen via the menu.
+    static func setAudioSource(_ source: String) {
+        writeKey("audioSource", value: source)
+    }
+
+    /// Persist a new system-audio bundle identifier chosen via the picker.
+    static func setSystemAudioBundleID(_ bundleID: String) {
+        writeKey("systemAudioBundleID", value: bundleID)
+    }
+
+    /// Partial in-place rewrite that preserves `_comment_*` keys and other
+    /// user edits. Used by `clearResetFlag` / `setAudioSource` /
+    /// `setSystemAudioBundleID`.
+    private static func writeKey(_ key: String, value: Any) {
         let url = fileURL
         guard
             let data = try? Data(contentsOf: url),
             var obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
-        obj["resetPanelOnNextStart"] = false
+        obj[key] = value
         guard let out = try? JSONSerialization.data(
             withJSONObject: obj,
             options: [.prettyPrinted, .sortedKeys]
@@ -199,7 +226,13 @@ struct LiveCaptionTuning: Codable, Sendable {
           "panelDefaultHeight": 160,
 
           "_comment_resetPanelOnNextStart": "Set to true to discard any persisted frame and re-apply panelDefaultWidth/Height the next time Live Caption is toggled on. The app flips it back to false after applying.",
-          "resetPanelOnNextStart": false
+          "resetPanelOnNextStart": false,
+
+          "_comment_audioSource": "Source for Live Caption: 'mic' or 'system'. Defaults to 'mic'. Switch via menu (Live Caption submenu) or by editing here + toggling Live Caption off/on. The menu always wins on conflict.",
+          "audioSource": "mic",
+
+          "_comment_systemAudioBundleID": "Last-picked app's bundle identifier for system-audio Live Caption. Set automatically by the picker; can be hand-edited. Empty means show picker on next start.",
+          "systemAudioBundleID": ""
         }
         """
     }
