@@ -45,10 +45,33 @@ enum OpenAIKeyStore {
 
     private static let fileURL: URL = AppConfig.openAIKeyFileURL
 
+    /// Maximum accepted file size for `openai.json`. Real keys fit in <200
+    /// bytes; a 64 KB ceiling guards against errant editor / malware writing
+    /// a gigabyte file that we'd otherwise faithfully read into RAM.
+    private static let maxFileSize: Int = 64 * 1024
+
     /// Read the key file, creating it on first call if missing. Never throws —
     /// I/O failures fall back to `.empty` so the UI can recover.
     static func load() -> LoadStatus {
         ensureExists()
+
+        // Defense in depth: refuse to follow symlinks AND refuse oversized
+        // files. The path itself is system-controlled (Application Support /
+        // HushType), so a malicious symlink there would already mean the user
+        // account is compromised — but reading whatever the symlink points at
+        // as JSON and pulling an `api_key` field out of it is a footgun we
+        // don't need.
+        let fm = FileManager.default
+        if let attrs = try? fm.attributesOfItem(atPath: fileURL.path) {
+            if let type = attrs[.type] as? FileAttributeType, type == .typeSymbolicLink {
+                log.warning("openai.json is a symlink; refusing to follow")
+                return .empty
+            }
+            if let size = attrs[.size] as? Int, size > Self.maxFileSize {
+                log.warning("openai.json exceeds \(Self.maxFileSize, privacy: .public) byte cap (size=\(size, privacy: .public)); treating as empty")
+                return .empty
+            }
+        }
 
         guard let data = try? Data(contentsOf: fileURL),
               let json = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] else {
@@ -113,6 +136,15 @@ enum OpenAIKeyStore {
         """
         do {
             try body.write(to: fileURL, atomically: true, encoding: .utf8)
+            // 0600 by default — same threat model as `.env`, no reason to be
+            // world-readable. `String.write(...)` respects the user's umask
+            // which on macOS yields 0644; we override explicitly so users on
+            // multi-user Macs don't get the key file readable by every other
+            // local account.
+            try? fm.setAttributes(
+                [.posixPermissions: NSNumber(value: 0o600)],
+                ofItemAtPath: fileURL.path
+            )
             log.info("Created openai.json at \(fileURL.path, privacy: .public) with empty values")
         } catch {
             log.error("Failed to create openai.json: \(error.localizedDescription, privacy: .public)")

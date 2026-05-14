@@ -184,7 +184,14 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         config.timeoutIntervalForRequest = 15
         config.timeoutIntervalForResource = 60 * 60 * 24
 
-        let session = URLSession(configuration: config)
+        // Belt-and-suspenders on the bearer header: URLSession's WebSocket
+        // upgrade does not follow 3xx redirects today, but the policy is
+        // implicit. Wire a delegate that explicitly refuses any redirect so
+        // the Authorization header can never flow to an unexpected origin
+        // through a future-macOS behavior change or a corporate proxy that
+        // rewrites the response.
+        let delegate = RedirectRefusingDelegate()
+        let session = URLSession(configuration: config, delegate: delegate, delegateQueue: nil)
         let task = session.webSocketTask(with: request)
 
         stateQueue.sync {
@@ -646,5 +653,22 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         } catch {
             log.warning("WS send failed: \(error.localizedDescription, privacy: .public)")
         }
+    }
+}
+
+/// URLSession delegate that refuses every HTTP redirect. Used on the cloud
+/// translate WebSocket so the Authorization Bearer header can never flow to
+/// an origin other than `api.openai.com`. URLSession's WebSocket upgrade
+/// already declines to follow 3xx today, but this makes the policy explicit
+/// and future-proof.
+final class RedirectRefusingDelegate: NSObject, URLSessionTaskDelegate {
+    func urlSession(
+        _ session: URLSession,
+        task: URLSessionTask,
+        willPerformHTTPRedirection response: HTTPURLResponse,
+        newRequest request: URLRequest,
+        completionHandler: @escaping (URLRequest?) -> Void
+    ) {
+        completionHandler(nil)
     }
 }

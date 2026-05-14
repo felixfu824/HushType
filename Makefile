@@ -26,6 +26,26 @@ bundle: build
 	@cp Resources/Info.plist "$(BUNDLE_DIR)/Contents/"
 	@cp Resources/HushType.icns "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
 	@cp scripts/ios_server.py "$(BUNDLE_DIR)/Contents/Resources/" 2>/dev/null || true
+	@# Strip debug symbols + scrub developer-path leakage from the binary
+	@# before signing. Two distinct fixes:
+	@#   (a) `strip -S` removes debug symbols.
+	@#   (b) `__FILE__` macro expansions inside Cmlx (MLX's C++ shim) bake
+	@#       absolute paths from the build worktree into the data segment —
+	@#       these survive `strip` because they're runtime-accessible string
+	@#       literals, not debug info. The python step does a length-preserving
+	@#       binary patch: replaces the user-home prefix with `/redacted` + null
+	@#       padding so `strings` returns nothing identifying the developer.
+	@# Both happen BEFORE codesign because modifying the binary invalidates
+	@# the signature.
+	@strip -S "$(BUNDLE_DIR)/Contents/MacOS/$(APP_NAME)" 2>/dev/null || true
+	@python3 -c "import sys, pathlib; \
+binary = pathlib.Path('$(BUNDLE_DIR)/Contents/MacOS/$(APP_NAME)'); \
+prefix = b'$(PWD)'; \
+data = binary.read_bytes(); \
+count = data.count(prefix); \
+replacement = b'/redacted' + b'\x00' * (len(prefix) - 9); \
+binary.write_bytes(data.replace(prefix, replacement)) if count else None; \
+print(f'  Scrubbed {count} dev-path occurrence(s) from binary')"
 	@$(MAKE) bundle-opencc
 	@# Sign the entire bundle with an explicit stable identifier so macOS TCC
 	@# tracks accessibility permission by identifier (constant across builds)
@@ -35,7 +55,7 @@ bundle: build
 	@# signed independently — codesign always treats them as part of the
 	@# enclosing bundle.
 	@codesign --force --deep --sign - --identifier "com.felix.hushtype" "$(BUNDLE_DIR)"
-	@echo "Bundle created: $(BUNDLE_DIR) (signed as com.felix.hushtype)"
+	@echo "Bundle created: $(BUNDLE_DIR) (signed as com.felix.hushtype, debug symbols stripped)"
 
 bundle-opencc:
 	@echo "Bundling OpenCC..."
