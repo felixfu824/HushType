@@ -27,6 +27,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var liveCaptionMicItem: NSMenuItem!
     private var liveCaptionSystemItem: NSMenuItem!
     private var liveCaptionChangeSourceItem: NSMenuItem!
+    private var liveTranslatedMenuItem: NSMenuItem!
+    private var liveTranslatedSubtitleItem: NSMenuItem!
+    private var liveTranslatedMicItem: NSMenuItem!
+    private var liveTranslatedSystemItem: NSMenuItem!
+    private var liveTranslatedChangeSourceItem: NSMenuItem!
     private var textTranslationMenuItem: NSMenuItem!
     private var translationSubtitleItem: NSMenuItem!
     private var translateToItem: NSMenuItem!
@@ -48,30 +53,53 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// can offer two distinct entry points.
     var onLiveCaptionToggle: (() -> Void)?
 
-    /// Fired when the user clicks `From Microphone` while Live Caption is OFF
-    /// or active on a different source. AppDelegate routes to
-    /// `LiveCaptionManager.start(source: .mic)` or `.switchSource(to: .mic)`.
+    /// Fired when the user clicks Live Caption → `From Microphone` while
+    /// the *local* product is off or running off a different source.
+    /// AppDelegate sets `liveCaptionEngine = .local` before starting.
     var onLiveCaptionStartMic: (() -> Void)?
 
-    /// Fired when the user clicks `From System Audio…`. AppDelegate routes
-    /// through `SystemAudioPermissionFlow` + picker → `start(source:)` or
-    /// `switchSource(to:)`.
+    /// Fired when the user clicks Live Caption → `From System Audio…`.
+    /// AppDelegate routes through `SystemAudioPermissionFlow` + picker, with
+    /// `liveCaptionEngine = .local`.
     var onLiveCaptionStartSystem: (() -> Void)?
 
-    /// Fired when the user clicks `Change System Audio Source…` to force the
-    /// picker even though a `systemAudioBundleID` is already saved.
+    /// Fired when the user clicks Live Caption → `Change System Audio Source…`
+    /// to force the picker even though a `systemAudioBundleID` is already
+    /// saved. (Source picker is shared between the two products; the new
+    /// bundleID persists in `live_caption.json` either way.)
     var onLiveCaptionChangeSystemSource: (() -> Void)?
 
-    /// Fired when the user clicks the currently-active source (stops Live
-    /// Caption). Decoupled from `onLiveCaptionToggle` so AppDelegate doesn't
-    /// have to inspect manager state to know which path the user took.
+    /// Fired when the user clicks the currently-active *local* Live Caption
+    /// source (stops it). Decoupled from start callbacks so AppDelegate
+    /// doesn't have to inspect manager state to know which path the user took.
     var onLiveCaptionStop: (() -> Void)?
+
+    /// Fired when the user clicks Live Translated Caption → `From Microphone`.
+    /// AppDelegate sets `liveCaptionEngine = .cloudTranslate` and, on first
+    /// use this app version, presents the cloud-onboarding disclosure modal.
+    var onLiveTranslatedStartMic: (() -> Void)?
+
+    /// Fired when the user clicks Live Translated Caption → `From System Audio…`.
+    /// Same routing as the local variant but engine = `.cloudTranslate`.
+    var onLiveTranslatedStartSystem: (() -> Void)?
+
+    /// Fired when the user clicks Live Translated Caption → `Change System
+    /// Audio Source…`. Same picker as the local variant.
+    var onLiveTranslatedChangeSystemSource: (() -> Void)?
+
+    /// Fired when the user clicks the currently-active *translated* Live
+    /// Caption source (stops it).
+    var onLiveTranslatedStop: (() -> Void)?
 
     /// Tracked here so the click handlers for the two mutually-exclusive
     /// modes (iOS Server, Live Caption) can show an NSAlert explaining why
     /// the click was rejected instead of silently disabling the menu item.
     private var iosServerActive: Bool = false
     private var liveCaptionActive: Bool = false
+    /// Tracks which product mode is currently active. Nil = neither product
+    /// is running. Drives both header checkmarks and which set of source
+    /// radios shows the selection.
+    private var liveCaptionActiveMode: AppConfig.CaptionMode?
     /// Tracks which source is active so radio-item checkmarks can be applied
     /// independently of the parent's active checkmark.
     private var liveCaptionActiveSource: AudioSourceKind?
@@ -247,8 +275,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         aiSubtitle.attributedTitle = NSAttributedString(string: "    via Apple Foundation Models", attributes: aiSubAttrs)
         menu.addItem(aiSubtitle)
 
-        // Live Caption parent (non-clickable header — shows ✓ when any source
-        // is active). The clickable entries are the radio sub-items below.
+        // ─────────────────── Live Caption (local Qwen3) ───────────────────
         liveCaptionMenuItem = NSMenuItem(
             title: "Live Caption",
             action: nil,
@@ -257,7 +284,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
         menu.addItem(liveCaptionMenuItem)
 
-        // Live Caption subtitle
         liveCaptionSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
         liveCaptionSubtitleItem.isEnabled = false
         let liveSubAttrs: [NSAttributedString.Key: Any] = [
@@ -265,12 +291,11 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             .foregroundColor: NSColor.secondaryLabelColor,
         ]
         liveCaptionSubtitleItem.attributedTitle = NSAttributedString(
-            string: "    Always-on captions for meetings & calls",
+            string: "    Local transcription — free, on-device",
             attributes: liveSubAttrs
         )
         menu.addItem(liveCaptionSubtitleItem)
 
-        // Radio: From Microphone
         liveCaptionMicItem = NSMenuItem(
             title: "    From Microphone",
             action: #selector(liveCaptionFromMicClicked),
@@ -280,7 +305,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         updateRadioAppearance(liveCaptionMicItem, title: "From Microphone", selected: false)
         menu.addItem(liveCaptionMicItem)
 
-        // Radio: From System Audio
         liveCaptionSystemItem = NSMenuItem(
             title: "    From System Audio…",
             action: #selector(liveCaptionFromSystemClicked),
@@ -290,48 +314,91 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         updateRadioAppearance(liveCaptionSystemItem, title: "From System Audio…", selected: false)
         menu.addItem(liveCaptionSystemItem)
 
-        // Change System Audio Source (forces picker)
+        let changeSourceAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
         liveCaptionChangeSourceItem = NSMenuItem(
             title: "    Change System Audio Source…",
             action: #selector(liveCaptionChangeSourceClicked),
             keyEquivalent: ""
         )
         liveCaptionChangeSourceItem.target = self
-        let changeSourceAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
         liveCaptionChangeSourceItem.attributedTitle = NSAttributedString(
             string: "    Change System Audio Source…",
             attributes: changeSourceAttrs
         )
         menu.addItem(liveCaptionChangeSourceItem)
 
-        // Engine Settings — opens the new floating settings window where the
-        // user picks Local vs Cloud Translate, target language, cost
-        // guardrails, and the OpenAI key file. (HushType's first persistent
-        // Settings window — see spec §5.)
-        let engineSettingsItem = NSMenuItem(
-            title: "    Engine Settings…",
+        // ───────── Live Translated Caption (cloud OpenAI translate) ─────────
+        menu.addItem(.separator())
+
+        liveTranslatedMenuItem = NSMenuItem(
+            title: "Live Translated Caption",
+            action: nil,
+            keyEquivalent: ""
+        )
+        updateToggleAppearance(liveTranslatedMenuItem, title: "Live Translated Caption", checked: false)
+        menu.addItem(liveTranslatedMenuItem)
+
+        liveTranslatedSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        liveTranslatedSubtitleItem.isEnabled = false
+        liveTranslatedSubtitleItem.attributedTitle = NSAttributedString(
+            string: "    Real-time foreign-language → text via OpenAI · $",
+            attributes: liveSubAttrs
+        )
+        menu.addItem(liveTranslatedSubtitleItem)
+
+        liveTranslatedMicItem = NSMenuItem(
+            title: "    From Microphone",
+            action: #selector(liveTranslatedFromMicClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedMicItem.target = self
+        updateRadioAppearance(liveTranslatedMicItem, title: "From Microphone", selected: false)
+        menu.addItem(liveTranslatedMicItem)
+
+        liveTranslatedSystemItem = NSMenuItem(
+            title: "    From System Audio…",
+            action: #selector(liveTranslatedFromSystemClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedSystemItem.target = self
+        updateRadioAppearance(liveTranslatedSystemItem, title: "From System Audio…", selected: false)
+        menu.addItem(liveTranslatedSystemItem)
+
+        liveTranslatedChangeSourceItem = NSMenuItem(
+            title: "    Change System Audio Source…",
+            action: #selector(liveTranslatedChangeSourceClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedChangeSourceItem.target = self
+        liveTranslatedChangeSourceItem.attributedTitle = NSAttributedString(
+            string: "    Change System Audio Source…",
+            attributes: changeSourceAttrs
+        )
+        menu.addItem(liveTranslatedChangeSourceItem)
+
+        // Translated Caption Settings — cloud-only options: target language,
+        // source-line toggle, cost guardrails, OpenAI key file. (Used to be
+        // "Engine Settings…" when local vs cloud lived in one menu.)
+        let translatedSettingsItem = NSMenuItem(
+            title: "    Translated Caption Settings…",
             action: #selector(openLiveCaptionEngineSettings),
             keyEquivalent: ""
         )
-        engineSettingsItem.target = self
-        let engineSettingsAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        engineSettingsItem.attributedTitle = NSAttributedString(
-            string: "    Engine Settings…",
-            attributes: engineSettingsAttrs
+        translatedSettingsItem.target = self
+        translatedSettingsItem.attributedTitle = NSAttributedString(
+            string: "    Translated Caption Settings…",
+            attributes: changeSourceAttrs
         )
-        menu.addItem(engineSettingsItem)
+        menu.addItem(translatedSettingsItem)
 
-        // Edit Live Caption Settings (opens the JSON tunables file in the
-        // user's default editor — mirrors the Edit Customized Dictionary
-        // pattern. Edits take effect on the next Live Caption toggle on.)
+        // ───────── Shared: tuning file (applies to both products) ─────────
+        menu.addItem(.separator())
+
         let liveCaptionSettingsItem = NSMenuItem(
-            title: "    Edit Live Caption Settings",
+            title: "Edit Live Caption Settings",
             action: #selector(editLiveCaptionSettings),
             keyEquivalent: ""
         )
@@ -341,7 +408,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             .foregroundColor: NSColor.secondaryLabelColor,
         ]
         liveCaptionSettingsItem.attributedTitle = NSAttributedString(
-            string: "    Edit Live Caption Settings",
+            string: "Edit Live Caption Settings",
             attributes: settingsAttrs
         )
         menu.addItem(liveCaptionSettingsItem)
@@ -482,12 +549,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func liveCaptionFromMicClicked() {
-        // If mic is already active → toggle off.
-        if liveCaptionActive, case .mic = liveCaptionActiveSource {
+        // If the LOCAL product is already running on mic → toggle off. Toggle
+        // semantics are now product-scoped: clicking translated-mic while
+        // local-mic is active is "start translated" not "stop local"; the
+        // start handler in AppDelegate auto-stops the other product first.
+        if liveCaptionActiveMode == .local, case .mic = liveCaptionActiveSource {
             onLiveCaptionStop?()
             return
         }
-        // Mutex: can't start (or switch) Live Caption while iOS server is up.
         if iosServerActive {
             showMutexAlert(
                 title: "Stop iOS Server first",
@@ -499,7 +568,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func liveCaptionFromSystemClicked() {
-        if liveCaptionActive, case .system = liveCaptionActiveSource {
+        if liveCaptionActiveMode == .local, case .system = liveCaptionActiveSource {
             onLiveCaptionStop?()
             return
         }
@@ -514,44 +583,98 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     @objc private func liveCaptionChangeSourceClicked() {
-        // No mutex gating — picking a different app doesn't change which
-        // permissions are in play.
         onLiveCaptionChangeSystemSource?()
     }
 
-    /// Legacy: only updates the parent's ✓ from a single boolean. Prefer
-    /// `setLiveCaptionActiveSource(_:)` so the radio items also reflect state.
-    func setLiveCaptionActive(_ active: Bool) {
-        setLiveCaptionActiveSource(active ? .mic : nil)
+    @objc private func liveTranslatedFromMicClicked() {
+        if liveCaptionActiveMode == .translated, case .mic = liveCaptionActiveSource {
+            onLiveTranslatedStop?()
+            return
+        }
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Translated Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveTranslatedStartMic?()
     }
 
-    /// Called from `LiveCaptionManager.onStateChanged`. Updates the parent ✓
-    /// AND the source radio items, AND tracks state for the iOS Server mutex.
-    func setLiveCaptionActiveSource(_ source: AudioSourceKind?) {
-        liveCaptionActiveSource = source
-        liveCaptionActive = (source != nil)
-        guard let parent = liveCaptionMenuItem else { return }
-        updateToggleAppearance(parent, title: "Live Caption", checked: source != nil)
+    @objc private func liveTranslatedFromSystemClicked() {
+        if liveCaptionActiveMode == .translated, case .system = liveCaptionActiveSource {
+            onLiveTranslatedStop?()
+            return
+        }
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Translated Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveTranslatedStartSystem?()
+    }
 
-        let micSelected: Bool
-        let systemSelected: Bool
+    @objc private func liveTranslatedChangeSourceClicked() {
+        onLiveTranslatedChangeSystemSource?()
+    }
+
+    /// Legacy single-boolean form. Assumes the local product. Preferred:
+    /// `setLiveCaptionState(mode:source:)`.
+    func setLiveCaptionActive(_ active: Bool) {
+        setLiveCaptionState(mode: active ? .local : nil, source: active ? .mic : nil)
+    }
+
+    /// Called from `LiveCaptionManager.onStateChanged`. Lights up the right
+    /// header checkmark + the right product's source radio. Nil mode = nothing
+    /// running. Also tracks state for the iOS Server mutex gate.
+    func setLiveCaptionState(mode: AppConfig.CaptionMode?, source: AudioSourceKind?) {
+        liveCaptionActiveMode = mode
+        liveCaptionActiveSource = source
+        liveCaptionActive = (mode != nil)
+
+        let localActive = (mode == .local)
+        let translatedActive = (mode == .translated)
+
+        if let parent = liveCaptionMenuItem {
+            updateToggleAppearance(parent, title: "Live Caption", checked: localActive)
+        }
+        if let parent = liveTranslatedMenuItem {
+            updateToggleAppearance(parent, title: "Live Translated Caption", checked: translatedActive)
+        }
+
+        let sourceIsMic: Bool
+        let sourceIsSystem: Bool
         switch source {
-        case .mic:
-            micSelected = true
-            systemSelected = false
-        case .system:
-            micSelected = false
-            systemSelected = true
-        case .none:
-            micSelected = false
-            systemSelected = false
+        case .mic:           sourceIsMic = true;  sourceIsSystem = false
+        case .system:        sourceIsMic = false; sourceIsSystem = true
+        case .none:          sourceIsMic = false; sourceIsSystem = false
         }
-        if let micItem = liveCaptionMicItem {
-            updateRadioAppearance(micItem, title: "From Microphone", selected: micSelected)
+        let localMicSelected = localActive && sourceIsMic
+        let localSystemSelected = localActive && sourceIsSystem
+        let translatedMicSelected = translatedActive && sourceIsMic
+        let translatedSystemSelected = translatedActive && sourceIsSystem
+
+        if let item = liveCaptionMicItem {
+            updateRadioAppearance(item, title: "From Microphone", selected: localMicSelected)
         }
-        if let systemItem = liveCaptionSystemItem {
-            updateRadioAppearance(systemItem, title: "From System Audio…", selected: systemSelected)
+        if let item = liveCaptionSystemItem {
+            updateRadioAppearance(item, title: "From System Audio…", selected: localSystemSelected)
         }
+        if let item = liveTranslatedMicItem {
+            updateRadioAppearance(item, title: "From Microphone", selected: translatedMicSelected)
+        }
+        if let item = liveTranslatedSystemItem {
+            updateRadioAppearance(item, title: "From System Audio…", selected: translatedSystemSelected)
+        }
+    }
+
+    /// Back-compat shim so existing call sites that just pass an AudioSourceKind
+    /// (e.g. earlier tests) still work. Assumes the local product when source
+    /// is non-nil — new call sites should use `setLiveCaptionState(mode:source:)`.
+    func setLiveCaptionActiveSource(_ source: AudioSourceKind?) {
+        setLiveCaptionState(mode: source.map { _ in .local }, source: source)
     }
 
     /// Called from the existing `iosServerManager.onStatusChanged` closure.

@@ -26,7 +26,7 @@ final class LiveCaptionEngineSettingsWindowController: NSWindowController, NSWin
             backing: .buffered,
             defer: false
         )
-        window.title = "Live Caption Settings"
+        window.title = "Translated Caption Settings"
         window.contentViewController = hosting
         window.isReleasedWhenClosed = false
         window.setFrameAutosaveName("hushtype.settings.liveCaptionEngine")

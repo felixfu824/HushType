@@ -23,6 +23,7 @@ final class AppConfig {
         static let cloudAutoStopMinutes = "hushtype.cloudAutoStopMinutes"
         static let cloudDailyCapDollars = "hushtype.cloudDailyCapDollars"
         static let cloudOnboardingShown = "hushtype.cloudOnboardingShown"
+        static let lastStartedCaptionMode = "hushtype.lastStartedCaptionMode"
     }
 
     /// Engine for Live Caption — local Qwen3 ASR vs. OpenAI cloud translate.
@@ -214,6 +215,28 @@ final class AppConfig {
     var cloudOnboardingShown: Bool {
         get { defaults.bool(forKey: Keys.cloudOnboardingShown) }
         set { defaults.set(newValue, forKey: Keys.cloudOnboardingShown) }
+    }
+
+    /// Which of the two caption products the user last started. Persisted so
+    /// the Right ⌘ + / hotkey can toggle "the same one I had running yesterday"
+    /// instead of always defaulting to local. First-use default = `.local` so
+    /// nobody accidentally racks up a translation bill via muscle memory on
+    /// day one. Set inside `AppDelegate` whenever a start path succeeds.
+    enum CaptionMode: String, Equatable, Sendable {
+        case local
+        case translated
+    }
+    var lastStartedCaptionMode: CaptionMode {
+        get {
+            guard let raw = defaults.string(forKey: Keys.lastStartedCaptionMode),
+                  let mode = CaptionMode(rawValue: raw) else {
+                return .local
+            }
+            return mode
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.lastStartedCaptionMode)
+        }
     }
 
     /// Path to the user-editable customized dictionary file. The dictionary is

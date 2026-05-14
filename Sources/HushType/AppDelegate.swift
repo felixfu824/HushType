@@ -85,38 +85,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.reloadModel()
         }
 
-        // Wire Live Caption submenu. The manager is constructed AFTER the ASR
-        // model finishes loading (see Task.detached block below); during that
-        // ~3s window the menu items beep instead of acting.
+        // Wire Live Caption (local) submenu. The manager is constructed AFTER
+        // the ASR model finishes loading (see Task.detached block below);
+        // during that ~3s window the menu items beep instead of acting.
         statusBar.onLiveCaptionStartMic = { [weak self] in
-            self?.startOrSwitchLiveCaption(to: .mic)
+            self?.startCaptionMode(.local, source: .mic)
         }
         statusBar.onLiveCaptionStartSystem = { [weak self] in
-            self?.startSystemAudioLiveCaption(forcePicker: false)
+            self?.startCaptionModeOnSystemAudio(.local, forcePicker: false)
         }
         statusBar.onLiveCaptionChangeSystemSource = { [weak self] in
-            self?.startSystemAudioLiveCaption(forcePicker: true)
+            self?.startCaptionModeOnSystemAudio(.local, forcePicker: true)
         }
         statusBar.onLiveCaptionStop = { [weak self] in
             self?.liveCaptionManager?.stop()
         }
 
-        // Observe engine flips from the Settings window. If Live Caption is
-        // currently active, route to `switchEngine(to:)` for the spec §10
-        // mid-session swap path. Otherwise the preference write is enough —
-        // the next start() picks up the new value.
-        NotificationCenter.default.addObserver(
-            forName: .hushtypeLiveCaptionEngineChanged,
-            object: nil,
-            queue: .main
-        ) { [weak self] note in
-            guard let self else { return }
-            guard let raw = note.userInfo?["engine"] as? String,
-                  let engine = AppConfig.LiveCaptionEngine(rawValue: raw) else { return }
-            guard let manager = self.liveCaptionManager, manager.isActive else { return }
-            Task { @MainActor in
-                await manager.switchEngine(to: engine)
-            }
+        // Wire Live Translated Caption (cloud) submenu.
+        statusBar.onLiveTranslatedStartMic = { [weak self] in
+            self?.startCaptionMode(.translated, source: .mic)
+        }
+        statusBar.onLiveTranslatedStartSystem = { [weak self] in
+            self?.startCaptionModeOnSystemAudio(.translated, forcePicker: false)
+        }
+        statusBar.onLiveTranslatedChangeSystemSource = { [weak self] in
+            self?.startCaptionModeOnSystemAudio(.translated, forcePicker: true)
+        }
+        statusBar.onLiveTranslatedStop = { [weak self] in
+            self?.liveCaptionManager?.stop()
         }
 
         #if DEBUG
@@ -154,8 +150,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                             asrModel: model,
                             captureService: self.audioCapture
                         )
-                        manager.onStateChanged = { [weak self] source in
-                            self?.statusBar.setLiveCaptionActiveSource(source)
+                        manager.onStateChanged = { [weak self] mode, source in
+                            self?.statusBar.setLiveCaptionState(mode: mode, source: source)
                         }
                         self.liveCaptionManager = manager
                     }
@@ -430,34 +426,59 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     // MARK: - Live Caption helpers
 
-    /// Start Live Caption with the requested source, or switch sources in
-    /// place if Live Caption is already active. Caller is responsible for
-    /// permission gating (mic check for `.mic`, `SystemAudioPermissionFlow`
-    /// for `.system`) before invoking this.
+    /// Start (or auto-switch to) the requested caption product on the given
+    /// audio source. The engine setting flips to match the mode before the
+    /// manager start fires. If a session of the OTHER product is running,
+    /// it's torn down first (auto-stop-then-start) so we never have two
+    /// products contending for the same panel. If the SAME product is
+    /// running on a different source, we use switchSource for fast handoff.
+    /// For .translated mode we gate on the cloud-disclosure modal first.
     @MainActor
-    private func startOrSwitchLiveCaption(to source: AudioSourceKind) {
+    private func startCaptionMode(_ mode: AppConfig.CaptionMode, source: AudioSourceKind) {
         guard let manager = self.liveCaptionManager else {
             NSSound.beep()
             return
         }
+        // Cloud-first-time disclosure. The cloudOnboardingShown flag is
+        // persisted, so this only fires once per macOS user account.
+        if mode == .translated && !AppConfig.shared.cloudOnboardingShown {
+            let accepted = CloudOnboardingAlert.presentIfNeeded()
+            if !accepted { return }
+        }
+
+        let targetEngine: AppConfig.LiveCaptionEngine = (mode == .translated) ? .cloudTranslate : .local
+
         Task { @MainActor in
             do {
-                if manager.isActive {
+                let currentMode: AppConfig.CaptionMode? = manager.isActive
+                    ? (AppConfig.shared.liveCaptionEngine == .cloudTranslate ? .translated : .local)
+                    : nil
+                if manager.isActive && currentMode == mode {
+                    // Same product, possibly different source → fast in-place switch.
                     try await manager.switchSource(to: source)
-                } else {
-                    try await manager.start(source: source)
+                    return
                 }
+                if manager.isActive {
+                    // Different product → tear down fully, then start fresh.
+                    manager.stop()
+                    // Give the teardown's async block a chance to settle the
+                    // panel and free MLX/URLSession state before we set up
+                    // the new engine. 200ms matches the cloud graceful-close
+                    // window plus a small buffer.
+                    try? await Task.sleep(nanoseconds: 200_000_000)
+                }
+                AppConfig.shared.liveCaptionEngine = targetEngine
+                try await manager.start(source: source)
             } catch {
-                log.error("LiveCaption start/switch failed: \(error.localizedDescription, privacy: .public)")
+                log.error("LiveCaption start failed: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
 
-    /// Right ⌘ + Shift + / handler: toggle Live Caption with the last-used
-    /// source. If LC was previously running off the mic (or has never been
-    /// started this session), starts on the mic; otherwise starts on the
-    /// remembered system-audio bundle. Cloud LC costs money per second and
-    /// the menu detour was a friction point per Felix's feedback.
+    /// Hotkey handler (Right ⌘ + /): toggle whichever product was last
+    /// started. First-use (no AppConfig.lastStartedCaptionMode set) defaults
+    /// to local — nobody accidentally starts a paid translation session via
+    /// muscle memory on day one.
     @MainActor
     private func toggleLiveCaptionViaHotkey() {
         guard let manager = self.liveCaptionManager else {
@@ -468,33 +489,33 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             manager.stop()
             return
         }
+        let mode = AppConfig.shared.lastStartedCaptionMode
         if AppConfig.shared.liveCaptionUsesMicSource {
-            startOrSwitchLiveCaption(to: .mic)
+            startCaptionMode(mode, source: .mic)
         } else {
-            startSystemAudioLiveCaption(forcePicker: false)
+            startCaptionModeOnSystemAudio(mode, forcePicker: false)
         }
     }
 
     /// Resolve the system-audio bundle ID (from tuning file or via picker)
-    /// then start/switch Live Caption to that source. Gates on permission via
+    /// then start the requested mode on that source. Gates on permission via
     /// `SystemAudioPermissionFlow` first.
     @MainActor
-    private func startSystemAudioLiveCaption(forcePicker: Bool) {
+    private func startCaptionModeOnSystemAudio(_ mode: AppConfig.CaptionMode, forcePicker: Bool) {
         guard self.liveCaptionManager != nil else {
             NSSound.beep()
             return
         }
         SystemAudioPermissionFlow.ensurePermission { [weak self] in
-            // Permission cleared. Resolve bundle ID — saved or via picker.
             guard let self else { return }
             let tuning = LiveCaptionTuning.load()
             if !forcePicker && !tuning.systemAudioBundleID.isEmpty {
-                self.startOrSwitchLiveCaption(to: .system(bundleID: tuning.systemAudioBundleID))
+                self.startCaptionMode(mode, source: .system(bundleID: tuning.systemAudioBundleID))
                 return
             }
             SystemAudioPicker.present { [weak self] bundleID in
                 guard let self, let bundleID else { return }
-                self.startOrSwitchLiveCaption(to: .system(bundleID: bundleID))
+                self.startCaptionMode(mode, source: .system(bundleID: bundleID))
             }
         }
     }
@@ -609,8 +630,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                                 asrModel: model,
                                 captureService: self.audioCapture
                             )
-                            manager.onStateChanged = { [weak self] source in
-                                self?.statusBar.setLiveCaptionActiveSource(source)
+                            manager.onStateChanged = { [weak self] mode, source in
+                                self?.statusBar.setLiveCaptionState(mode: mode, source: source)
                             }
                             self.liveCaptionManager = manager
                         }

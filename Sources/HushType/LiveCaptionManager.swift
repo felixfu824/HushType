@@ -38,10 +38,13 @@ final class LiveCaptionManager {
     private let captureService: AudioCaptureService
 
     /// Called whenever the active state flips. AppDelegate forwards to
-    /// `statusBarController.setLiveCaptionActiveSource(_:)` so the submenu
+    /// `statusBarController.setLiveCaptionState(mode:source:)` so the submenu
     /// reflects programmatic state changes (e.g. auto-stop on model unload,
-    /// auto-switch from one source to another). `nil` means Live Caption is off.
-    var onStateChanged: ((AudioSourceKind?) -> Void)?
+    /// auto-switch from one source to another). `(nil, nil)` means Live
+    /// Caption is off. The `mode` distinguishes the two parallel products —
+    /// local "Live Caption" vs cloud "Live Translated Caption" — which share
+    /// this manager but have separate menu submenus.
+    var onStateChanged: ((AppConfig.CaptionMode?, AudioSourceKind?) -> Void)?
 
     // MARK: - State
 
@@ -341,7 +344,9 @@ final class LiveCaptionManager {
         currentSource = requestedSource
         AppConfig.shared.liveCaptionEnabled = true
         AppConfig.shared.liveCaptionUsesMicSource = (requestedSource == .mic)
-        onStateChanged?(requestedSource)
+        let mode: AppConfig.CaptionMode = (engine == .cloudTranslate) ? .translated : .local
+        AppConfig.shared.lastStartedCaptionMode = mode
+        onStateChanged?(mode, requestedSource)
         log.info("LiveCaption started")
     }
 
@@ -424,7 +429,7 @@ final class LiveCaptionManager {
         currentSource = nil
         AppConfig.shared.liveCaptionEnabled = false
         AppConfig.shared.liveCaptionUsesMicSource = false
-        onStateChanged?(nil)
+        onStateChanged?(nil, nil)
         Task { @MainActor in
             await self.teardown(stopAudio: true)
             self.hidePanel()

@@ -182,19 +182,29 @@ enum OnboardingManager {
         let bundleURL = Bundle.main.bundleURL
         log.info("Relaunching HushType from \(bundleURL.path, privacy: .public)")
 
+        // Spawn `/bin/sh -c "sleep 1 && open -n <path>"` and let it reparent
+        // to launchd when we terminate. Doing `open -n` ourselves and dying
+        // 0.3s later races: LaunchServices still sees our PID-family as the
+        // active instance and silently refuses the new launch (this was the
+        // SystemAudioPermissionFlow "Restart" button quitting without
+        // reopening). The detached shell waits a full second for our
+        // termination to settle and the LS record to clear, then issues
+        // the launch against a fully-quit bundle.
+        let escaped = bundleURL.path.replacingOccurrences(of: "'", with: "'\\''")
+        let cmd = "sleep 1 && open -n '\(escaped)' >/dev/null 2>&1"
         let task = Process()
-        task.executableURL = URL(fileURLWithPath: "/usr/bin/open")
-        task.arguments = ["-n", bundleURL.path]
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = ["-c", cmd]
         do {
             try task.run()
         } catch {
-            log.error("Failed to spawn new instance: \(error.localizedDescription)")
+            log.error("Failed to spawn relauncher shell: \(error.localizedDescription)")
         }
 
-        // Brief delay so the new process can finish its early startup
-        // before we tear down — without this, `open -n` sometimes races and
-        // spawns the new process under the dying one's PID family.
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+        // We can terminate fast now — the shell is independent of our
+        // lifecycle. Give NSApp 150ms to flush its termination message
+        // chain so windows close cleanly.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
             NSApp.terminate(nil)
         }
     }

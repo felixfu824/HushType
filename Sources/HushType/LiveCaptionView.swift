@@ -97,7 +97,14 @@ struct LiveCaptionView: View {
         case .live:
             HStack(spacing: 8) {
                 LivePulseDot()
-                Text("Live")
+                // Header text reflects which product is running. Cloud
+                // sessions translate audio into a target language; local
+                // sessions just transcribe — same UI panel, different
+                // products with different cost/privacy profiles, so the
+                // header label distinguishes them at a glance.
+                Text(AppConfig.shared.liveCaptionEngine == .cloudTranslate
+                     ? "Live · Translated"
+                     : "Live")
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(.primary.opacity(0.85))
             }
