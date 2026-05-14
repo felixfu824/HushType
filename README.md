@@ -19,15 +19,15 @@
 
 ## Why HushType
 
-**Private and local-first.** Your voice never leaves your machine. The speech model runs on your Mac's GPU — no cloud, no account, no telemetry, no data collection. The only network call is the one-time model download (~675 MB) on first launch; after that the app runs fully offline. iPhone audio travels to YOUR Mac over Tailscale (WireGuard-encrypted) or local WiFi. Pre-download the model folder on another machine and HushType is fully air-gappable.
+**Private and local-first.** Voice never leaves your machine. The speech model runs on your Mac's GPU — no cloud, no account, no telemetry. The only network call is the one-time model download (~675 MB); after that, fully offline. iPhone audio travels to YOUR Mac over Tailscale or local WiFi. Pre-download the model on another machine and HushType is fully air-gappable.
 
-**Memory-friendly — coexists with your agents.** HushType is built for how Apple Silicon owners actually use their Macs in 2026: two or three coding agents running (Claude Code, Cursor, Codex), a browser, normal workload. Qwen3-ASR-0.6B 4-bit (~675 MB on disk — less than half the ~1.6 GB of Whisper Large v3 Turbo) is competitive with models 3× its size, small enough for an entry-level 8 / 16 GB M-series Mac to host comfortably alongside everything else. One click in the menu bar unloads the model and frees ~2 GB on demand; it auto-reloads on the next Right ⌥ hold (~3s cold start).
+**Memory-friendly — coexists with your agents.** Built for how Apple Silicon owners actually use their Macs in 2026: two or three coding agents (Claude Code, Cursor, Codex), a browser, normal workload. Qwen3-ASR-0.6B 4-bit is ~675 MB on disk — less than half of Whisper Large v3 Turbo — yet competitive with models 3× its size. Small enough for an entry-level 8 / 16 GB M-series Mac. One click unloads it and frees ~2 GB; auto-reloads on the next Right ⌥ hold (~3s cold start).
 
-**Traditional Chinese that actually works.** Whisper only offers a single `zh` code that defaults to Simplified with no reliable way to force Traditional. Most open-source models mix Simplified characters or use Mainland phrasing (软件 not 軟體). HushType chains Qwen3-ASR for recognition with OpenCC `s2twp` for Taiwan-specific Traditional output — 軟體 not 软件, 滑鼠 not 鼠标, 品質 not 质量. Qwen3-ASR also handles English / Mandarin code-switching in one pass — mix the two in a single sentence and you get one clean transcription, no manual language toggle mid-sentence. An optional deterministic ITN layer converts Chinese numerals to Arabic digits in context (`一零一大樓` → `101 大樓`, `三點一四` → `3.14`), on by default and reversible from the menu.
+**Traditional Chinese that actually works.** Whisper's single `zh` code defaults to Simplified with no reliable way to force Traditional; most open-source models mix Simplified or Mainland phrasing (软件, not 軟體). HushType chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-specific output — 軟體, 滑鼠, 品質. Native EN / ZH code-switching in one pass (mix in a single sentence, get one clean transcription). Optional deterministic ITN converts Chinese numerals to Arabic digits in context (`一零一大樓` → `101 大樓`), on by default.
 
-**Live captions in two flavors — local for transcription, cloud for translation.** New in v0.5. **Live Caption** runs your audio through the same on-device Qwen3-ASR pipeline as dictation and writes captions onto a floating panel — fully local, free, works on a plane. **Live Translated Caption** is the opt-in deviation from local-only: it streams audio directly from your Mac to OpenAI's realtime translate endpoint (`gpt-realtime-translate`) so you can subtitle a Japanese YouTube clip, a Korean podcast, or a Spanish-language meeting in English (or 13 other target languages) in real time. The bar for "good enough live translation" used to require renting a server; OpenAI's latest audio model collapses it to a single API call, and shipping this to you behind your own key felt worth the deviation.
+**Live captions in two flavors — local for transcription, cloud for translation.** New in v0.5. **Live Caption** runs your audio through the same on-device Qwen3-ASR pipeline as dictation and writes captions onto a floating panel — fully local, free, works on a plane. **Live Translated Caption** is the opt-in deviation from local-only: it streams audio directly from your Mac to OpenAI's latest `gpt-realtime-translate` model so you can subtitle a Japanese YouTube clip, a Korean podcast, or a Spanish-language meeting in English (or 13 other target languages) in real time.
 
-When you turn on cloud captions, **the key is yours, the audio is yours, the bill is yours.** Your API key sits in plaintext at `~/Library/Application Support/HushType/openai.json` — same security profile as a `.env` file, same threat model. Audio streams Mac → OpenAI directly over WSS; HushType operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend. Cost guardrails (auto-stop minutes, daily-cap warnings) and a per-session cost chip are built in. Cloud mode never auto-starts — the first time you turn it on you see a one-time disclosure, and the engine resets to local on every app launch.
+When you turn it on, **the key is yours, the audio is yours, the bill is yours.** Your API key sits in plaintext at `~/Library/Application Support/HushType/openai.json` (same security profile as `.env`). Audio streams Mac → OpenAI directly over WSS; HushType operates no servers, sees no audio, no key, no spend. Cost guardrails (auto-stop, daily cap) and a per-session cost chip are built in. Cloud mode never auto-starts — first use triggers a one-time disclosure, and the engine resets to local on every app launch.
 
 ---
 
@@ -112,34 +112,19 @@ The DMG is self-contained — OpenCC and all dependencies are bundled. No Homebr
 
 See [Prerequisites](#prerequisites-and-dependencies) and [macOS Setup Guide](#setup-guide-macos) below.
 
-### Option C: Zero-experience setup
-
-**Not technical? No problem.** Open [AGENT_SETUP.md](AGENT_SETUP.md), copy the entire content, and paste it into any AI coding agent — [Claude Code](https://claude.ai/code), [Cursor](https://cursor.com), [Codex](https://openai.com/index/codex/), or [Windsurf](https://windsurf.com). The agent will walk you through the entire setup step by step, from installing dependencies to running the app on your Mac and iPhone.
-
 ---
 
 ## Updating
 
-macOS apps don't have a Windows-style uninstaller — updating just means **replacing the `.app` bundle**. Your preferences, the downloaded ASR model, and user data all live outside the bundle, so replacing it preserves everything.
+Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and user data live outside the bundle and are preserved.
 
-**To update HushType (DMG):**
+**DMG:** quit HushType, drag the new `HushType.app` onto the Applications shortcut in the new DMG (click **Replace**), relaunch from Spotlight.
 
-1. **Quit HushType** — menu bar icon → Quit HushType. Finder can't replace a running app.
-2. **Download the new `HushType.dmg`** from the [latest release](https://github.com/felixfu824/HushType/releases).
-3. **Open the DMG and drag `HushType.app` onto the `Applications` shortcut** inside the DMG window. Finder asks *"An item named HushType.app already exists. Do you want to replace it?"* — click **Replace**.
-4. **Launch HushType from Spotlight.** On first launch of the new version, HushType automatically resets its stale Accessibility entry (left over from the previous build's code hash) and shows the onboarding modal again. Follow it once — toggle HushType on in System Settings → Accessibility, then click **Restart HushType** in the modal. You only need to do this once per update.
+**From source:** `git pull && make install`.
 
-**To update when building from source:** `git pull && make install` handles everything. The same Accessibility re-grant still applies because the new binary has a new code hash.
+**Permission re-grant:** because HushType is ad-hoc signed, macOS tracks its TCC entries by code hash, which changes every build. The app auto-cleans the stale entry on first launch and shows an onboarding modal — toggle Accessibility on, click **Restart HushType**, done. Once per update. Proper Developer ID signing ($99/yr Apple account) would eliminate this.
 
-**Why the permission re-grant?** HushType is ad-hoc signed (not notarized). macOS's permission database tracks ad-hoc signed apps by their code hash, which changes on every build. Proper Developer ID signing (requires a paid Apple Developer account) would eliminate this step. Until then, HushType auto-cleans the stale entry on launch so you only have to re-toggle the switch — not manually hunt down the orphaned row.
-
-**To fully uninstall HushType:**
-
-1. Quit HushType
-2. Drag `/Applications/HushType.app` to the Trash
-3. *(Optional)* Remove preferences: `defaults delete com.felix.hushtype`
-4. *(Optional)* Remove the downloaded model: `rm -rf ~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR* ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
-5. *(Optional)* Remove the Accessibility entry: System Settings → Privacy & Security → Accessibility → select HushType → click the `-` button
+**Full uninstall:** Trash `/Applications/HushType.app`, then optionally `defaults delete com.felix.hushtype` and `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` to remove preferences and the model cache.
 
 ---
 
@@ -198,19 +183,21 @@ make install
 
 ### Step 3: Use it
 
-- **Hold Right Option (≥0.3s)** — start recording. A translucent "Listening" pill appears at the bottom of the screen with a live audio level meter.
-- **Release** — the pill switches to a pulsing "Transcribing" state while ASR runs, then the transcribed text is pasted at your cursor and also left on the clipboard for re-pasting.
-- **Tap Right Option (<0.3s)** — with text selected, translates the selection and shows the result in a floating card. Auto-copies the translation to clipboard. See [Text Translation](#optional-text-translation-macos-14) below.
-- **Menu bar icon** — shows status (idle / recording / transcribing) and live RAM usage
-- **Menu bar > Language** — switch between Auto / English / Chinese / Japanese
-- **Menu bar > Show Floating Indicator** — toggle the bottom-of-screen pill (default on)
-- **Menu bar > Number Conversion** — toggle the deterministic Chinese-numeral → Arabic-digit pass (default on)
-- **Menu bar > Text Translation** — enable/disable the tap-to-translate feature (requires macOS 14+). See below.
-- **Menu bar > AI Cleanup** — optional post-processing via Apple Foundation Models (requires macOS 26+, off by default). See below.
-- **Menu bar > Unload Speech-to-Text Model** — frees ~2 GB RAM when you don't need voice input. Click "Reload Speech-to-Text Model" to re-enable (~3s cold start).
-- **Menu bar > Edit Customized Dictionary** — open a plain-text file at `~/Library/Application Support/HushType/dictionary.txt` for proper nouns and jargon (`source -> target`, one rule per line). Hot-reloads on save.
+- **Hold Right Option (≥0.3s)** — record. A "Listening" pill with a live audio meter shows at the bottom of the screen.
+- **Release** — pill switches to "Transcribing"; transcribed text pastes at your cursor and stays on the clipboard.
+- **Tap Right Option (<0.3s)** — with text selected, translates via Apple Translation Framework into a floating card. See [Text Translation](#optional-text-translation-macos-14).
 
-That's it for macOS. No server, no network, no configuration needed.
+**Menu bar:**
+
+- **Language** — Auto / English / Chinese / Japanese
+- **Show Floating Indicator** — toggle the listening pill (default on)
+- **Number Conversion** — Chinese numeral → Arabic digit pass (default on)
+- **Text Translation** — enable tap-to-translate (macOS 14+)
+- **AI Cleanup** — Apple Foundation Models post-processing (macOS 26+, off by default)
+- **Unload Speech-to-Text Model** — frees ~2 GB RAM; reload from the same menu (~3s cold start)
+- **Edit Customized Dictionary** — `~/Library/Application Support/HushType/dictionary.txt`, plain text, `source -> target` per line, hot-reloads
+
+That's it. No server, no network, no configuration.
 
 ### Optional: Live Caption / Live Translated Caption (macOS 15+)
 
@@ -236,28 +223,11 @@ Two products sharing the same floating caption panel. Mutually exclusive at runt
 
 ### Optional: Text Translation (macOS 14+)
 
-HushType v0.4 adds on-device text translation via Apple's Translation Framework. Select any text in any app, tap Right Option (quick press, <0.3s), and a translucent floating card appears with the translation. The translation is also auto-copied to your clipboard.
+On-device translation via Apple Translation Framework. Select any text → tap Right Option (<0.3s) → translucent card appears with the translation, also auto-copied to clipboard. Card auto-dismisses after 10s; hover to pause, click or Escape to dismiss now.
 
-**Smart language direction:**
-- Chinese text → English
-- All other languages → Traditional Chinese (繁體中文)
-- Override the target language in the menu bar or via `defaults write`
+**Direction:** Chinese → English; everything else → Traditional Chinese. Override via menu bar or `defaults write hushtype.translateTargetLanguage`.
 
-**Requirements:**
-- macOS 14 (Sonoma) or later
-- Apple Silicon or Intel Mac (Translation Framework uses Apple's on-device models)
-
-**How to enable:**
-1. Menu bar → click the HushType icon → click **Text Translation**
-2. The checkmark appears and translation is active
-3. Select text in any app → tap Right Option → translation card appears
-4. Toggle off any time from the same menu
-
-**How to use:**
-1. Select text you want to translate (in any app — Safari, Notes, Mail, etc.)
-2. Tap Right Option quickly (<0.3s) — don't hold it
-3. A floating translucent card appears with the translation
-4. The translation is automatically copied to your clipboard and auto-dismisses after 10 seconds. Hover over the card to pause the countdown; click anywhere or press Escape to dismiss instantly.
+**Enable:** Menu bar → **Text Translation**. The toggle runs a sanity-check; if Translation Framework isn't available, the toggle stays off with a clear error.
 
 ### Optional: AI Cleanup (opt-in beta, macOS 26+)
 

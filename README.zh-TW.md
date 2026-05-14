@@ -19,15 +19,15 @@
 
 ## 為什麼選擇 HushType
 
-**隱私與本地優先。** 你的語音永遠不會離開你的機器。語音模型完全在你 Mac 的 GPU 上執行——無雲端、無帳號、無遙測、無資料蒐集。唯一的網路連線是首次啟動時的一次性模型下載（約 675 MB）；之後 App 完全離線運行。iPhone 的音訊透過 Tailscale（WireGuard 加密）或區域網路 WiFi 傳送到你自己的 Mac。事先在另一台機器下載好模型資料夾再複製過來，HushType 就能完全離網運作。
+**隱私與本地優先。** 語音永遠不會離開你的機器。模型完全在 Mac 的 GPU 執行——無雲端、無帳號、無遙測。唯一的網路連線是首次的一次性模型下載（約 675 MB），之後完全離線。iPhone 音訊透過 Tailscale 或 WiFi 直送你的 Mac。事先把模型資料夾複製過來，HushType 就能完全離網。
 
-**記憶體友善——與你的 AI 助手共存。** HushType 是為了 2026 年 Apple Silicon 使用者真實的使用情境而設計：同時開著兩三個程式助手（Claude Code、Cursor、Codex）、瀏覽器、加上日常工作。Qwen3-ASR-0.6B 4-bit 磁碟空間約 675 MB，不到 Whisper Large v3 Turbo（約 1.6 GB）的一半，效能可媲美體積大三倍的模型，小到讓入門級 8 / 16 GB M 系列 Mac 也能在跑其他應用程式的同時舒服地裝載。在選單列點一下即可卸載模型，立刻釋放約 2 GB 記憶體；下次按住 Right ⌥ 時會自動重新載入（冷啟動約 3 秒）。
+**記憶體友善——與你的 AI 助手共存。** 為 2026 年 Apple Silicon 使用者的真實情境而設計：同時開兩三個程式助手（Claude Code、Cursor、Codex）、瀏覽器、加上日常工作。Qwen3-ASR-0.6B 4-bit 磁碟約 675 MB，不到 Whisper Large v3 Turbo（約 1.6 GB）的一半，但效能可媲美體積大三倍的模型。入門級 8 / 16 GB M 系列 Mac 也跑得動。選單列點一下卸載即釋放約 2 GB，下次按住 Right ⌥ 自動重新載入（冷啟動約 3 秒）。
 
-**真正能用的繁體中文。** Whisper 只提供單一的 `zh` 語言代碼，預設輸出簡體中文，且沒有可靠的方法強制輸出繁體。大多數開源模型常混雜簡體字或使用大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 進行語音辨識，再透過 OpenCC `s2twp` 進行台灣在地的繁體輸出——軟體 而非 软件、滑鼠 而非 鼠标、品質 而非 质量。Qwen3-ASR 也原生支援英文/中文混用辨識——在同一句話混說兩種語言，一次轉錄就能搞定，不需要中途切換語言。另有選用的確定性 ITN 階層，可依語境將中文數字轉成阿拉伯數字（`一零一大樓` → `101 大樓`、`三點一四` → `3.14`），預設開啟，可從選單列關閉。
+**真正能用的繁體中文。** Whisper 只有單一 `zh` 代碼且預設輸出簡體，沒有可靠方法強制繁體；大多數開源模型混雜簡體或大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地繁體輸出——軟體、滑鼠、品質。原生支援英中混用辨識（同句混說兩種語言一次搞定）。確定性 ITN 將中文數字轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟，可從選單關閉。
 
-**字幕模式有兩種選擇——本機轉錄、雲端翻譯。** v0.5 新增功能。**Live Caption（即時字幕）**用跟聽寫一樣的 Qwen3-ASR 在本機跑，把語音字幕顯示在浮動面板上：免費、離線、飛機上也能用。**Live Translated Caption（即時翻譯字幕）**是這次刻意違反「全本機」承諾的功能——你的 Mac 直接把音訊串流到 OpenAI 的即時翻譯端點（`gpt-realtime-translate`），就能即時把日文 YouTube、韓文 podcast、西文會議字幕翻成英文（或其他 13 種目標語言）。以前要做出「堪用的即時翻譯」得自己租伺服器；OpenAI 最新的 audio model 讓這件事剩下一個 API 呼叫的距離。我們覺得把這件事讓使用者用自己的 key 用起來，值得這次破例。
+**字幕模式有兩種選擇——本機轉錄、雲端翻譯。** v0.5 新增。**Live Caption（即時字幕）** 用跟聽寫一樣的 Qwen3-ASR 在本機跑，把字幕顯示在浮動面板上：免費、離線、飛機上也能用。**Live Translated Caption（即時翻譯字幕）** 是這次刻意違反「全本機」承諾的功能——你的 Mac 直接把音訊串到 OpenAI 最新的 `gpt-realtime-translate` 模型，就能即時把日文 YouTube、韓文 podcast、西文會議字幕翻成英文（或其他 13 種目標語言）。
 
-雲端字幕啟用時，**金鑰是你的、音訊是你的、帳單是你的。** 你的 API key 以明文存在 `~/Library/Application Support/HushType/openai.json`，跟 `.env` 是同一種安全等級。音訊以 WSS 直送 Mac → OpenAI；HushType 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。內建費用上限（自動停止分鐘數、日花費警示）與面板抬頭的即時費用顯示。雲端從來不會自動啟動——第一次開啟會看到一次性免責說明，且 App 重啟後字幕模式一律回到本機，要再用雲端就得自己再點一次。
+啟用時，**金鑰是你的、音訊是你的、帳單是你的。** 你的 API key 以明文存在 `~/Library/Application Support/HushType/openai.json`（跟 `.env` 同安全等級）。音訊以 WSS 直送 Mac → OpenAI；HushType 沒有伺服器、看不到音訊、金鑰、或費用。內建費用上限（自動停止、日花費警示）與面板抬頭的即時費用顯示。雲端從來不會自動啟動——第一次開啟有一次性免責說明，App 重啟後一律回到本機，要再用雲端得自己再點一次。
 
 ---
 
@@ -112,34 +112,19 @@ DMG 為完全獨立版本——OpenCC 及所有相依套件皆已內含。不需
 
 參見下方[前置需求](#前置需求與相依套件)及 [macOS 安裝指南](#安裝指南macos)。
 
-### 方案 C：零基礎安裝
-
-**完全不懂技術？沒問題。** 打開 [AGENT_SETUP.md](AGENT_SETUP.md)，複製全部內容，貼到任何 AI 程式助手中——[Claude Code](https://claude.ai/code)、[Cursor](https://cursor.com)、[Codex](https://openai.com/index/codex/) 或 [Windsurf](https://windsurf.com)。AI 助手會一步一步帶你完成整個安裝，從安裝相依套件到在你的 Mac 和 iPhone 上執行。
-
 ---
 
 ## 更新
 
-macOS 沒有 Windows 那種「解除安裝程式」的概念——更新一個 App 就是**直接覆蓋 `.app` 資料夾**。你的偏好設定、下載好的 ASR 模型、以及其他使用者資料都存在 `.app` 外面，覆蓋的時候不會被動到。
+更新等於**覆蓋 `.app` 資料夾**。偏好設定、ASR 模型、使用者資料都存在 `.app` 外面，不會被動到。
 
-**更新 HushType（DMG 使用者）：**
+**DMG：** 退出 HushType → 開啟新 DMG → 拖 `HushType.app` 到視窗內的 Applications 捷徑（點 **取代 / Replace**）→ 從 Spotlight 重啟。
 
-1. **退出 HushType** — 選單列圖示 → Quit HushType。正在執行中的 App 沒辦法被 Finder 覆蓋。
-2. **從 [latest release](https://github.com/felixfu824/HushType/releases) 下載新的 `HushType.dmg`**。
-3. **打開 DMG，把 `HushType.app` 拖到視窗內的 `Applications` 捷徑上**。Finder 會跳出：「名為 HushType.app 的項目已存在。要取代嗎？」點 **取代 / Replace**。
-4. **從 Spotlight 啟動 HushType**。新版本首次啟動時，HushType 會自動清除舊版本留下的輔助使用權限記錄（舊版的程式碼雜湊值），然後重新顯示 onboarding 歡迎對話框。照著流程走一次：在系統設定 → 隱私權與安全性 → 輔助使用 中把 HushType 開關打開，然後在對話框點 **Restart HushType**。每次更新只需要做一次這個動作。
+**從原始碼編譯：** `git pull && make install`。
 
-**從原始碼編譯的使用者：** 直接 `git pull && make install` 就搞定。新編譯出的 binary 會有新的程式碼雜湊，所以一樣需要重新授權輔助使用一次。
+**為什麼每次更新都要重新授權？** HushType 是 ad-hoc 簽章，macOS 用程式碼雜湊（cdhash）追蹤 TCC 記錄，cdhash 每次編譯都會改。App 會在啟動時自動清掉舊 entry 並顯示 onboarding 對話框——打開輔助使用、點 **Restart HushType** 即可。每次更新一次就好。正式的 Developer ID 簽章（年費 $99 Apple 帳號）可以解決。
 
-**為什麼每次更新都要重新授權？** HushType 目前是 ad-hoc 簽章（沒有 Notarization）。macOS 的權限資料庫對 ad-hoc 簽章的 App 是用**程式碼雜湊值（cdhash）**來追蹤的，而 cdhash 在每次重新編譯後都會改變。正式的 Developer ID 簽章（需要付費 Apple Developer 帳號）可以解決這個問題。在那之前，HushType 會在啟動時自動清理舊的 entry，讓你只要重按一次開關就好，不用手動去找哪個是舊的、哪個是新的。
-
-**完全解除安裝 HushType：**
-
-1. 退出 HushType
-2. 把 `/Applications/HushType.app` 拖到垃圾桶
-3. *（可選）* 移除偏好設定：`defaults delete com.felix.hushtype`
-4. *（可選）* 移除下載的模型：`rm -rf ~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR* ~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR*`
-5. *（可選）* 移除輔助使用權限紀錄：系統設定 → 隱私權與安全性 → 輔助使用 → 選 HushType → 點 `-` 按鈕
+**完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時 `defaults delete com.felix.hushtype` 並 `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` 清掉偏好設定與模型快取。
 
 ---
 
@@ -198,19 +183,21 @@ make install
 
 ### 步驟 3：使用
 
-- **按住 Right Option（≥0.3 秒）** — 開始錄音。螢幕底部會出現一個半透明的「Listening」指示條，顯示即時的音量條。
-- **放開** — 指示條切換為脈動的「Transcribing」狀態，語音辨識完成後，文字貼到游標位置，同時也保留在剪貼簿中可再次貼上。
-- **輕按 Right Option（<0.3 秒）** — 選取文字後輕按，即刻翻譯並在浮動卡片中顯示結果。翻譯自動複製到剪貼簿。詳見下方[文字翻譯](#選用功能文字翻譯macos-14)。
-- **選單列圖示** — 顯示狀態（閒置 / 錄音中 / 轉錄中）及即時記憶體用量
-- **選單列 > Language** — 切換 Auto / English / 中文 / 日本語
-- **選單列 > Show Floating Indicator** — 切換底部浮動指示條（預設開啟）
-- **選單列 > Number Conversion** — 切換中文數字 → 阿拉伯數字的確定性轉換（預設開啟）
-- **選單列 > Text Translation** — 啟用/停用輕按翻譯功能（需要 macOS 14+）。詳見下方。
-- **選單列 > AI Cleanup** — 透過 Apple Foundation Models 的選用後處理（需要 macOS 26+，預設關閉）。詳見下方。
-- **選單列 > Unload Speech-to-Text Model** — 釋放約 2 GB 記憶體。點擊「Reload Speech-to-Text Model」可重新載入（約 3 秒冷啟動）。
-- **選單列 > Edit Customized Dictionary** — 開啟位於 `~/Library/Application Support/HushType/dictionary.txt` 的純文字檔，用於專有名詞與行話（`source -> target`，一行一條規則）。儲存後自動熱重載。
+- **按住 Right Option（≥0.3 秒）** — 錄音。螢幕底部出現「Listening」指示條與音量條。
+- **放開** — 指示條切換為「Transcribing」，文字貼到游標並保留在剪貼簿。
+- **輕按 Right Option（<0.3 秒）** — 選取文字後輕按，浮動卡片顯示 Apple Translation Framework 翻譯結果。詳見下方[文字翻譯](#選用功能文字翻譯macos-14)。
 
-macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
+**選單列：**
+
+- **Language** — Auto / English / 中文 / 日本語
+- **Show Floating Indicator** — 切換指示條（預設開啟）
+- **Number Conversion** — 中文數字 → 阿拉伯數字（預設開啟）
+- **Text Translation** — 啟用輕按翻譯（macOS 14+）
+- **AI Cleanup** — Apple Foundation Models 後處理（macOS 26+，預設關閉）
+- **Unload Speech-to-Text Model** — 釋放約 2 GB 記憶體；同一選單可重新載入（約 3 秒冷啟動）
+- **Edit Customized Dictionary** — `~/Library/Application Support/HushType/dictionary.txt`，`source -> target` 一行一條，存檔自動熱重載
+
+到此結束。不需要伺服器、不需要網路、不需要設定。
 
 ### 選用功能：Live Caption / Live Translated Caption（macOS 15+）
 
@@ -236,28 +223,11 @@ macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
 
 ### 選用功能：文字翻譯（macOS 14+）
 
-HushType v0.4 新增了裝置端文字翻譯功能，使用 Apple Translation Framework。在任何 App 中選取文字，輕按 Right Option（快速按壓，<0.3 秒），即會跳出半透明浮動卡片顯示翻譯結果。翻譯同時自動複製到剪貼簿。
+使用 Apple Translation Framework 在裝置端翻譯。選取任何文字 → 輕按 Right Option（<0.3 秒）→ 浮動卡片顯示翻譯，並自動複製到剪貼簿。卡片 10 秒後自動關閉，游標停留可暫停，點擊或按 Escape 立即關閉。
 
-**智慧語言方向：**
-- 中文 → 英文
-- 其他語言 → 繁體中文
-- 可在選單列或透過 `defaults write` 覆寫目標語言
+**方向：** 中文 → 英文；其他 → 繁體中文。可從選單列或 `defaults write hushtype.translateTargetLanguage` 覆寫。
 
-**需求：**
-- macOS 14（Sonoma）或更新版本
-- Apple Silicon 或 Intel Mac（Translation Framework 使用 Apple 的裝置端模型）
-
-**如何啟用：**
-1. 選單列 → 點 HushType 圖示 → 點 **Text Translation**
-2. 出現勾勾即代表啟用
-3. 在任何 App 中選取文字 → 輕按 Right Option → 翻譯卡片出現
-4. 隨時可從同一選單關閉
-
-**使用方式：**
-1. 選取想翻譯的文字（任何 App 都可以——Safari、備忘錄、郵件等）
-2. 快速輕按 Right Option（<0.3 秒）——不要按住
-3. 半透明浮動卡片出現，顯示翻譯結果
-4. 翻譯自動複製到剪貼簿，並會在 10 秒後自動關閉。游標停留在卡片上會暫停倒數；點擊任意處或按 Escape 可立即關閉。
+**啟用：** 選單列 → **Text Translation**。會做一次可用性測試，若 Translation Framework 不可用會跳清楚的錯誤訊息。
 
 ### 選用功能：AI Cleanup（opt-in beta,macOS 26+）
 
