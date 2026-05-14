@@ -109,43 +109,19 @@ private struct SystemAudioPickerView: View {
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
-                    // Hit-target rules of thumb:
-                    //   * Single-tap MUST drive List selection, so we cannot put a
-                    //     plain `.onTapGesture` on the row (it swallows the click).
-                    //   * `.simultaneousGesture(TapGesture(count:2))` runs alongside
-                    //     SwiftUI's selection logic, so double-click activation
-                    //     ("Pick this app immediately") still works.
-                    //   * `frame(maxWidth: .infinity, alignment: .leading)` then
-                    //     `contentShape(Rectangle())` makes the whole row width
-                    //     clickable, not just where the icon/text happen to land.
-                    //   * `padding(.vertical, 4)` gives a taller hit zone so fast
-                    //     trackpad strokes don't miss between rows.
-                    List(apps, selection: $selection) { app in
-                        HStack(spacing: 10) {
-                            if let icon = app.icon {
-                                Image(nsImage: icon)
-                                    .resizable()
-                                    .frame(width: 24, height: 24)
-                            } else {
-                                Image(systemName: "app.fill")
-                                    .frame(width: 24, height: 24)
-                                    .foregroundColor(.secondary)
-                            }
-                            Text(app.name)
-                            Spacer()
-                            Text(app.id)
-                                .font(.caption2)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .contentShape(Rectangle())
-                        .tag(app.id)
-                        .simultaneousGesture(
-                            TapGesture(count: 2).onEnded { onPick(app.id) }
-                        )
-                    }
-                    .listStyle(.bordered(alternatesRowBackgrounds: true))
+                    // Custom scroll + Button rows, NOT SwiftUI List(selection:).
+                    // The List-based approach was tried twice; on macOS the
+                    // NSCollectionView-backed implementation dispatches hit
+                    // testing such that clicks on Text content didn't propagate
+                    // to row selection — the only clickable zone was the
+                    // Spacer gap between the app name and the bundle ID
+                    // (Felix's red circle, 2026-05-14). `.contentShape`,
+                    // `.frame(maxWidth: .infinity)`, and `simultaneousGesture`
+                    // each tried as fixes did not help. A plain Button with
+                    // `.plain` style is the macOS-native pattern for a full-
+                    // row click target, and gives us free keyboard/focus
+                    // handling on top.
+                    appListView
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -166,6 +142,73 @@ private struct SystemAudioPickerView: View {
         .padding(16)
         .frame(minWidth: 380, minHeight: 480)
         .task { await loadApps() }
+    }
+
+    // MARK: - Row list
+
+    @ViewBuilder
+    private var appListView: some View {
+        ScrollView {
+            LazyVStack(spacing: 0) {
+                ForEach(Array(apps.enumerated()), id: \.element.id) { (index, app) in
+                    appRow(app, alternateBackground: !index.isMultiple(of: 2))
+                }
+            }
+        }
+        .background(Color(NSColor.textBackgroundColor))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color(NSColor.separatorColor), lineWidth: 1)
+        )
+        .cornerRadius(6)
+    }
+
+    /// Whole row is a `.plain`-styled Button so single-click anywhere on the
+    /// row selects, and macOS handles focus/keyboard semantics natively.
+    /// Double-click activates (picks immediately) via a tap-count gesture
+    /// attached after the Button — it doesn't fight single-click selection
+    /// the way it did inside a `List(selection:)` row.
+    @ViewBuilder
+    private func appRow(_ app: AppEntry, alternateBackground: Bool) -> some View {
+        let isSelected = (selection == app.id)
+        Button {
+            selection = app.id
+        } label: {
+            HStack(spacing: 10) {
+                if let icon = app.icon {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 24, height: 24)
+                } else {
+                    Image(systemName: "app.fill")
+                        .frame(width: 24, height: 24)
+                        .foregroundStyle(isSelected ? Color.white : .secondary)
+                }
+                Text(app.name)
+                    .foregroundStyle(isSelected ? Color.white : .primary)
+                Spacer(minLength: 16)
+                Text(app.id)
+                    .font(.caption2)
+                    .foregroundStyle(isSelected ? Color.white.opacity(0.9) : .secondary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.trailing)
+            }
+            .padding(.vertical, 8)
+            .padding(.horizontal, 12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+            .background(
+                isSelected
+                    ? Color.accentColor
+                    : (alternateBackground
+                        ? Color(NSColor.alternatingContentBackgroundColors.last ?? .clear)
+                        : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+        .simultaneousGesture(
+            TapGesture(count: 2).onEnded { onPick(app.id) }
+        )
     }
 
     private func loadApps() async {
