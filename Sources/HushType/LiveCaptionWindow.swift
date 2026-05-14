@@ -17,12 +17,15 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     /// Loaded from `LiveCaptionTuning.panelDefault*` once per panel creation
     /// so the JSON file can override the bundled default.
     private let defaultSize: NSSize
-    /// Bumped to `.v2` alongside the panelDefaultWidth migration so any pre-
-    /// existing narrow frame (saved against the legacy `panelFrame` key) is
-    /// dropped on the user's next launch. The orphaned legacy key is purged
-    /// once for hygiene, but never written again.
-    private static let panelFrameKey = "hushtype.liveCaption.panelFrame.v2"
-    private static let legacyPanelFrameKey = "hushtype.liveCaption.panelFrame"
+    /// Bumped to `.v3` (was `.v2` for the panelDefaultWidth=1500 bump that
+    /// over-shot). Forcing another reset lets the new 1350 default land
+    /// without users having to manually resize. Orphaned legacy keys are
+    /// purged once for hygiene below.
+    private static let panelFrameKey = "hushtype.liveCaption.panelFrame.v3"
+    private static let legacyPanelFrameKeys = [
+        "hushtype.liveCaption.panelFrame",
+        "hushtype.liveCaption.panelFrame.v2",
+    ]
 
     private var saveFrameWork: DispatchWorkItem?
 
@@ -80,12 +83,15 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     /// formula as `FloatingOverlayWindow.show()`.
     private func positionForShow() {
         let defaults = UserDefaults.standard
-        // One-shot cleanup of the legacy `panelFrame` key. We don't migrate
-        // its value forward — the whole reason the key was renamed is that
-        // users had been carrying a too-narrow saved frame from prior builds,
-        // and forcing a fresh default-position pass is the intended UX.
-        if defaults.object(forKey: Self.legacyPanelFrameKey) != nil {
-            defaults.removeObject(forKey: Self.legacyPanelFrameKey)
+        // One-shot cleanup of legacy `panelFrame` keys. We don't migrate
+        // their values forward — the whole reason the key was renamed is
+        // that users had been carrying a stale saved frame from prior
+        // builds, and forcing a fresh default-position pass is the intended
+        // UX. Each entry in the legacy list is purged once.
+        for legacy in Self.legacyPanelFrameKeys {
+            if defaults.object(forKey: legacy) != nil {
+                defaults.removeObject(forKey: legacy)
+            }
         }
 
         if let saved = defaults.string(forKey: Self.panelFrameKey), !saved.isEmpty {

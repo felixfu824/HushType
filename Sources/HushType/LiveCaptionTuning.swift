@@ -43,8 +43,8 @@ struct LiveCaptionTuning: Codable, Sendable {
     var backpressureMaxPending: Int = 50
 
     /// Default panel size. Persisted overrides from window drag/resize take
-    /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame.v2`.
-    var panelDefaultWidth: Double = 1500
+    /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame.v3`.
+    var panelDefaultWidth: Double = 1350
     var panelDefaultHeight: Double = 160
 
     /// One-shot signal: set to `true` in the JSON file to force the next
@@ -165,19 +165,19 @@ struct LiveCaptionTuning: Codable, Sendable {
         var current = decoded
         let defaults = UserDefaults.standard
 
-        // panelDefaultWidth v2 bump (1300 → 1500). Felix's MBA testing showed
-        // the prior default still felt cramped. Anything below 1500 that
-        // looks like an unedited app default (1300, or the pre-Widen 700)
-        // gets pushed up. Custom narrower widths (everything outside this
-        // exact set) are left alone so we don't fight an explicit user choice.
-        let migrationKey = "hushtype.liveCaption.tuningMigration.panelWidth.v2"
+        // panelDefaultWidth v3 settle (→ 1350). The v2 bump went from 1300 →
+        // 1500 but in testing 1500 ran a touch off the edge of usable screen
+        // on Felix's setup. Anything that looks like an unedited prior app
+        // default — including the v2 default of 1500 — gets nudged to 1350.
+        // Custom widths the user picked outside that exact set are respected.
+        let migrationKey = "hushtype.liveCaption.tuningMigration.panelWidth.v3"
         if !defaults.bool(forKey: migrationKey) {
             defaults.set(true, forKey: migrationKey)
-            let appDefaults: Set<Double> = [700, 800, 900, 1000, 1100, 1300]
+            let appDefaults: Set<Double> = [700, 800, 900, 1000, 1100, 1300, 1500]
             if appDefaults.contains(current.panelDefaultWidth) {
-                writeKey("panelDefaultWidth", value: 1500)
-                current.panelDefaultWidth = 1500
-                log.info("Migration: bumped panelDefaultWidth → 1500")
+                writeKey("panelDefaultWidth", value: 1350)
+                current.panelDefaultWidth = 1350
+                log.info("Migration: settled panelDefaultWidth → 1350")
             }
         }
         return current
@@ -250,7 +250,7 @@ struct LiveCaptionTuning: Codable, Sendable {
           "backpressureMaxPending": 50,
 
           "_comment_panel": "Default panel size (pixels). Window drag / resize values persist separately and override this on next launch.",
-          "panelDefaultWidth": 1500,
+          "panelDefaultWidth": 1350,
           "panelDefaultHeight": 160,
 
           "_comment_resetPanelOnNextStart": "Set to true to discard any persisted frame and re-apply panelDefaultWidth/Height the next time Live Caption is toggled on. The app flips it back to false after applying.",

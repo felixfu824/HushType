@@ -66,6 +66,12 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         var reconnectAttempt: Int = 0
         var stopped: Bool = false
         var awaitingGracefulClose: Bool = false
+        /// Tracks the in-flight WS receive loop so `stop()` can await its
+        /// exit before invalidating the URLSession — without this, the loop
+        /// captures `self` and keeps the backend (resampler, accumulator,
+        /// URLSession internals) alive past `stop()`, which Felix observed
+        /// as a long memory tail when followed by a dictation hotkey.
+        var receiveLoopTask: Task<Void, Never>?
     }
     private var state = State()
 
@@ -80,7 +86,12 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
     /// 3-retry reconnect ladder per spec §10.
     private static let reconnectDelaysSec: [Double] = [0.5, 1.0, 2.0]
     /// Maximum wait after sending `session.close` before forcibly closing.
-    private static let gracefulCloseTimeoutSec: TimeInterval = 1.5
+    /// Originally 1.5s to let trailing deltas settle; lowered to 300ms after
+    /// Felix saw a long memory tail when stopping cloud LC and immediately
+    /// triggering dictation. The trailing-delta loss is acceptable — the
+    /// user is explicitly stopping, they don't expect the last 1.5s of
+    /// translated speech to keep appearing on screen.
+    private static let gracefulCloseTimeoutSec: TimeInterval = 0.3
 
     private static let endpoint = URL(string: "wss://api.openai.com/v1/realtime/translations?model=gpt-realtime-translate")!
 
@@ -115,34 +126,43 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
     }
 
     func stop() async {
-        // Graceful close per spec §8: send session.close, wait up to 1.5s for
-        // trailing deltas + session.closed, flush any pending buffers, then
-        // close WS with status 1000.
-        let task = stateQueue.sync { () -> URLSessionWebSocketTask? in
+        // Shortened graceful close per Felix's 2026-05-14 feedback: 300ms
+        // window is enough for the server to receive the close frame, but
+        // doesn't keep the URLSession holding receive buffers for ~1.5s
+        // after the user has already moved on (often to dictation).
+        let (task, receiveTask) = stateQueue.sync { () -> (URLSessionWebSocketTask?, Task<Void, Never>?) in
             state.stopped = true
             state.awaitingGracefulClose = true
             cancelDebounceTimers_locked()
-            return state.task
+            return (state.task, state.receiveLoopTask)
         }
 
         if let task {
             await sendClientEvent(task: task, event: ["type": "session.close"])
-            // Give the server a brief window to flush deltas. Receive loop
-            // will commit them via debounce timers as they arrive.
             try? await Task.sleep(nanoseconds: UInt64(Self.gracefulCloseTimeoutSec * 1_000_000_000))
-            // Flush any remaining buffers immediately.
             flushPendingBuffers()
             task.cancel(with: .normalClosure, reason: nil)
         }
+
+        // Wait for the receive loop to finish observing the cancel. Without
+        // this await, the receive Task keeps a strong reference to self
+        // (resampler / accumulator / URLSession state) for an indeterminate
+        // window after stop() returns — which was the long memory tail Felix
+        // observed when stopping cloud LC and starting dictation back-to-back.
+        receiveTask?.cancel()
+        await receiveTask?.value
 
         stateQueue.sync {
             state.session?.invalidateAndCancel()
             state.session = nil
             state.task = nil
+            state.receiveLoopTask = nil
             state.resampler = nil
             state.inputFormat = nil
             state.outputFormat = nil
             state.int16Accumulator.removeAll()
+            state.currentSourceBuf = ""
+            state.currentTargetBuf = ""
         }
 
         eventsContinuation.finish()
@@ -194,8 +214,17 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         // Spin up the inbound receive loop. Each `receive()` is one-shot — we
         // re-arm in handleMessage. The loop terminates when the task throws
         // (transport drop) or when `state.stopped` is set.
-        Task { [weak self] in
-            await self?.receiveLoop(task: task)
+        // We hold a handle to this Task in state so stop() can explicitly
+        // await its exit — without that, the Task keeps a strong ref to
+        // self past stop() and delays deallocation of resampler / URLSession
+        // internals.
+        let receiveTask: Task<Void, Never> = Task { [weak self] in
+            guard let self else { return }
+            await self.receiveLoop(task: task)
+        }
+        stateQueue.sync {
+            state.receiveLoopTask?.cancel()
+            state.receiveLoopTask = receiveTask
         }
 
         if isReconnect {

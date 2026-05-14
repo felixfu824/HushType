@@ -202,12 +202,12 @@ struct LiveCaptionView: View {
     }
 
     /// Pinned dual-line region below the scrollback: source line on top
-    /// (small grey, "quote bubble" glyph), translated line below (main caption
-    /// font, "globe" glyph). Both share a single left rule so the user reads
-    /// them as one translation pair rather than two unrelated lines.
-    /// Collapses when both are nil.
+    /// (small grey, "SOURCE" chip), translated line below (main caption
+    /// font, "TRANSLATED" chip). Both share a single left accent rule so the
+    /// user reads them as one translation pair rather than two unrelated
+    /// lines. Collapses when both are nil.
     private var dualLineRegion: some View {
-        HStack(alignment: .top, spacing: 8) {
+        HStack(alignment: .top, spacing: 10) {
             Rectangle()
                 .fill(Color.accentColor.opacity(0.55))
                 .frame(width: 2)
@@ -216,7 +216,7 @@ struct LiveCaptionView: View {
             VStack(alignment: .leading, spacing: 6) {
                 if let source = model.currentSourceLine, !source.isEmpty {
                     dualLineRow(
-                        icon: "text.bubble",
+                        roleLabel: "SOURCE",
                         text: source,
                         fontSize: 12,
                         color: .secondary
@@ -224,7 +224,7 @@ struct LiveCaptionView: View {
                 }
                 if let target = model.currentTargetLine, !target.isEmpty {
                     dualLineRow(
-                        icon: "globe",
+                        roleLabel: "TRANSLATED",
                         text: target,
                         fontSize: 17,
                         color: .primary
@@ -235,14 +235,23 @@ struct LiveCaptionView: View {
         }
     }
 
+    /// One line of the dual-line region. Fixed-width pill chip on the left
+    /// (so SOURCE / TRANSLATED stack vertically aligned), then the caption.
+    /// The chip is intentionally bold + capsule-shaped so the role is
+    /// readable at panel viewing distance — the previous SF Symbol glyphs
+    /// at 10pt tertiary opacity were near-invisible.
     @ViewBuilder
-    private func dualLineRow(icon: String, text: String, fontSize: CGFloat, color: Color) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.tertiary)
-                .frame(width: 12, alignment: .center)
-                .accessibilityHidden(true)
+    private func dualLineRow(roleLabel: String, text: String, fontSize: CGFloat, color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 10) {
+            Text(roleLabel)
+                .font(.system(size: 9, weight: .heavy, design: .rounded))
+                .foregroundStyle(.secondary)
+                .tracking(0.5)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(Color.primary.opacity(0.14), in: Capsule())
+                .frame(width: 92, alignment: .leading)
+                .accessibilityLabel(roleLabel == "SOURCE" ? "Source language" : "Translated")
             Text(text)
                 .font(.system(size: fontSize, weight: .regular))
                 .foregroundStyle(color)
