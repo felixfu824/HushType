@@ -5,8 +5,8 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  Local voice-to-text for all Apple Silicon macOS users.<br>
-  Private. Memory-friendly. Steady Traditional Chinese output.
+  Local voice-to-text for Apple Silicon macOS — plus opt-in cloud captions when you want them.<br>
+  Private by default. Memory-friendly. Steady Traditional Chinese output.
 </p>
 
 <p align="center">
@@ -25,6 +25,10 @@
 
 **Traditional Chinese that actually works.** Whisper only offers a single `zh` code that defaults to Simplified with no reliable way to force Traditional. Most open-source models mix Simplified characters or use Mainland phrasing (软件 not 軟體). HushType chains Qwen3-ASR for recognition with OpenCC `s2twp` for Taiwan-specific Traditional output — 軟體 not 软件, 滑鼠 not 鼠标, 品質 not 质量. Qwen3-ASR also handles English / Mandarin code-switching in one pass — mix the two in a single sentence and you get one clean transcription, no manual language toggle mid-sentence. An optional deterministic ITN layer converts Chinese numerals to Arabic digits in context (`一零一大樓` → `101 大樓`, `三點一四` → `3.14`), on by default and reversible from the menu.
 
+**Live captions in two flavors — local for transcription, cloud for translation.** New in v0.5. **Live Caption** runs your audio through the same on-device Qwen3-ASR pipeline as dictation and writes captions onto a floating panel — fully local, free, works on a plane. **Live Translated Caption** is the opt-in deviation from local-only: it streams audio directly from your Mac to OpenAI's realtime translate endpoint (`gpt-realtime-translate`) so you can subtitle a Japanese YouTube clip, a Korean podcast, or a Spanish-language meeting in English (or 13 other target languages) in real time. The bar for "good enough live translation" used to require renting a server; OpenAI's latest audio model collapses it to a single API call, and shipping this to you behind your own key felt worth the deviation.
+
+When you turn on cloud captions, **the key is yours, the audio is yours, the bill is yours.** Your API key sits in plaintext at `~/Library/Application Support/HushType/openai.json` — same security profile as a `.env` file, same threat model. Audio streams Mac → OpenAI directly over WSS; HushType operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend. Cost guardrails (auto-stop minutes, daily-cap warnings) and a per-session cost chip are built in. Cloud mode never auto-starts — the first time you turn it on you see a one-time disclosure, and the engine resets to local on every app launch.
+
 ---
 
 ## Key Features
@@ -33,6 +37,9 @@
 |---|---|---|
 | Hold Right ⌥ to dictate (macOS) | ON | macOS 15+ |
 | Tap Right ⌥ to translate selected text | OFF | macOS 14+ |
+| **Live Caption** (local, free) — floating panel from mic or system audio | OFF | macOS 15+ |
+| **Live Translated Caption** (cloud, ~$2/hr) — real-time foreign-language subtitles via OpenAI | OFF (opt-in) | Your own OpenAI API key |
+| Right ⌘ + / — toggle whichever caption mode you used last | — | macOS 15+ |
 | EN / ZH / JA + native code-switching | ON | — |
 | 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | — |
 | 阿拉伯數字 conversion (deterministic ITN) | **ON** | — |
@@ -51,6 +58,8 @@
 **Voice notes on the go.** On the subway, Mac at home. Tap "Start Listening" on iPhone, switch to Notes, tap the mic button on the HushType keyboard. Audio travels over Tailscale to your Mac, transcribes in ~1 second, text appears.
 
 **Reading in another language.** Select any text in Safari, Mail, Notes — anywhere — and tap Right ⌥. A translucent card pops up with the translation via Apple's on-device Translation Framework. Auto-dismisses after 10s, pauses on hover. No API key, no cloud.
+
+**Watching foreign-language content.** Korean drama, Japanese news, Spanish football commentary. Open the source in any app, click **Live Translated Caption → From System Audio…** in the menu bar, pick the app — translated English (or whichever target you set) streams onto a floating caption panel anchored at the bottom of your screen. Right ⌘ + / toggles it on and off. The original-language line shows above the translation as a confidence check; cost chip in the header tracks the session bill against your own OpenAI key.
 
 ---
 
@@ -202,6 +211,28 @@ make install
 - **Menu bar > Edit Customized Dictionary** — open a plain-text file at `~/Library/Application Support/HushType/dictionary.txt` for proper nouns and jargon (`source -> target`, one rule per line). Hot-reloads on save.
 
 That's it for macOS. No server, no network, no configuration needed.
+
+### Optional: Live Caption / Live Translated Caption (macOS 15+)
+
+Two products sharing the same floating caption panel. Mutually exclusive at runtime — starting one auto-stops the other.
+
+**Live Caption** (free, local, on-device):
+
+1. Status-bar menu → click **Live Caption** to toggle (uses last-known source — defaults to mic on first use), or pick **From Microphone** / **From System Audio…** explicitly.
+2. System Audio first time → pick the app whose audio you want to caption from the picker.
+3. Captions stream onto a floating panel pinned near the bottom of your screen. The panel is draggable and resizable; its frame is remembered across stops.
+
+**Live Translated Caption** (~$2/hr against your own OpenAI account):
+
+1. Get an API key at https://platform.openai.com/api-keys.
+2. Status-bar menu → **Live Translated Caption → Translated Caption Settings…** → click **Open file in TextEdit** and paste your key into `openai.json` as the `api_key` field.
+3. Pick a target language in the same settings window (default: English; 13 others including 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch).
+4. Click **Live Translated Caption → From Microphone** (or **From System Audio…**) in the menu. First time you do this, a one-time disclosure modal explains the cost and privacy profile — accept once and it stays accepted.
+5. A cost chip in the caption panel header (e.g. `12:34 · $0.42`) shows session duration and spend. Auto-stop minutes and daily-cap warnings are configurable in the same settings window.
+
+**Hotkey** (both products): Right ⌘ + / toggles **whichever product you last started**. First-use default is local (Live Caption). The menu items are the authoritative way to pick a specific product + source.
+
+**Mid-session switching:** Clicking the other product's menu item while one is running auto-stops the current session and starts the new one. Clicking the same product's other source switches in place without rebuilding the panel.
 
 ### Optional: Text Translation (macOS 14+)
 
@@ -417,7 +448,8 @@ Common keycodes: Right Option (61), Right Command (54), Left Option (58), Left C
 
 - **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk — not on macOS, not on the iOS server.
 - **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
-- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift).
+- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift) and an optional GitHub releases check for update notifications.
+- **Cloud Live Translated Caption uses YOUR key directly to OpenAI.** Opt-in, off by default, never auto-resumes across launches. Your API key is stored in plaintext at `~/Library/Application Support/HushType/openai.json` (same security profile as `.env`) — `chmod 600 ~/Library/Application\ Support/HushType/openai.json` if you want a tighter mode bit. Audio streams Mac → OpenAI via WSS; HushType operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend. The engine resets to local on every app launch — you re-opt-in each time you want the cloud path.
 - **iOS audio stays on your network.** iPhone audio travels directly to your Mac over local WiFi or Tailscale (WireGuard-encrypted). No third-party server is involved.
 - **Fully air-gappable.** Pre-download the model folder on another machine (`~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/` for the macOS app, `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/` for the iOS server) and copy it over — the app will never need internet.
 

@@ -5,8 +5,8 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  專為 Apple Silicon macOS 使用者打造的本地語音轉文字工具。<br>
-  隱私至上。省記憶體。穩定的繁體中文輸出。
+  專為 Apple Silicon macOS 打造的本地語音轉文字工具 — 想要時也可以選擇雲端字幕。<br>
+  預設不外傳。省記憶體。穩定的繁體中文輸出。
 </p>
 
 <p align="center">
@@ -25,6 +25,10 @@
 
 **真正能用的繁體中文。** Whisper 只提供單一的 `zh` 語言代碼，預設輸出簡體中文，且沒有可靠的方法強制輸出繁體。大多數開源模型常混雜簡體字或使用大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 進行語音辨識，再透過 OpenCC `s2twp` 進行台灣在地的繁體輸出——軟體 而非 软件、滑鼠 而非 鼠标、品質 而非 质量。Qwen3-ASR 也原生支援英文/中文混用辨識——在同一句話混說兩種語言，一次轉錄就能搞定，不需要中途切換語言。另有選用的確定性 ITN 階層，可依語境將中文數字轉成阿拉伯數字（`一零一大樓` → `101 大樓`、`三點一四` → `3.14`），預設開啟，可從選單列關閉。
 
+**字幕模式有兩種選擇——本機轉錄、雲端翻譯。** v0.5 新增功能。**Live Caption（即時字幕）**用跟聽寫一樣的 Qwen3-ASR 在本機跑，把語音字幕顯示在浮動面板上：免費、離線、飛機上也能用。**Live Translated Caption（即時翻譯字幕）**是這次刻意違反「全本機」承諾的功能——你的 Mac 直接把音訊串流到 OpenAI 的即時翻譯端點（`gpt-realtime-translate`），就能即時把日文 YouTube、韓文 podcast、西文會議字幕翻成英文（或其他 13 種目標語言）。以前要做出「堪用的即時翻譯」得自己租伺服器；OpenAI 最新的 audio model 讓這件事剩下一個 API 呼叫的距離。我們覺得把這件事讓使用者用自己的 key 用起來，值得這次破例。
+
+雲端字幕啟用時，**金鑰是你的、音訊是你的、帳單是你的。** 你的 API key 以明文存在 `~/Library/Application Support/HushType/openai.json`，跟 `.env` 是同一種安全等級。音訊以 WSS 直送 Mac → OpenAI；HushType 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。內建費用上限（自動停止分鐘數、日花費警示）與面板抬頭的即時費用顯示。雲端從來不會自動啟動——第一次開啟會看到一次性免責說明，且 App 重啟後字幕模式一律回到本機，要再用雲端就得自己再點一次。
+
 ---
 
 ## 主要功能
@@ -33,6 +37,9 @@
 |---|---|---|
 | 按住 Right ⌥ 進行語音輸入（macOS）| ON | macOS 15+ |
 | 輕按 Right ⌥ 翻譯選取的文字 | OFF | macOS 14+ |
+| **Live Caption（本機，免費）** — 浮動字幕面板，麥克風或系統音訊 | OFF | macOS 15+ |
+| **Live Translated Caption（雲端，約 $2/小時）** — 即時外文翻譯字幕，使用 OpenAI | OFF（自行開啟） | 你自己的 OpenAI API key |
+| Right ⌘ + / — 切換上次用過的字幕模式 | — | macOS 15+ |
 | 英文 / 中文 / 日文 + 原生混用 | ON | — |
 | 簡體 → 繁體 後處理（OpenCC `s2twp`）| **ON** | — |
 | 阿拉伯數字轉換（確定性 ITN）| **ON** | — |
@@ -51,6 +58,8 @@
 **通勤時的語音筆記。** 在捷運上，Mac 留在家裡。在 iPhone 上點「Start Listening」，切到備忘錄，按 HushType 鍵盤上的麥克風按鈕。語音透過 Tailscale 傳回你的 Mac，約 1 秒完成轉錄，文字出現。
 
 **閱讀其他語言。** 在 Safari、Mail、備忘錄等任何 App 中選取文字，輕按 Right ⌥。半透明卡片即跳出翻譯結果，使用 Apple 裝置端 Translation Framework。10 秒後自動關閉、游標停留會暫停倒數。無 API 金鑰、無雲端。
+
+**看外語內容。** 韓劇、日本新聞、西語足球轉播。在任何 App 開來源，選單列 → **Live Translated Caption → From System Audio…** 選那個 App — 翻譯後的英文（或你設定的目標語言）會即時顯示在螢幕下方的浮動字幕面板。Right ⌘ + / 開關。原文小灰字在翻譯上方一起顯示，方便確認翻譯沒走偏；面板抬頭的費用條會即時顯示本次工作階段在你 OpenAI 帳戶上的累積花費。
 
 ---
 
@@ -202,6 +211,28 @@ make install
 - **選單列 > Edit Customized Dictionary** — 開啟位於 `~/Library/Application Support/HushType/dictionary.txt` 的純文字檔，用於專有名詞與行話（`source -> target`，一行一條規則）。儲存後自動熱重載。
 
 macOS 到此結束。不需要伺服器、不需要網路、不需要設定。
+
+### 選用功能：Live Caption / Live Translated Caption（macOS 15+）
+
+兩種共用同一塊浮動字幕面板的功能，執行時互斥——啟動其中一個會自動停止另一個。
+
+**Live Caption（本機、免費、裝置端）：**
+
+1. 選單列 → 點 **Live Caption** 直接切換（使用上次的音源，首次預設麥克風），或明確選 **From Microphone** / **From System Audio…**。
+2. 第一次選 System Audio 會跳出選擇器讓你挑要監聽的 App。
+3. 字幕會出現在螢幕下方的浮動面板，面板可拖曳、可調整大小，下次開啟會記住位置。
+
+**Live Translated Caption（雲端，約 $2/小時，計費於你自己的 OpenAI 帳戶）：**
+
+1. 在 https://platform.openai.com/api-keys 取得 API key。
+2. 選單列 → **Live Translated Caption → Translated Caption Settings…** → 點 **Open file in TextEdit**，把 key 貼進 `openai.json` 的 `api_key` 欄位。
+3. 在同一個設定視窗選目標語言（預設英文；另支援 13 種，含 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch）。
+4. 選單列 → **Live Translated Caption → From Microphone**（或 **From System Audio…**）開始。第一次會跳一次性免責說明，接受一次後不再跳。
+5. 字幕面板抬頭會出現費用條（例如 `12:34 · $0.42`），即時顯示工作階段時間與累積花費。自動停止分鐘數與日花費上限警示都在同一個設定視窗可調。
+
+**快捷鍵（兩種共用）：** Right ⌘ + / 切換**上次用過的那種模式**。首次預設本機 Live Caption。要精確選擇哪個模式 + 哪種音源，從選單列點選是最直接的方式。
+
+**模式切換：** 在一個模式執行中點另一個模式的選單項，會自動停止當前的、啟動新的。同一個模式換音源（mic ↔ system）會原地切換、不重建面板。
 
 ### 選用功能：文字翻譯（macOS 14+）
 
@@ -417,7 +448,8 @@ private static let rightOptionKeyCode: Int64 = 61
 
 - **不儲存任何錄音。** 語音資料僅存在於記憶體中（錄音 → 轉錄流程），完成後即丟棄。無論 macOS 或 iOS 伺服器，皆不會將任何音訊寫入磁碟。
 - **設定完成後不需要網路。** 唯一需要連網的是首次啟動時下載模型（約 675 MB）。之後，App 與模型完全離線運行，零對外連線。
-- **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）外，不包含任何網路程式碼。
+- **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）以及選用的 GitHub releases 更新檢查外，不包含任何網路程式碼。
+- **雲端 Live Translated Caption 用你自己的 key 直接打 OpenAI。** 預設關閉、需自行開啟、不會跨啟動自動恢復。你的 API key 以明文存在 `~/Library/Application Support/HushType/openai.json`（跟 `.env` 同安全等級）— 想嚴格一點可以用 `chmod 600 ~/Library/Application\ Support/HushType/openai.json` 改檔案權限。音訊以 WSS 直送 Mac → OpenAI；HushType 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。每次 App 重啟字幕模式都重設回本機，要用雲端就重新點開。
 - **iOS 音訊留在你的網路中。** iPhone 音訊直接傳送到你的 Mac，透過區域網路 WiFi 或 Tailscale（WireGuard 加密）。不經過任何第三方伺服器。
 - **可完全離網運作。** 事先在另一台機器下載模型資料夾（macOS App 為 `~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/`,iOS 伺服器為 `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`）再複製過來——App 將永遠不需要網路。
 
