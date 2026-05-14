@@ -560,17 +560,28 @@ final class LiveCaptionManager {
             }
 
         case .sourceComplete:
-            // Source debounce fired — clear the in-progress source current-
-            // line ONLY. Target may still be accumulating; leaving it
-            // untouched avoids clobbering a fresh utterance that started in
-            // the gap between source-fire and target-fire.
-            viewModel?.currentSourceLine = nil
+            // Source debounce fired. If the target is still mid-stream
+            // (translation lag — typically ~200ms behind recognition),
+            // DEFER source clearing to .segmentComplete so the user keeps
+            // seeing the source/translation pair together until the whole
+            // thought commits. Only clear right now if target is empty —
+            // that's the "source spoken, nothing translatable came back"
+            // case where leaving source on screen would just hang there.
+            let targetMidStream = !(viewModel?.currentTargetLine ?? "").isEmpty
+            if !targetMidStream {
+                viewModel?.currentSourceLine = nil
+            }
 
         case .segmentComplete(let text):
             await handleSegment(text)
-            // Clear the target current-line only. Source-line clearing is
-            // owned by `.sourceComplete` (see comment in BackendEvent).
+            // Clear both the target AND the source current-lines together.
+            // The source-line clearing was previously owned only by
+            // .sourceComplete, but that fires ~200ms before this event in
+            // the common case, leaving an awkward window where the user saw
+            // a translation with no source underneath. See the .sourceComplete
+            // arm above for the matching defer.
             viewModel?.currentTargetLine = nil
+            viewModel?.currentSourceLine = nil
             // The live accumulator is consumed by this commit. Wipe so the
             // next utterance starts clean. `liveTargetRawDirty` stays false
             // because we've reached the canonical end of the segment — any

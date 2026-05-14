@@ -6,6 +6,11 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "hotkey")
 final class HotkeyManager {
     var onPress: (() -> Void)?
     var onRelease: (() -> Void)?
+    /// Fires on Right ⌘ + Shift + / (i.e., the "?" key). Single keyDown
+    /// event — caller should treat it as a toggle (start if off, stop if
+    /// running). Suppressed from propagation so it doesn't open the Help
+    /// menu in the focused app.
+    var onLiveCaptionToggle: (() -> Void)?
 
     private var eventTap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -13,6 +18,14 @@ final class HotkeyManager {
     private var otherKeyPressedDuringHold = false
 
     private static let rightOptionKeyCode: Int64 = 61 // kVK_RightOption
+    /// kVK_ANSI_Slash — physical "/" key. With Shift held, this is "?".
+    private static let slashKeyCode: Int64 = 44
+    /// Device-dependent bit for Right Command on macOS CGEventFlags.
+    /// The published `CGEventFlags.maskCommand` only encodes "some cmd is
+    /// pressed"; left vs right lives in the lower byte of the raw value.
+    /// 0x10 = right cmd; 0x08 = left cmd.
+    private static let rightCommandFlagBit: UInt64 = 0x10
+    private static let leftCommandFlagBit: UInt64 = 0x08
 
     func start() {
         let eventMask: CGEventMask = (1 << CGEventType.flagsChanged.rawValue)
@@ -65,6 +78,26 @@ final class HotkeyManager {
                 CGEvent.tapEnable(tap: tap, enable: true)
             }
             return Unmanaged.passUnretained(event)
+        }
+
+        // Live Caption toggle: Right ⌘ + Shift + / (= "?"). Single discrete
+        // keyDown event. We require the Right command bit specifically and
+        // forbid the Left command bit so users who comment-toggle with
+        // left-⌘+/ in an editor aren't disrupted, and global "?" Help menu
+        // shortcuts on left-⌘ also continue to work.
+        if type == .keyDown {
+            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
+            if keyCode == Self.slashKeyCode {
+                let flagsRaw = event.flags.rawValue
+                let rightCmd = (flagsRaw & Self.rightCommandFlagBit) != 0
+                let leftCmd = (flagsRaw & Self.leftCommandFlagBit) != 0
+                let shift = event.flags.contains(.maskShift)
+                if rightCmd && !leftCmd && shift {
+                    log.debug("Live Caption hotkey (Right ⌘ + Shift + /)")
+                    onLiveCaptionToggle?()
+                    return nil // suppress — don't open Help menu in focused app
+                }
+            }
         }
 
         // Track if other keys are pressed during Right Option hold

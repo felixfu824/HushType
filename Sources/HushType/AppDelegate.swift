@@ -56,6 +56,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyManager.onRelease = { [weak self] in
             self?.handleHotkeyRelease()
         }
+        hotkeyManager.onLiveCaptionToggle = { [weak self] in
+            Task { @MainActor in self?.toggleLiveCaptionViaHotkey() }
+        }
 
         // RMS callback fires on the CoreAudio IO thread — must hop to main
         // before touching @Published state on the overlay model.
@@ -447,6 +450,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             } catch {
                 log.error("LiveCaption start/switch failed: \(error.localizedDescription, privacy: .public)")
             }
+        }
+    }
+
+    /// Right ⌘ + Shift + / handler: toggle Live Caption with the last-used
+    /// source. If LC was previously running off the mic (or has never been
+    /// started this session), starts on the mic; otherwise starts on the
+    /// remembered system-audio bundle. Cloud LC costs money per second and
+    /// the menu detour was a friction point per Felix's feedback.
+    @MainActor
+    private func toggleLiveCaptionViaHotkey() {
+        guard let manager = self.liveCaptionManager else {
+            NSSound.beep()
+            return
+        }
+        if manager.isActive {
+            manager.stop()
+            return
+        }
+        if AppConfig.shared.liveCaptionUsesMicSource {
+            startOrSwitchLiveCaption(to: .mic)
+        } else {
+            startSystemAudioLiveCaption(forcePicker: false)
         }
     }
 

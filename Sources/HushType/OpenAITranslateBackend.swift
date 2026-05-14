@@ -195,11 +195,18 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         task.resume()
 
         // Send session.update with the target language and the realtime-
-        // translation client-event shape (§8).
+        // translation client-event shape (§8). We also set
+        // `output_modalities: ["text"]` so the server never streams back
+        // synthesized audio (`session.output_audio.delta`). We discard those
+        // payloads anyway, but URLSession buffers them on receive — which
+        // showed up as a ~700MB memory tail after stop() in Felix's testing.
+        // Suppressing them at the source eliminates the buffer pressure
+        // entirely.
         let outputLangISO = mapTargetLanguage(targetLanguage)
         let sessionUpdate: [String: Any] = [
             "type": "session.update",
             "session": [
+                "output_modalities": ["text"],
                 "audio": [
                     "input": [
                         "transcription": ["model": "gpt-realtime-whisper"],
@@ -295,8 +302,12 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
             }
 
         case "session.output_audio.delta":
-            // Discard — we don't play translated audio in v0.7.
-            break
+            // Discard — we don't play translated audio in v0.7. After the
+            // output_modalities=["text"] addition to session.update we
+            // shouldn't see this anymore; if it shows up it means OpenAI
+            // is ignoring the modalities suppression and we'd want to
+            // surface that in logs for diagnosis.
+            log.debug("WS output_audio.delta received — output_modalities suppression may not be applying")
 
         case "session.closed":
             log.info("WS session.closed received")
@@ -317,8 +328,14 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
             eventsContinuation.yield(.error(nsError))
 
         default:
-            // Unknown event type — log at debug, don't drop the connection.
-            log.debug("WS unknown event type: \(type, privacy: .public)")
+            // Unknown event type — log at INFO (was debug) so Felix can pull
+            // them out of Console.app when the panel stalls (the EN→ZH
+            // language-switch case is suspected to involve a previously-
+            // unseen event type from the translate endpoint when source and
+            // target collapse to the same language). Don't drop the
+            // connection on unknown events — forward-compat with new server
+            // event types is worth the noise.
+            log.info("WS unknown event type: \(type, privacy: .public)")
         }
     }
 
