@@ -17,7 +17,12 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     /// Loaded from `LiveCaptionTuning.panelDefault*` once per panel creation
     /// so the JSON file can override the bundled default.
     private let defaultSize: NSSize
-    private static let panelFrameKey = "hushtype.liveCaption.panelFrame"
+    /// Bumped to `.v2` alongside the panelDefaultWidth migration so any pre-
+    /// existing narrow frame (saved against the legacy `panelFrame` key) is
+    /// dropped on the user's next launch. The orphaned legacy key is purged
+    /// once for hygiene, but never written again.
+    private static let panelFrameKey = "hushtype.liveCaption.panelFrame.v2"
+    private static let legacyPanelFrameKey = "hushtype.liveCaption.panelFrame"
 
     private var saveFrameWork: DispatchWorkItem?
 
@@ -75,6 +80,14 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     /// formula as `FloatingOverlayWindow.show()`.
     private func positionForShow() {
         let defaults = UserDefaults.standard
+        // One-shot cleanup of the legacy `panelFrame` key. We don't migrate
+        // its value forward — the whole reason the key was renamed is that
+        // users had been carrying a too-narrow saved frame from prior builds,
+        // and forcing a fresh default-position pass is the intended UX.
+        if defaults.object(forKey: Self.legacyPanelFrameKey) != nil {
+            defaults.removeObject(forKey: Self.legacyPanelFrameKey)
+        }
+
         if let saved = defaults.string(forKey: Self.panelFrameKey), !saved.isEmpty {
             let restored = NSRectFromString(saved)
             // Reject saved frames smaller than the current minSize so a width
@@ -93,7 +106,11 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
 
         guard let screen = NSScreen.main else { return }
         let visible = screen.visibleFrame
-        let size = defaultSize
+        // Clamp horizontally so the tuning default (1500) doesn't push the
+        // panel off the right edge on a 13" MBA (~1440 effective wide). 40px
+        // of breathing room on each side keeps it from kissing the bezel.
+        let clampedWidth = min(defaultSize.width, visible.width - 40)
+        let size = NSSize(width: max(minSize.width, clampedWidth), height: defaultSize.height)
         let x = visible.midX - size.width / 2
         let y = visible.minY + 80
         setFrame(NSRect(origin: CGPoint(x: x, y: y), size: size), display: false)

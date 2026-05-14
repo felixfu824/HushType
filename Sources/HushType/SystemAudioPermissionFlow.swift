@@ -38,12 +38,34 @@ enum SystemAudioPermissionFlow {
             return
         }
 
+        // Same stale-cdhash story as Accessibility (see OnboardingManager).
+        // Every ad-hoc rebuild produces a fresh cdhash, so older HushType
+        // builds leave orphan entries in System Settings → Screen & System
+        // Audio Recording. Without this wipe, users see two identical
+        // HushType rows and have to guess which to enable. tccutil reset
+        // ScreenCapture clears them all; the running process re-registers
+        // itself on the next CGRequest call.
+        resetStaleScreenCaptureEntries()
+
         // Triggers the OS prompt if status == .notDetermined.
         // Returns the cached state synchronously, NOT the prompt resolution.
         let granted = CGRequestScreenCaptureAccess()
         log.info("Requested screen capture access — preflight=\(granted, privacy: .public) (cached state)")
 
         showGuidanceAlert()
+    }
+
+    private static func resetStaleScreenCaptureEntries() {
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
+        task.arguments = ["reset", "ScreenCapture", "com.felix.hushtype"]
+        do {
+            try task.run()
+            task.waitUntilExit()
+            log.info("tccutil reset ScreenCapture exit code: \(task.terminationStatus)")
+        } catch {
+            log.error("Failed to run tccutil reset ScreenCapture: \(error.localizedDescription, privacy: .public)")
+        }
     }
 
     /// Mid-session revocation alert (spec §6.c). Called from

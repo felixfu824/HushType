@@ -67,6 +67,22 @@ final class LiveCaptionManager {
     /// the rest of the second's checks without racing the teardown path.
     private var autoStopFiring: Bool = false
 
+    /// Raw (un-converted) accumulator for the live target line. Kept
+    /// separately from `viewModel.currentTargetLine` only when the cloud
+    /// target requires OpenCC conversion (i.e., zh-Hant) — otherwise the
+    /// rendered text and the raw text are the same and we write straight
+    /// to the view model. `liveTargetConversionInFlight` is the one-slot
+    /// rate limiter: every targetDelta that lands while a previous OpenCC
+    /// subprocess is still running just sets `liveTargetRawDirty = true`,
+    /// and the completion handler re-kicks itself with the latest text.
+    /// That bounds OpenCC subprocess pressure to ~20–30 / sec on Apple
+    /// Silicon and avoids the prior bug where simplified Chinese would
+    /// flash in the current-line for the full 800 ms debounce window
+    /// before flipping to traditional at segment commit.
+    private var liveTargetRaw: String = ""
+    private var liveTargetConversionInFlight: Bool = false
+    private var liveTargetRawDirty: Bool = false
+
     /// Strictly-ordered post-processing of segments: OpenCC → FillerFilter →
     /// DictionaryReplacer for local; OpenCC-only for cloud. Static caches
     /// inside `DictionaryReplacer` have no lock today, so we serialize.
@@ -168,6 +184,12 @@ final class LiveCaptionManager {
         vm.currentSourceLine = nil
         vm.currentTargetLine = nil
         vm.cloudCostChip = nil
+        liveTargetRaw = ""
+        liveTargetRawDirty = false
+        // Don't touch liveTargetConversionInFlight here — if a prior session
+        // left it stuck true (it shouldn't, but defensively), the in-flight
+        // Task will still complete and reset the flag once. Forcing it false
+        // here could let two conversion Tasks race.
 
         if panel == nil {
             panel = LiveCaptionWindow(
@@ -463,6 +485,11 @@ final class LiveCaptionManager {
             audioSource = nil
         }
 
+        // Note the backend kind BEFORE we tear it down — we need it to decide
+        // whether MLX cache clearing is warranted, and `backend` is nil after
+        // the await below.
+        let backendUsedMLX = (backend is LocalQwen3Backend)
+
         if let backend {
             await backend.stop()
         }
@@ -473,7 +500,24 @@ final class LiveCaptionManager {
         // Drop the SileroVAD model — same rationale as before: ~30 MB of
         // MLX-backed weights, holding it cached after stop misleads the user.
         vadModel = nil
-        MLX.Memory.clearCache()
+
+        // Only clear the MLX buffer pool if the engine that just finished
+        // actually used it. Cloud translate is a pure WebSocket path that
+        // never touches MLX, so calling clearCache after a cloud session
+        // throws away dictation's warm cache for no benefit — and observably
+        // makes the next push-to-talk dictation slower. Local engine still
+        // clears as before because it just filled the pool with decoder KV
+        // and segment activations we no longer need.
+        if backendUsedMLX {
+            MLX.Memory.clearCache()
+        }
+
+        // Live-target raw accumulator and conversion gate clear regardless
+        // of engine; they're cheap and stale state here would leak into the
+        // next session.
+        liveTargetRaw = ""
+        liveTargetConversionInFlight = false
+        liveTargetRawDirty = false
 
         viewModel?.cloudCostChip = nil
     }
@@ -503,8 +547,17 @@ final class LiveCaptionManager {
             // .segmentComplete; we ignore deltas there so the highlight stays
             // on segments.last (no flicker through the dual-line region).
             guard AppConfig.shared.liveCaptionEngine == .cloudTranslate else { return }
-            let existing = viewModel.currentTargetLine ?? ""
-            viewModel.currentTargetLine = existing + text
+            liveTargetRaw += text
+            if shouldConvertLiveTargetToTraditional() {
+                // Rendered text is whatever the last OpenCC pass produced,
+                // re-kicked by kickLiveTargetConversion below if it lags
+                // behind raw. Do not overwrite currentTargetLine here — that
+                // would let raw simplified text appear on screen for the
+                // duration of the conversion subprocess.
+                kickLiveTargetConversion()
+            } else {
+                viewModel.currentTargetLine = liveTargetRaw
+            }
 
         case .sourceComplete:
             // Source debounce fired — clear the in-progress source current-
@@ -518,6 +571,14 @@ final class LiveCaptionManager {
             // Clear the target current-line only. Source-line clearing is
             // owned by `.sourceComplete` (see comment in BackendEvent).
             viewModel?.currentTargetLine = nil
+            // The live accumulator is consumed by this commit. Wipe so the
+            // next utterance starts clean. `liveTargetRawDirty` stays false
+            // because we've reached the canonical end of the segment — any
+            // in-flight conversion that completes after this point will
+            // assign empty/short text to currentTargetLine which is fine
+            // (immediately overwritten by the next delta).
+            liveTargetRaw = ""
+            liveTargetRawDirty = false
             // A successful segment-complete during a reconnecting header
             // means the stream is back; restore .live so the header reflects
             // real state.
@@ -569,6 +630,13 @@ final class LiveCaptionManager {
                     }
                     cont.resume(returning: DictionaryReplacer.apply(afterOpenCC))
                 case .cloudTranslate:
+                    // For zh-Hant we've already been converting per delta, but
+                    // the per-delta pass works on a rolling buffer that may
+                    // include incomplete characters at chunk boundaries —
+                    // doing one final s2twp pass on the committed segment
+                    // guarantees we don't ship a half-converted token to
+                    // scrollback. Cheap (one subprocess on a complete
+                    // utterance) and idempotent on already-traditional text.
                     let needsHant = (AppConfig.shared.cloudTargetLanguage == "zh-Hant")
                     let afterOpenCC = needsHant ? ChineseConverter.convert(rawText) : rawText
                     cont.resume(returning: afterOpenCC)
@@ -578,6 +646,48 @@ final class LiveCaptionManager {
 
         guard let text = processed, !text.isEmpty else { return }
         appendSegmentText(text)
+    }
+
+    // MARK: - Live target conversion (cloud zh-Hant only)
+
+    private func shouldConvertLiveTargetToTraditional() -> Bool {
+        AppConfig.shared.cloudTargetLanguage == "zh-Hant"
+            && AppConfig.shared.chineseConversionEnabled
+    }
+
+    /// Kick a single-slot OpenCC conversion of `liveTargetRaw` and assign the
+    /// result to `viewModel.currentTargetLine`. If a conversion is already in
+    /// flight, set `liveTargetRawDirty = true` and let the completion handler
+    /// re-arm itself — that bounds OpenCC subprocess pressure to one
+    /// concurrent call and naturally rate-limits to subprocess turnaround
+    /// time (~30–50 ms cold, ~5–10 ms warm). The raw buffer is read inside
+    /// MainActor, the subprocess runs detached, and the result is written
+    /// back via MainActor.
+    private func kickLiveTargetConversion() {
+        if liveTargetConversionInFlight {
+            liveTargetRawDirty = true
+            return
+        }
+        liveTargetConversionInFlight = true
+        let snapshot = liveTargetRaw
+        Task.detached(priority: .userInitiated) { [weak self] in
+            let converted = ChineseConverter.convert(snapshot)
+            await MainActor.run { [weak self] in
+                guard let self else { return }
+                // Only commit if the live target is still active. If the
+                // segment has been committed (raw cleared) in the meantime,
+                // skip the assign — the next delta will replace anyway, and
+                // overwriting nil → empty-conversion would flash briefly.
+                if !self.liveTargetRaw.isEmpty {
+                    self.viewModel?.currentTargetLine = converted
+                }
+                self.liveTargetConversionInFlight = false
+                if self.liveTargetRawDirty {
+                    self.liveTargetRawDirty = false
+                    self.kickLiveTargetConversion()
+                }
+            }
+        }
     }
 
     private func appendSegmentText(_ text: String) {

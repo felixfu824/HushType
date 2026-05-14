@@ -109,6 +109,17 @@ private struct SystemAudioPickerView: View {
                         .foregroundColor(.secondary)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
+                    // Hit-target rules of thumb:
+                    //   * Single-tap MUST drive List selection, so we cannot put a
+                    //     plain `.onTapGesture` on the row (it swallows the click).
+                    //   * `.simultaneousGesture(TapGesture(count:2))` runs alongside
+                    //     SwiftUI's selection logic, so double-click activation
+                    //     ("Pick this app immediately") still works.
+                    //   * `frame(maxWidth: .infinity, alignment: .leading)` then
+                    //     `contentShape(Rectangle())` makes the whole row width
+                    //     clickable, not just where the icon/text happen to land.
+                    //   * `padding(.vertical, 4)` gives a taller hit zone so fast
+                    //     trackpad strokes don't miss between rows.
                     List(apps, selection: $selection) { app in
                         HStack(spacing: 10) {
                             if let icon = app.icon {
@@ -126,11 +137,13 @@ private struct SystemAudioPickerView: View {
                                 .font(.caption2)
                                 .foregroundColor(.secondary)
                         }
-                        .tag(app.id)
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
-                        .onTapGesture(count: 2) {
-                            onPick(app.id)
-                        }
+                        .tag(app.id)
+                        .simultaneousGesture(
+                            TapGesture(count: 2).onEnded { onPick(app.id) }
+                        )
                     }
                     .listStyle(.bordered(alternatesRowBackgrounds: true))
                 }

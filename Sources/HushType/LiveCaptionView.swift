@@ -202,26 +202,53 @@ struct LiveCaptionView: View {
     }
 
     /// Pinned dual-line region below the scrollback: source line on top
-    /// (small grey), translated line below (main caption font). Collapses
-    /// when both are nil.
+    /// (small grey, "quote bubble" glyph), translated line below (main caption
+    /// font, "globe" glyph). Both share a single left rule so the user reads
+    /// them as one translation pair rather than two unrelated lines.
+    /// Collapses when both are nil.
     private var dualLineRegion: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            if let source = model.currentSourceLine, !source.isEmpty {
-                Text(source)
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundStyle(.secondary)
-                    .lineSpacing(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
+        HStack(alignment: .top, spacing: 8) {
+            Rectangle()
+                .fill(Color.accentColor.opacity(0.55))
+                .frame(width: 2)
+                .padding(.vertical, 2)
+
+            VStack(alignment: .leading, spacing: 6) {
+                if let source = model.currentSourceLine, !source.isEmpty {
+                    dualLineRow(
+                        icon: "text.bubble",
+                        text: source,
+                        fontSize: 12,
+                        color: .secondary
+                    )
+                }
+                if let target = model.currentTargetLine, !target.isEmpty {
+                    dualLineRow(
+                        icon: "globe",
+                        text: target,
+                        fontSize: 17,
+                        color: .primary
+                    )
+                }
             }
-            if let target = model.currentTargetLine, !target.isEmpty {
-                Text(target)
-                    .font(.system(size: 17, weight: .regular))
-                    .foregroundStyle(.primary)
-                    .lineSpacing(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .textSelection(.enabled)
-            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    @ViewBuilder
+    private func dualLineRow(icon: String, text: String, fontSize: CGFloat, color: Color) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.tertiary)
+                .frame(width: 12, alignment: .center)
+                .accessibilityHidden(true)
+            Text(text)
+                .font(.system(size: fontSize, weight: .regular))
+                .foregroundStyle(color)
+                .lineSpacing(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .textSelection(.enabled)
         }
     }
 }

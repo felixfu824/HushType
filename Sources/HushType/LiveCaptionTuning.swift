@@ -43,8 +43,8 @@ struct LiveCaptionTuning: Codable, Sendable {
     var backpressureMaxPending: Int = 50
 
     /// Default panel size. Persisted overrides from window drag/resize take
-    /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame`.
-    var panelDefaultWidth: Double = 1300
+    /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame.v2`.
+    var panelDefaultWidth: Double = 1500
     var panelDefaultHeight: Double = 160
 
     /// One-shot signal: set to `true` in the JSON file to force the next
@@ -97,7 +97,9 @@ struct LiveCaptionTuning: Codable, Sendable {
             // the user's file yet, write them in (with defaults) so the user
             // can edit them in place without losing their other tweaks.
             migrateMissingKeysIfNeeded(url: url, decoded: decoded)
-            return decoded
+            // Apply one-shot value bumps (e.g. panel width default raised
+            // between builds — see runOneOffMigrationsIfNeeded).
+            return runOneOffMigrationsIfNeeded(url: url, decoded: decoded)
         } catch {
             log.error("Failed to parse live_caption.json (\(error.localizedDescription, privacy: .public)) — falling back to defaults")
             return LiveCaptionTuning()
@@ -154,6 +156,32 @@ struct LiveCaptionTuning: Codable, Sendable {
     }
 
     // MARK: - Internals
+
+    /// One-shot migrations that bump existing values (as opposed to filling in
+    /// new keys). Tracked via UserDefaults flags so each migration runs at
+    /// most once. New users (no file) never hit these because the template
+    /// already carries the latest defaults.
+    private static func runOneOffMigrationsIfNeeded(url: URL, decoded: LiveCaptionTuning) -> LiveCaptionTuning {
+        var current = decoded
+        let defaults = UserDefaults.standard
+
+        // panelDefaultWidth v2 bump (1300 → 1500). Felix's MBA testing showed
+        // the prior default still felt cramped. Anything below 1500 that
+        // looks like an unedited app default (1300, or the pre-Widen 700)
+        // gets pushed up. Custom narrower widths (everything outside this
+        // exact set) are left alone so we don't fight an explicit user choice.
+        let migrationKey = "hushtype.liveCaption.tuningMigration.panelWidth.v2"
+        if !defaults.bool(forKey: migrationKey) {
+            defaults.set(true, forKey: migrationKey)
+            let appDefaults: Set<Double> = [700, 800, 900, 1000, 1100, 1300]
+            if appDefaults.contains(current.panelDefaultWidth) {
+                writeKey("panelDefaultWidth", value: 1500)
+                current.panelDefaultWidth = 1500
+                log.info("Migration: bumped panelDefaultWidth → 1500")
+            }
+        }
+        return current
+    }
 
     private static func migrateMissingKeysIfNeeded(url: URL, decoded: LiveCaptionTuning) {
         guard
@@ -222,7 +250,7 @@ struct LiveCaptionTuning: Codable, Sendable {
           "backpressureMaxPending": 50,
 
           "_comment_panel": "Default panel size (pixels). Window drag / resize values persist separately and override this on next launch.",
-          "panelDefaultWidth": 1300,
+          "panelDefaultWidth": 1500,
           "panelDefaultHeight": 160,
 
           "_comment_resetPanelOnNextStart": "Set to true to discard any persisted frame and re-apply panelDefaultWidth/Height the next time Live Caption is toggled on. The app flips it back to false after applying.",
