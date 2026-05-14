@@ -195,18 +195,18 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         task.resume()
 
         // Send session.update with the target language and the realtime-
-        // translation client-event shape (§8). We also set
-        // `output_modalities: ["text"]` so the server never streams back
-        // synthesized audio (`session.output_audio.delta`). We discard those
-        // payloads anyway, but URLSession buffers them on receive — which
-        // showed up as a ~700MB memory tail after stop() in Felix's testing.
-        // Suppressing them at the source eliminates the buffer pressure
-        // entirely.
+        // translation client-event shape (§8). We previously tried
+        // `output_modalities: ["text"]` here to stop the server from
+        // streaming back synthesized audio, but the realtime-translate
+        // endpoint rejects that field ("Unknown parameter:
+        // 'session.output_modalities'") and drops the connection. Removed
+        // until we know the right knob for this endpoint specifically; if
+        // memory tail re-surfaces, the next lever is explicit
+        // malloc_zone_pressure_relief on cloud teardown.
         let outputLangISO = mapTargetLanguage(targetLanguage)
         let sessionUpdate: [String: Any] = [
             "type": "session.update",
             "session": [
-                "output_modalities": ["text"],
                 "audio": [
                     "input": [
                         "transcription": ["model": "gpt-realtime-whisper"],

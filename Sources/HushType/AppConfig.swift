@@ -24,6 +24,7 @@ final class AppConfig {
         static let cloudDailyCapDollars = "hushtype.cloudDailyCapDollars"
         static let cloudOnboardingShown = "hushtype.cloudOnboardingShown"
         static let lastStartedCaptionMode = "hushtype.lastStartedCaptionMode"
+        static let lastStartedCaptionUsesMicSource = "hushtype.lastStartedCaptionUsesMicSource"
     }
 
     /// Engine for Live Caption — local Qwen3 ASR vs. OpenAI cloud translate.
@@ -236,6 +237,24 @@ final class AppConfig {
         }
         set {
             defaults.set(newValue.rawValue, forKey: Keys.lastStartedCaptionMode)
+        }
+    }
+
+    /// What source the user picked the last time they started either caption
+    /// product. PERSISTED — and never reset on stop (unlike
+    /// `liveCaptionUsesMicSource`, which is a "currently active" flag the
+    /// dictation gate relies on). Used by the Right ⌘ + / hotkey handler to
+    /// decide whether to re-invoke on mic or system audio. First-use default
+    /// = true (mic) so day-one hotkey doesn't pop the system-audio picker.
+    var lastStartedCaptionUsesMicSource: Bool {
+        get {
+            if defaults.object(forKey: Keys.lastStartedCaptionUsesMicSource) == nil {
+                return true
+            }
+            return defaults.bool(forKey: Keys.lastStartedCaptionUsesMicSource)
+        }
+        set {
+            defaults.set(newValue, forKey: Keys.lastStartedCaptionUsesMicSource)
         }
     }
 

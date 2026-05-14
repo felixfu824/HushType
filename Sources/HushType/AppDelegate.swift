@@ -114,6 +114,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.onLiveTranslatedStop = { [weak self] in
             self?.liveCaptionManager?.stop()
         }
+        statusBar.onLiveCaptionHeaderClicked = { [weak self] in
+            self?.toggleProductWithLastSource(.local)
+        }
+        statusBar.onLiveTranslatedHeaderClicked = { [weak self] in
+            self?.toggleProductWithLastSource(.translated)
+        }
 
         #if DEBUG
         _ = FillerFilter.runSelfTests()
@@ -489,8 +495,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             manager.stop()
             return
         }
-        let mode = AppConfig.shared.lastStartedCaptionMode
-        if AppConfig.shared.liveCaptionUsesMicSource {
+        toggleProductWithLastSource(AppConfig.shared.lastStartedCaptionMode)
+    }
+
+    /// Shared entry point for "start `mode` with whatever source the user
+    /// picked last." Used by the hotkey (last-used mode) and by both menu-
+    /// header clicks (mode pinned per header). Reads the PERSISTED
+    /// `lastStartedCaptionUsesMicSource` — not the session-only
+    /// `liveCaptionUsesMicSource` which is reset to false on every stop
+    /// because the dictation gate watches it.
+    @MainActor
+    private func toggleProductWithLastSource(_ mode: AppConfig.CaptionMode) {
+        if AppConfig.shared.lastStartedCaptionUsesMicSource {
             startCaptionMode(mode, source: .mic)
         } else {
             startCaptionModeOnSystemAudio(mode, forcePicker: false)

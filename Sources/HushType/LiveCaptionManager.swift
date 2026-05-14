@@ -343,7 +343,13 @@ final class LiveCaptionManager {
         isActive = true
         currentSource = requestedSource
         AppConfig.shared.liveCaptionEnabled = true
-        AppConfig.shared.liveCaptionUsesMicSource = (requestedSource == .mic)
+        let usingMic = (requestedSource == .mic)
+        AppConfig.shared.liveCaptionUsesMicSource = usingMic
+        // Persisted "last-started" memory — read by the Right ⌘ + / hotkey
+        // to honor the user's previous source choice across stops. Distinct
+        // from `liveCaptionUsesMicSource` which is reset on stop (it's the
+        // "currently using mic" flag the dictation gate watches).
+        AppConfig.shared.lastStartedCaptionUsesMicSource = usingMic
         let mode: AppConfig.CaptionMode = (engine == .cloudTranslate) ? .translated : .local
         AppConfig.shared.lastStartedCaptionMode = mode
         onStateChanged?(mode, requestedSource)

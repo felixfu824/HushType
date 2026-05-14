@@ -91,6 +91,18 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Caption source (stops it).
     var onLiveTranslatedStop: (() -> Void)?
 
+    /// Fired when the user clicks the "Live Caption" header itself. Toggles
+    /// the local product with the last-used source (mirrors the Right ⌘ + /
+    /// hotkey behavior). Without this the header is a non-actionable label
+    /// and macOS greys it out — making it visually inconsistent with the
+    /// bright-white "AI Cleanup", "Text Translation", etc. toggle items
+    /// elsewhere in this menu.
+    var onLiveCaptionHeaderClicked: (() -> Void)?
+
+    /// Fired when the user clicks the "Live Translated Caption" header.
+    /// Same last-used-source toggle semantics as the local variant.
+    var onLiveTranslatedHeaderClicked: (() -> Void)?
+
     /// Tracked here so the click handlers for the two mutually-exclusive
     /// modes (iOS Server, Live Caption) can show an NSAlert explaining why
     /// the click was rejected instead of silently disabling the menu item.
@@ -276,11 +288,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         menu.addItem(aiSubtitle)
 
         // ─────────────────── Live Caption (local Qwen3) ───────────────────
+        // Header is CLICKABLE — clicking it toggles the local product with
+        // the user's last-used source. The radios below let the user pick
+        // explicitly. Making it clickable also keeps the text bright-white
+        // and the green ✓ visible when active (non-clickable menu items get
+        // dimmed by AppKit, which also greys out our attributed colors).
         liveCaptionMenuItem = NSMenuItem(
             title: "Live Caption",
-            action: nil,
+            action: #selector(liveCaptionHeaderClicked),
             keyEquivalent: ""
         )
+        liveCaptionMenuItem.target = self
         updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
         menu.addItem(liveCaptionMenuItem)
 
@@ -335,9 +353,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         liveTranslatedMenuItem = NSMenuItem(
             title: "Live Translated Caption",
-            action: nil,
+            action: #selector(liveTranslatedHeaderClicked),
             keyEquivalent: ""
         )
+        liveTranslatedMenuItem.target = self
         updateToggleAppearance(liveTranslatedMenuItem, title: "Live Translated Caption", checked: false)
         menu.addItem(liveTranslatedMenuItem)
 
@@ -618,6 +637,37 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func liveTranslatedChangeSourceClicked() {
         onLiveTranslatedChangeSystemSource?()
+    }
+
+    @objc private func liveCaptionHeaderClicked() {
+        // If local is currently running, treat this as the explicit Stop.
+        if liveCaptionActiveMode == .local {
+            onLiveCaptionStop?()
+            return
+        }
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveCaptionHeaderClicked?()
+    }
+
+    @objc private func liveTranslatedHeaderClicked() {
+        if liveCaptionActiveMode == .translated {
+            onLiveTranslatedStop?()
+            return
+        }
+        if iosServerActive {
+            showMutexAlert(
+                title: "Stop iOS Server first",
+                message: "The iOS Server is running. Stop it before starting Live Translated Caption — they share GPU memory."
+            )
+            return
+        }
+        onLiveTranslatedHeaderClicked?()
     }
 
     /// Legacy single-boolean form. Assumes the local product. Preferred:
