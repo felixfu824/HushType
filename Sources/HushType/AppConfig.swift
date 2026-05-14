@@ -18,7 +18,24 @@ final class AppConfig {
         static let aiCleanupEnabled = "hushtype.aiCleanupEnabled"
         static let textTranslationEnabled = "hushtype.textTranslationEnabled"
         static let translateTargetLanguage = "hushtype.translateTargetLanguage"
+        static let cloudTargetLanguage = "hushtype.cloudTargetLanguage"
+        static let cloudShowSourceLine = "hushtype.cloudShowSourceLine"
+        static let cloudAutoStopMinutes = "hushtype.cloudAutoStopMinutes"
+        static let cloudDailyCapDollars = "hushtype.cloudDailyCapDollars"
+        static let cloudOnboardingShown = "hushtype.cloudOnboardingShown"
     }
+
+    /// Engine for Live Caption — local Qwen3 ASR vs. OpenAI cloud translate.
+    /// SESSION-ONLY: not persisted across launches. Every app boot resets to
+    /// `.local` so a fresh launch can't silently start spending money on
+    /// cloud. Same rationale as `liveCaptionEnabled` (see §13.4 of the
+    /// cloud-translate spec). User must explicitly flip in Settings each
+    /// session.
+    enum LiveCaptionEngine: String, Equatable, Sendable {
+        case local
+        case cloudTranslate
+    }
+    var liveCaptionEngine: LiveCaptionEngine = .local
 
     /// Language for transcription. nil = auto-detect.
     var language: String? {
@@ -136,6 +153,69 @@ final class AppConfig {
         }
     }
 
+    // MARK: - Cloud Translate (Live Caption)
+
+    /// Target language for cloud translate. Two-letter ISO except for the two
+    /// Chinese variants which downstream code maps to `"zh"` + OpenCC. Default
+    /// `"en"`. Persisted.
+    var cloudTargetLanguage: String {
+        get { defaults.string(forKey: Keys.cloudTargetLanguage) ?? "en" }
+        set {
+            defaults.set(newValue, forKey: Keys.cloudTargetLanguage)
+            log.info("Cloud target language set to: \(newValue, privacy: .public)")
+        }
+    }
+
+    /// Whether to show the recognized source-language line above the translated
+    /// caption line. Default `true` — paid usage benefits from a sanity-check
+    /// that the system is translating what the user thinks. Persisted.
+    var cloudShowSourceLine: Bool {
+        get {
+            if defaults.object(forKey: Keys.cloudShowSourceLine) == nil {
+                return true
+            }
+            return defaults.bool(forKey: Keys.cloudShowSourceLine)
+        }
+        set { defaults.set(newValue, forKey: Keys.cloudShowSourceLine) }
+    }
+
+    /// Auto-stop the cloud session after this many minutes. Default 60.
+    /// Clamped to 5...480 on set.
+    var cloudAutoStopMinutes: Int {
+        get {
+            if defaults.object(forKey: Keys.cloudAutoStopMinutes) == nil {
+                return 60
+            }
+            return defaults.integer(forKey: Keys.cloudAutoStopMinutes)
+        }
+        set {
+            let clamped = max(5, min(480, newValue))
+            defaults.set(clamped, forKey: Keys.cloudAutoStopMinutes)
+        }
+    }
+
+    /// Daily soft-cap warning threshold in USD. Default $5. Clamped to
+    /// 0.5...100.0 on set.
+    var cloudDailyCapDollars: Double {
+        get {
+            if defaults.object(forKey: Keys.cloudDailyCapDollars) == nil {
+                return 5.0
+            }
+            return defaults.double(forKey: Keys.cloudDailyCapDollars)
+        }
+        set {
+            let clamped = max(0.5, min(100.0, newValue))
+            defaults.set(clamped, forKey: Keys.cloudDailyCapDollars)
+        }
+    }
+
+    /// Whether the user has dismissed the one-time pre-session cloud
+    /// disclosure modal. Persists once true.
+    var cloudOnboardingShown: Bool {
+        get { defaults.bool(forKey: Keys.cloudOnboardingShown) }
+        set { defaults.set(newValue, forKey: Keys.cloudOnboardingShown) }
+    }
+
     /// Path to the user-editable customized dictionary file. The dictionary is
     /// applied as the final post-processing step (after OpenCC and AI Cleanup)
     /// to fix recurring transcription errors like proper nouns and jargon.
@@ -164,6 +244,18 @@ final class AppConfig {
         )[0]
         .appendingPathComponent("HushType", isDirectory: true)
         .appendingPathComponent("cleanup_prompt.txt")
+    }
+
+    /// Path to the OpenAI API key file used by the cloud Live Caption engine.
+    /// Plaintext JSON, same security profile as `.env`. Loader rules in
+    /// `OpenAIKeyStore`.
+    static var openAIKeyFileURL: URL {
+        FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        .appendingPathComponent("HushType", isDirectory: true)
+        .appendingPathComponent("openai.json")
     }
 
     private init() {}

@@ -307,6 +307,26 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
         menu.addItem(liveCaptionChangeSourceItem)
 
+        // Engine Settings — opens the new floating settings window where the
+        // user picks Local vs Cloud Translate, target language, cost
+        // guardrails, and the OpenAI key file. (HushType's first persistent
+        // Settings window — see spec §5.)
+        let engineSettingsItem = NSMenuItem(
+            title: "    Engine Settings…",
+            action: #selector(openLiveCaptionEngineSettings),
+            keyEquivalent: ""
+        )
+        engineSettingsItem.target = self
+        let engineSettingsAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+        engineSettingsItem.attributedTitle = NSAttributedString(
+            string: "    Engine Settings…",
+            attributes: engineSettingsAttrs
+        )
+        menu.addItem(engineSettingsItem)
+
         // Edit Live Caption Settings (opens the JSON tunables file in the
         // user's default editor — mirrors the Edit Customized Dictionary
         // pattern. Edits take effect on the next Live Caption toggle on.)
@@ -538,6 +558,15 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Tracks state for the Live Caption mutex check.
     func setIOSServerActive(_ active: Bool) {
         iosServerActive = active
+    }
+
+    @objc private func openLiveCaptionEngineSettings() {
+        // Lazy-instantiate via the singleton accessor. Window retains itself
+        // (`isReleasedWhenClosed = false`) so reopening from this menu just
+        // re-foregrounds the same window with its persisted frame.
+        Task { @MainActor in
+            LiveCaptionEngineSettingsWindowController.shared.presentAndFocus()
+        }
     }
 
     @objc private func editLiveCaptionSettings() {

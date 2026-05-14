@@ -98,6 +98,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.liveCaptionManager?.stop()
         }
 
+        // Observe engine flips from the Settings window. If Live Caption is
+        // currently active, route to `switchEngine(to:)` for the spec §10
+        // mid-session swap path. Otherwise the preference write is enough —
+        // the next start() picks up the new value.
+        NotificationCenter.default.addObserver(
+            forName: .hushtypeLiveCaptionEngineChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] note in
+            guard let self else { return }
+            guard let raw = note.userInfo?["engine"] as? String,
+                  let engine = AppConfig.LiveCaptionEngine(rawValue: raw) else { return }
+            guard let manager = self.liveCaptionManager, manager.isActive else { return }
+            Task { @MainActor in
+                await manager.switchEngine(to: engine)
+            }
+        }
+
         #if DEBUG
         _ = FillerFilter.runSelfTests()
         #endif

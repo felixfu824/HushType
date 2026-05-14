@@ -6,6 +6,8 @@ enum LiveCaptionHeaderState: Equatable {
     case loadingVAD       // "Loading VAD model…"
     case live              // "● Live"
     case gatedFlash        // "Stop Live Caption to dictate" (orange, 2s)
+    case reconnecting(attempt: Int, max: Int)   // cloud transport reconnect
+    case autoStopped                            // 5s flash after auto-stop
 }
 
 /// SwiftUI body of the live caption panel. Owned/hosted by
@@ -15,6 +17,20 @@ final class LiveCaptionViewModel: ObservableObject {
     @Published var headerState: LiveCaptionHeaderState = .live
     /// Rolling buffer (max 50 segments — §9.b "Buffer size").
     @Published var segments: [SegmentEntry] = []
+
+    /// Small grey line above the target caption — only meaningful for the
+    /// cloud translate engine. Nil = hidden. Set/cleared by the manager from
+    /// `BackendEvent.sourceDelta` / `.segmentComplete`.
+    @Published var currentSourceLine: String? = nil
+    /// Main caption font; the in-progress translated line. Nil = hidden.
+    /// When non-nil, the existing `isCurrent` highlight on `segments.last` is
+    /// suppressed — the highlight applies to this region instead.
+    @Published var currentTargetLine: String? = nil
+
+    /// "MM:SS · $X.XX" chip shown in the panel header when cloud engine is
+    /// active. Nil = hide chip (local engine, or cloud session not yet
+    /// emitting audio).
+    @Published var cloudCostChip: String? = nil
 
     struct SegmentEntry: Identifiable, Equatable {
         let id: UUID = UUID()
@@ -52,10 +68,16 @@ struct LiveCaptionView: View {
     // MARK: - Header
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 8) {
             headerLeft
                 .animation(.easeInOut(duration: 0.18), value: model.headerState)
             Spacer()
+            if let chip = model.cloudCostChip {
+                Text(chip)
+                    .font(.system(size: 11, weight: .regular, design: .monospaced))
+                    .foregroundStyle(.secondary)
+                    .accessibilityLabel("Cloud Live Caption session cost")
+            }
             stopButton
         }
     }
@@ -83,6 +105,19 @@ struct LiveCaptionView: View {
             Text("Stop Live Caption to dictate")
                 .font(.system(size: 13, weight: .medium))
                 .foregroundStyle(.orange)
+        case .reconnecting(let attempt, let max):
+            HStack(spacing: 6) {
+                ProgressView()
+                    .controlSize(.small)
+                    .scaleEffect(0.7)
+                Text("Reconnecting (\(attempt)/\(max))…")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(.orange)
+            }
+        case .autoStopped:
+            Text("Auto-stopped")
+                .font(.system(size: 13, weight: .medium))
+                .foregroundStyle(.secondary)
         }
     }
 
@@ -102,7 +137,9 @@ struct LiveCaptionView: View {
 
     @ViewBuilder
     private var body_: some View {
-        if model.segments.isEmpty {
+        let hasCurrentLine = (model.currentSourceLine != nil) || (model.currentTargetLine != nil)
+
+        if model.segments.isEmpty && !hasCurrentLine {
             HStack {
                 Spacer()
                 Text("Listening…")
@@ -112,35 +149,78 @@ struct LiveCaptionView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 4) {
-                        // ForEach identity is the entry UUID — stable across appends.
-                        // Do NOT also attach .id("current") on the last view; switching
-                        // a Text's .id between "current" and its UUID on each append
-                        // confuses SwiftUI's diff and causes the white-styled position
-                        // to render stale content. The scroll anchor below is a
-                        // separate invisible view so identity stays clean.
-                        ForEach(Array(model.segments.enumerated()), id: \.element.id) { (index, entry) in
-                            let isCurrent = (index == model.segments.count - 1)
-                            Text(entry.text)
-                                .font(.system(size: isCurrent ? 17 : 13, weight: .regular))
-                                .lineSpacing(1)
-                                .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
-                                .textSelection(.enabled)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        Color.clear
-                            .frame(height: 1)
-                            .id("liveCaptionScrollAnchor")
+            VStack(alignment: .leading, spacing: 0) {
+                scrollback
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                if hasCurrentLine {
+                    dualLineRegion
+                        .padding(.top, 6)
+                }
+            }
+        }
+    }
+
+    /// Rolling segment history. The current/last segment gets the white
+    /// highlight only when the dual-line region is NOT showing — when cloud
+    /// is feeding live deltas into `currentTargetLine`, that region owns the
+    /// highlight instead.
+    private var scrollback: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 4) {
+                    // ForEach identity is the entry UUID — stable across appends.
+                    // Do NOT also attach .id("current") on the last view; switching
+                    // a Text's .id between "current" and its UUID on each append
+                    // confuses SwiftUI's diff and causes the white-styled position
+                    // to render stale content. The scroll anchor below is a
+                    // separate invisible view so identity stays clean.
+                    ForEach(Array(model.segments.enumerated()), id: \.element.id) { (index, entry) in
+                        let dualLineActive = (model.currentTargetLine != nil) || (model.currentSourceLine != nil)
+                        let isCurrent = !dualLineActive && (index == model.segments.count - 1)
+                        Text(entry.text)
+                            .font(.system(size: isCurrent ? 17 : 13, weight: .regular))
+                            .lineSpacing(1)
+                            .foregroundStyle(isCurrent ? Color.primary : Color.secondary)
+                            .textSelection(.enabled)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    Color.clear
+                        .frame(height: 1)
+                        .id("liveCaptionScrollAnchor")
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .onChange(of: model.segments.count) { _, _ in
+                // Only re-anchor on segment count change — not on per-delta
+                // edits of currentTargetLine — so the live deltas don't
+                // re-scroll 60+ times per second.
+                withAnimation(.easeOut(duration: 0.18)) {
+                    proxy.scrollTo("liveCaptionScrollAnchor", anchor: .bottom)
+                }
+            }
+        }
+    }
+
+    /// Pinned dual-line region below the scrollback: source line on top
+    /// (small grey), translated line below (main caption font). Collapses
+    /// when both are nil.
+    private var dualLineRegion: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            if let source = model.currentSourceLine, !source.isEmpty {
+                Text(source)
+                    .font(.system(size: 11, weight: .regular))
+                    .foregroundStyle(.secondary)
+                    .lineSpacing(1)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .onChange(of: model.segments.count) { _, _ in
-                    withAnimation(.easeOut(duration: 0.18)) {
-                        proxy.scrollTo("liveCaptionScrollAnchor", anchor: .bottom)
-                    }
-                }
+                    .textSelection(.enabled)
+            }
+            if let target = model.currentTargetLine, !target.isEmpty {
+                Text(target)
+                    .font(.system(size: 17, weight: .regular))
+                    .foregroundStyle(.primary)
+                    .lineSpacing(1)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .textSelection(.enabled)
             }
         }
     }
