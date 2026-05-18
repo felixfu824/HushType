@@ -15,21 +15,23 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "onboarding"
 ///
 /// This manager:
 ///   1. Checks `AXIsProcessTrusted()` BEFORE we ever call CGEvent.tapCreate.
-///   2. If accessibility is missing, presents a friendly modal explaining
-///      what's needed and what will happen next.
-///   3. Opens System Settings to the right page.
-///   4. After the user grants permission, offers a "Restart HushType" button
+///   2. If accessibility is missing, presents a guided setup panel explaining
+///      the Accessibility and Microphone permissions.
+///   3. Opens System Settings from explicit user actions and shows a draggable
+///      app helper when Accessibility needs a manual list entry.
+///   4. Offers an explicit reset action for old Accessibility entries left by
+///      previous builds, instead of clearing TCC automatically.
+///   5. After the user grants Accessibility, offers a "Restart HushType" button
 ///      that spawns a new instance and quits the current one.
-///   5. Triggers the microphone permission prompt as a side-effect (it
-///      doesn't require restart, but we want all permission prompts grouped).
+///   6. Requests microphone permission in the same setup surface; microphone
+///      grants do not require restart.
 ///
 /// First-launch detection (per user spec):
 ///   - The trigger is "accessibility currently denied", not "first install".
 ///     This handles both first installs AND post-rebuild permission revokes
 ///     (which happen if the binary's signature changes between builds).
-///   - The "Welcome" message variant is shown only once (`onboardingCompleted`
-///     flag). Subsequent launches with denied accessibility skip straight to
-///     the shorter "Grant Permission" guidance.
+///   - The same setup panel is reused for first-time onboarding and permission
+///     repair so the flow stays consistent.
 @MainActor
 enum OnboardingManager {
 
@@ -46,97 +48,76 @@ enum OnboardingManager {
 
         log.info("Accessibility not granted — running onboarding flow")
 
-        // Clear any stale TCC entries from previous builds before prompting.
-        // macOS TCC tracks Accessibility grants as (identifier + cdhash). For
-        // ad-hoc signed apps like HushType, every rebuild produces a new
-        // cdhash, so upgrades leave the previous entry orphaned in the list
-        // with the OLD cdhash, and the OS creates a fresh entry for the NEW
-        // cdhash. Users then see two identical "HushType" rows in System
-        // Settings → Accessibility and have to guess which one to delete.
-        //
-        // `tccutil reset Accessibility com.felix.hushtype` wipes ALL entries
-        // for this bundle ID. It's a no-op on true first installs (nothing
-        // to clear), and on upgrades it leaves exactly one fresh entry once
-        // the current process re-registers itself on the next API call.
-        // No sudo required — users can always reset their own TCC records.
-        resetStaleAccessibilityEntries()
-
-        // Foreground the app so the modal appears in front of other windows
+        // Foreground the app so the setup panel appears in front of other windows
         // (HushType is LSUIElement so it doesn't activate by default).
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
-        let isFirstTime = !AppConfig.shared.onboardingCompleted
-        if isFirstTime {
-            showWelcomeModal()
-        } else {
-            showPermissionGuidanceModal()
-        }
+        OnboardingSetupWindowController.present(
+            onOpenAccessibilitySettings: {
+                AppConfig.shared.onboardingCompleted = true
+                openAccessibilitySettings()
+                PermissionSettingsGuidePanel.shared.showAccessibilityGuide()
+            },
+            onResetOldAccessibilityEntry: {
+                guard confirmAccessibilityReset() else { return false }
+                AppConfig.shared.onboardingCompleted = true
+                let didReset = resetStaleAccessibilityEntries()
+                openAccessibilitySettings()
+                PermissionSettingsGuidePanel.shared.showAccessibilityGuide()
+                return didReset
+            },
+            onRequestMicrophone: { completion in
+                AppConfig.shared.onboardingCompleted = true
+                requestMicrophoneAccess(completion: completion)
+            },
+            onOpenMicrophoneSettings: {
+                AppConfig.shared.onboardingCompleted = true
+                openMicrophoneSettings()
+            },
+            onRestart: {
+                relaunchAndQuit()
+            },
+            onQuit: {
+                log.info("User quit during onboarding")
+                NSApp.terminate(nil)
+            }
+        )
+
         return true
     }
 
-    // MARK: - Welcome (shown once on first launch)
+    // MARK: - Settings links
 
-    private static func showWelcomeModal() {
-        let alert = NSAlert()
-        alert.messageText = "Welcome to HushType"
-        alert.informativeText = """
-            HushType needs two permissions to work:
-
-            • Accessibility — to listen for the Right Option hotkey
-            • Microphone — to record your voice
-
-            After you grant these, HushType will need to be restarted. We'll handle that for you.
-            """
-        alert.icon = NSImage(named: "AppIcon")
-            ?? NSImage(systemSymbolName: "mic.fill", accessibilityDescription: nil)
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Get Started")
-        alert.addButton(withTitle: "Quit")
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            AppConfig.shared.onboardingCompleted = true
-            triggerMicPermissionIfNeeded()
-            showPermissionGuidanceModal()
-        } else {
-            log.info("User quit during welcome modal")
-            NSApp.terminate(nil)
-        }
-    }
-
-    // MARK: - Permission guidance (shown every time accessibility is denied)
-
-    private static func showPermissionGuidanceModal() {
-        // Open System Settings → Privacy & Security → Accessibility
+    private static func openAccessibilitySettings() {
         if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
             NSWorkspace.shared.open(url)
         }
+    }
 
+    private static func openMicrophoneSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Microphone") {
+            NSWorkspace.shared.open(url)
+        }
+    }
+
+    // MARK: - Accessibility reset
+
+    private static func confirmAccessibilityReset() -> Bool {
         let alert = NSAlert()
-        alert.messageText = "Grant Accessibility Permission"
+        alert.messageText = "Reset Old HushType Entry?"
         alert.informativeText = """
-            System Settings is now open.
+            This clears HushType from the Accessibility permission list.
 
-            1. Find HushType in the Accessibility list
-            2. Toggle the switch ON
-            3. Click "Restart HushType" below
-
-            HushType must be restarted after you grant permission for it to take effect.
+            Use this if you installed an older HushType, see duplicate HushType entries, cannot find HushType, or the switch does not work. You'll need to add or enable HushType again.
             """
         alert.icon = NSImage(named: "AppIcon")
             ?? NSImage(systemSymbolName: "lock.shield", accessibilityDescription: nil)
         alert.alertStyle = .informational
-        alert.addButton(withTitle: "Restart HushType")
-        alert.addButton(withTitle: "Quit")
+        alert.addButton(withTitle: "Reset and Reopen Settings")
+        alert.addButton(withTitle: "Cancel")
 
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            relaunchAndQuit()
-        } else {
-            log.info("User quit during permission guidance modal")
-            NSApp.terminate(nil)
-        }
+        return alert.runModal() == .alertFirstButtonReturn
     }
 
     // MARK: - Microphone permission
@@ -147,15 +128,28 @@ enum OnboardingManager {
             log.info("Mic permission already \(String(describing: status), privacy: .public)")
             return
         }
+        requestMicrophoneAccess { _ in }
+    }
+
+    private static func requestMicrophoneAccess(completion: @escaping (Bool) -> Void) {
+        let status = AVCaptureDevice.authorizationStatus(for: .audio)
+        guard status == .notDetermined else {
+            log.info("Mic permission already \(String(describing: status), privacy: .public)")
+            completion(status == .authorized)
+            return
+        }
+
         log.info("Requesting microphone permission")
         AVCaptureDevice.requestAccess(for: .audio) { granted in
             log.info("Microphone permission granted: \(granted, privacy: .public)")
+            completion(granted)
         }
     }
 
     // MARK: - TCC reset
 
-    private static func resetStaleAccessibilityEntries() {
+    @discardableResult
+    private static func resetStaleAccessibilityEntries() -> Bool {
         let task = Process()
         task.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
         task.arguments = ["reset", "Accessibility", "com.felix.hushtype"]
@@ -163,8 +157,10 @@ enum OnboardingManager {
             try task.run()
             task.waitUntilExit()
             log.info("tccutil reset Accessibility exit code: \(task.terminationStatus)")
+            return task.terminationStatus == 0
         } catch {
             log.error("Failed to run tccutil reset: \(error.localizedDescription, privacy: .public)")
+            return false
         }
     }
 

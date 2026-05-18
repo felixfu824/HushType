@@ -3,6 +3,8 @@ import SwiftUI
 
 @MainActor
 final class SystemAudioPermissionWindowController: NSWindowController, NSWindowDelegate {
+    static let panelWidth: CGFloat = 620
+    static let panelHeight: CGFloat = 430
     private static var active: SystemAudioPermissionWindowController?
 
     private let onOpenSettings: () -> Void
@@ -62,8 +64,8 @@ final class SystemAudioPermissionWindowController: NSWindowController, NSWindowD
         let hosting = NSHostingController(rootView: view)
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 500, height: 420),
-            styleMask: [.titled, .closable, .fullSizeContentView],
+            contentRect: NSRect(x: 0, y: 0, width: Self.panelWidth, height: Self.panelHeight),
+            styleMask: [.titled, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
@@ -82,6 +84,9 @@ final class SystemAudioPermissionWindowController: NSWindowController, NSWindowD
 
         super.init(window: panel)
         panel.delegate = self
+        panel.standardWindowButton(.closeButton)?.isHidden = true
+        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
+        panel.standardWindowButton(.zoomButton)?.isHidden = true
     }
 
     @available(*, unavailable)
@@ -145,7 +150,7 @@ private struct SystemAudioPermissionView: View {
             footer
         }
         .padding(24)
-        .frame(width: 500)
+        .frame(width: SystemAudioPermissionWindowController.panelWidth)
         .background(VisualEffectBlur(material: .hudWindow))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
@@ -191,10 +196,13 @@ private struct SystemAudioPermissionView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Screen & System Audio Recording")
                     .font(.system(size: 14, weight: .semibold))
+                    .lineLimit(1)
                 Text("Required by macOS for system-audio capture.")
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
             }
+            .layoutPriority(1)
 
             Spacer(minLength: 12)
 

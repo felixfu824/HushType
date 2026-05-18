@@ -14,10 +14,28 @@ final class PermissionSettingsGuidePanel {
     private init() {}
 
     func showSystemAudioGuide() {
+        showGuide(
+            title: "Turn on HushType in Screen & System Audio Recording.",
+            detail: "If HushType is missing, drag HushType into the list."
+        )
+    }
+
+    func showAccessibilityGuide() {
+        showGuide(
+            title: "Turn on HushType in Accessibility.",
+            detail: "If HushType is missing, drag HushType into the list."
+        )
+    }
+
+    private func showGuide(title: String, detail: String) {
         dismiss()
 
         let appURL = Bundle.main.bundleURL
-        let view = PermissionSettingsGuideView(appURL: appURL) {
+        let view = PermissionSettingsGuideView(
+            title: title,
+            detail: detail,
+            appURL: appURL
+        ) {
             Task { @MainActor in
                 PermissionSettingsGuidePanel.shared.dismiss()
             }
@@ -81,6 +99,8 @@ final class PermissionSettingsGuidePanel {
 }
 
 private struct PermissionSettingsGuideView: View {
+    let title: String
+    let detail: String
     let appURL: URL
     let onDismiss: () -> Void
 
@@ -92,12 +112,12 @@ private struct PermissionSettingsGuideView: View {
                 .frame(width: 34)
 
             VStack(alignment: .leading, spacing: 7) {
-                Text("Turn on HushType in Screen & System Audio Recording.")
+                Text(title)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.primary)
                     .lineLimit(2)
 
-                Text("If HushType is missing, drag HushType into the list.")
+                Text(detail)
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
