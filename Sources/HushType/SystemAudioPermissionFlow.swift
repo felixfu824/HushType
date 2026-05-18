@@ -13,23 +13,21 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "systemAudio
 /// cache barrier as Accessibility). After the user grants permission for the
 /// first time — via the system prompt OR via System Settings — the running
 /// HushType process still cannot capture until it restarts. This flow surfaces
-/// that restart requirement explicitly via an `NSAlert` that mirrors
-/// `OnboardingManager`'s Accessibility pattern.
+/// that restart requirement explicitly via a focused permission panel.
 ///
 /// Implementation note vs. spec §6.b: the spec described two separate alerts
 /// (Alert A "post-grant restart", Alert B "denied — open Settings"), but
 /// `CGPreflightScreenCaptureAccess()` returns `false` in both cases until the
 /// process is restarted, so we cannot reliably distinguish them. This flow
-/// instead presents a single guidance alert with three buttons:
-/// `Open System Settings` / `Restart HushType Now` / `Cancel`. The user knows
-/// which state they're in; this lets them pick the right action.
+/// instead presents a single guided setup panel with `Open System Settings`,
+/// `Restart HushType`, and a manual troubleshooting reset for stale TCC rows.
 enum SystemAudioPermissionFlow {
 
     /// If permission is already granted for this process, calls `onReady`
-    /// synchronously. Otherwise triggers the OS prompt (if `.notDetermined`)
-    /// and shows the guidance alert. `onReady` is NEVER called from inside
-    /// the alert — restarting the app picks up the grant in the next
-    /// process, where this function will be called again and short-circuit.
+    /// synchronously. Otherwise shows the guided setup panel. `onReady` is
+    /// NEVER called from inside the panel — restarting the app picks up the
+    /// grant in the next process, where this function will be called again
+    /// and short-circuit.
     @MainActor
     static func ensurePermission(then onReady: @escaping () -> Void) {
         if CGPreflightScreenCaptureAccess() {
@@ -38,21 +36,7 @@ enum SystemAudioPermissionFlow {
             return
         }
 
-        // Same stale-cdhash story as Accessibility (see OnboardingManager).
-        // Every ad-hoc rebuild produces a fresh cdhash, so older HushType
-        // builds leave orphan entries in System Settings → Screen & System
-        // Audio Recording. Without this wipe, users see two identical
-        // HushType rows and have to guess which to enable. tccutil reset
-        // ScreenCapture clears them all; the running process re-registers
-        // itself on the next CGRequest call.
-        resetStaleScreenCaptureEntries()
-
-        // Triggers the OS prompt if status == .notDetermined.
-        // Returns the cached state synchronously, NOT the prompt resolution.
-        let granted = CGRequestScreenCaptureAccess()
-        log.info("Requested screen capture access — preflight=\(granted, privacy: .public) (cached state)")
-
-        showGuidanceAlert()
+        showGuidedSetupPanel()
     }
 
     private static func resetStaleScreenCaptureEntries() {
@@ -94,40 +78,34 @@ enum SystemAudioPermissionFlow {
     // MARK: - Private
 
     @MainActor
-    private static func showGuidanceAlert() {
-        let alert = NSAlert()
-        alert.messageText = "Screen & System Audio Recording Permission Needed"
-        alert.informativeText = """
-            To caption audio from apps like Zoom, Chrome, or Safari, HushType \
-            needs Screen & System Audio Recording permission.
-
-            1. Click "Open System Settings"
-            2. Find HushType in the list
-            3. Toggle the switch ON
-            4. Click "Restart HushType Now" below
-
-            macOS won't pick up the grant until HushType is restarted.
-
-            If you've already granted permission, click "Restart HushType Now" \
-            directly — no need to revisit System Settings.
-            """
-        alert.icon = NSImage(named: "AppIcon")
-            ?? NSImage(systemSymbolName: "lock.shield", accessibilityDescription: nil)
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Open System Settings")
-        alert.addButton(withTitle: "Restart HushType Now")
-        alert.addButton(withTitle: "Cancel")
-
-        switch alert.runModal() {
-        case .alertFirstButtonReturn:
-            openScreenCaptureSettings()
-            // Do NOT terminate — user may return to grant + come back.
-        case .alertSecondButtonReturn:
-            log.info("User chose restart from system audio permission flow")
-            OnboardingManager.relaunchAndQuit()
-        default:
-            log.info("User cancelled system audio permission flow")
-        }
+    private static func showGuidedSetupPanel() {
+        SystemAudioPermissionWindowController.present(
+            onOpenSettings: {
+                // Triggers the OS prompt / app registration if status is
+                // `.notDetermined`. Returns the cached state synchronously,
+                // NOT the prompt resolution.
+                let granted = CGRequestScreenCaptureAccess()
+                log.info("Requested screen capture access from setup panel — preflight=\(granted, privacy: .public) (cached state)")
+                openScreenCaptureSettings()
+                PermissionSettingsGuidePanel.shared.showSystemAudioGuide()
+            },
+            onRestart: {
+                log.info("User chose restart from system audio permission flow")
+                SystemAudioPermissionWindowController.dismissActive()
+                OnboardingManager.relaunchAndQuit()
+            },
+            onResetStaleEntries: {
+                log.info("User requested stale ScreenCapture permission reset")
+                resetStaleScreenCaptureEntries()
+                let granted = CGRequestScreenCaptureAccess()
+                log.info("Requested screen capture access after reset — preflight=\(granted, privacy: .public) (cached state)")
+                openScreenCaptureSettings()
+                PermissionSettingsGuidePanel.shared.showSystemAudioGuide()
+            },
+            onCancel: {
+                log.info("User cancelled system audio permission flow")
+            }
+        )
     }
 
     private static func openScreenCaptureSettings() {
