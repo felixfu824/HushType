@@ -69,11 +69,13 @@ make install
 open /Applications/HushType.app
 ```
 
-9. **Walk the user through the onboarding flow** (this is mostly automated by HushType v0.2.3+):
-   - On first launch, HushType shows a "Welcome to HushType" modal explaining what permissions it needs. Tell the user: "Click **Get Started** in the welcome dialog."
-   - System Settings will open automatically to the Accessibility pane. Tell the user: "Find HushType in the list and toggle it on."
-   - A macOS microphone permission prompt may appear. Tell the user: "Click Allow."
-   - HushType will then show a "Grant Accessibility Permission" modal with a **Restart HushType** button. Tell the user: "Click **Restart HushType** — this will automatically relaunch HushType with the new permissions."
+9. **Walk the user through the onboarding flow** (HushType v0.5.0+):
+   - On first launch, HushType shows the **Set Up HushType** window with Accessibility and Microphone cards.
+   - Tell the user: "Click **Open System Settings** in the Accessibility card, then enable HushType in System Settings → Privacy & Security → Accessibility."
+   - If HushType is missing from the list, tell the user to use the small helper panel to drag HushType into the Accessibility list.
+   - If there are duplicate old entries, HushType is missing, or the switch does not work, tell the user to click **Reset Old HushType Entry**, confirm, then add or enable HushType again.
+   - Tell the user: "Click **Allow Microphone** and approve the macOS microphone prompt."
+   - When Accessibility is enabled and Microphone has been handled, tell the user: "Click **Restart HushType** — this will automatically relaunch HushType with the new Accessibility permission."
    - After the restart, the menu bar icon will appear. Wait for the model to download. Tell the user: "Wait until the menu bar shows 'Ready' (first download is ~675 MB, one-time)."
 
 10. Test it:

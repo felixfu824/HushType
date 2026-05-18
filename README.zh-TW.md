@@ -122,7 +122,7 @@ DMG 為完全獨立版本——OpenCC 及所有相依套件皆已內含。不需
 
 **從原始碼編譯：** `git pull && make install`。
 
-**為什麼每次更新都要重新授權？** HushType 是 ad-hoc 簽章，macOS 用程式碼雜湊（cdhash）追蹤 TCC 記錄，cdhash 每次編譯都會改。App 會在啟動時自動清掉舊 entry 並顯示 onboarding 對話框——打開輔助使用、點 **Restart HushType** 即可。每次更新一次就好。正式的 Developer ID 簽章（年費 $99 Apple 帳號）可以解決。
+**為什麼每次更新都可能要重新授權？** HushType 是 ad-hoc 簽章，macOS 可能會在更新後要求你重新啟用輔助使用權限。設定視窗會顯示目前權限狀態。點 **Open System Settings**，在輔助使用清單裡開啟 HushType，接著點 **Restart HushType** 讓 macOS 套用權限。如果你看到重複的 HushType、找不到 HushType，或開關無法正常運作，請在設定視窗中使用 **Reset Old HushType Entry**，再重新加入或啟用 HushType。
 
 **完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時 `defaults delete com.felix.hushtype` 並 `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` 清掉偏好設定與模型快取。
 
@@ -175,10 +175,10 @@ make install
 ### 步驟 2：啟動並授予權限
 
 1. 從 Spotlight 啟動 HushType（Cmd+Space → HushType）
-2. 首次啟動時會跳出**歡迎視窗**，說明 HushType 需要的權限。點擊 **Get Started**。
-3. 系統設定會自動打開到輔助使用頁面。在清單中找到 HushType 並**開啟開關**。
-4. 當系統要求麥克風權限時，點擊**允許**。
-5. 回到 HushType 的後續視窗，點擊 **Restart HushType** — App 會自動重新啟動，讓新授予的權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟 — HushType 會幫你處理這個步驟。）
+2. 首次啟動時，**Set Up HushType** 視窗會列出需要的權限：輔助使用與麥克風。
+3. 在輔助使用卡片點 **Open System Settings**。在輔助使用清單中找到 HushType 並**開啟開關**。如果清單裡沒有 HushType，可以使用小型提示視窗把 HushType 拖進清單。
+4. 點 **Allow Microphone**，並在 macOS 麥克風權限提示中允許。
+5. 回到 HushType，點擊 **Restart HushType** — App 會自動重新啟動，讓新授予的輔助使用權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟 — HushType 會幫你處理這個步驟。）
 6. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
 ### 步驟 3：使用

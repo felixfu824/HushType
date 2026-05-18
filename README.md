@@ -122,7 +122,7 @@ Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and 
 
 **From source:** `git pull && make install`.
 
-**Permission re-grant:** because HushType is ad-hoc signed, macOS tracks its TCC entries by code hash, which changes every build. The app auto-cleans the stale entry on first launch and shows an onboarding modal — toggle Accessibility on, click **Restart HushType**, done. Once per update. Proper Developer ID signing ($99/yr Apple account) would eliminate this.
+**Permission re-grant:** because HushType is ad-hoc signed, macOS may require Accessibility to be enabled again after an update. The setup window will show the current permission state. Click **Open System Settings**, enable HushType in Accessibility, then click **Restart HushType** so macOS applies the grant. If you see duplicate HushType entries, cannot find HushType, or the switch does not work, use **Reset Old HushType Entry** in the setup window and add/enable HushType again.
 
 **Full uninstall:** Trash `/Applications/HushType.app`, then optionally `defaults delete com.felix.hushtype` and `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` to remove preferences and the model cache.
 
@@ -175,10 +175,10 @@ make install
 ### Step 2: Launch and grant permissions
 
 1. Launch HushType from Spotlight (Cmd+Space → HushType)
-2. On first launch, a **welcome modal** explains the permissions HushType needs. Click **Get Started**.
-3. System Settings opens automatically to the Accessibility pane. Find HushType in the list and **toggle it on**.
-4. Grant the **Microphone** permission when the system prompts for it.
-5. Return to HushType's follow-up modal and click **Restart HushType** — the app relaunches itself with the new permissions active. (macOS caches the permission check per-process, so a restart is mandatory after granting — HushType handles it for you.)
+2. On first launch, the **Set Up HushType** window shows the required permissions: Accessibility and Microphone.
+3. Click **Open System Settings** in the Accessibility card. Find HushType in the Accessibility list and **toggle it on**. If HushType is missing, use the small helper panel to drag HushType into the list.
+4. Click **Allow Microphone** and approve the macOS microphone prompt.
+5. Return to HushType and click **Restart HushType** — the app relaunches itself with the new Accessibility permission active. (macOS caches the permission check per-process, so a restart is mandatory after granting — HushType handles it for you.)
 6. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
 
 ### Step 3: Use it
@@ -436,7 +436,12 @@ HushType/
 │   ├── AppDelegate.swift              Orchestrator + state machine
 │   ├── StatusBarController.swift      Menu bar icon + menus + iOS server toggle
 │   ├── IOSServerManager.swift         Manages ios_server.py subprocess
-│   ├── OnboardingManager.swift        First-launch welcome + permission flow + auto-restart
+│   ├── OnboardingManager.swift        First-launch / repair permission orchestration
+│   ├── OnboardingSetupWindowController.swift  Setup window for Accessibility + Microphone
+│   ├── PermissionSettingsGuidePanel.swift     Floating helper for macOS permission lists
+│   ├── DraggableAppTileView.swift     Draggable HushType.app tile for System Settings
+│   ├── SystemAudioPermissionFlow.swift        Screen & System Audio permission flow
+│   ├── SystemAudioPermissionWindowController.swift  System-audio permission setup panel
 │   ├── HotkeyManager.swift            CGEvent tap for Right Option
 │   ├── AudioCaptureService.swift      AVAudioEngine mic capture (16kHz mono, RMS publisher)
 │   ├── TranscriptionEngine.swift      Protocol + Qwen3ASR wrapper (MLX)
@@ -449,10 +454,20 @@ HushType/
 │   ├── FloatingOverlayView.swift      SwiftUI pill: RMS bars + transcribing spinner
 │   ├── AICleaner.swift                Non-gated façade over FoundationModels cleanup
 │   ├── FoundationModelsCleaner.swift  macOS 26+ gated Apple FM wrapper
-│   ├── CleanupPrompt.swift            Locked Path C hybrid system prompt
+│   ├── CleanupPrompt.swift            Phase 4 AI Cleanup prompt (filler + self-correction)
 │   ├── TranslationManager.swift       Apple Translation Framework integration
 │   ├── TranslationCardWindow.swift    Floating translation card NSPanel
 │   ├── TranslationCardView.swift      SwiftUI translation card view
+│   ├── LiveCaptionManager.swift       Local/cloud live caption orchestration
+│   ├── LiveCaptionWindow.swift        Floating live caption panel
+│   ├── LiveCaptionView.swift          SwiftUI live caption panel view
+│   ├── LiveCaptionWorker.swift        Streaming local ASR worker
+│   ├── LocalQwen3Backend.swift        Local Live Caption backend
+│   ├── OpenAITranslateBackend.swift   Cloud translated-caption backend
+│   ├── OpenAIKeyStore.swift           User OpenAI API key file handling
+│   ├── CloudOnboardingAlert.swift     One-time cloud disclosure
+│   ├── SystemAudioSource.swift        ScreenCaptureKit system-audio source
+│   ├── SystemAudioPicker.swift        App/source picker for system audio
 │   ├── MemoryUtils.swift              Process memory reading utilities
 │   └── AppConfig.swift                UserDefaults wrapper
 ├── scripts/
@@ -502,7 +517,7 @@ To run HushType on your own devices, change these:
 Run: `bash scripts/build_mlx_metallib.sh release`
 
 **macOS: Hotkey not working**
-Check Accessibility permission in System Settings → Privacy & Security → Accessibility. HushType must be in the list and toggled on. If you just granted it and the hotkey still doesn't work, quit and relaunch HushType — macOS caches the permission check per-process, so a restart is mandatory after granting. The first-launch onboarding flow handles this automatically, but if you reach this state some other way, you'll need to restart manually.
+Check Accessibility permission in System Settings → Privacy & Security → Accessibility. HushType must be in the list and toggled on. If HushType is missing or the switch does not work, relaunch HushType and use **Reset Old HushType Entry** from the setup window, then add/enable HushType again. If you just granted Accessibility and the hotkey still does not work, click **Restart HushType** in the setup window or quit and relaunch manually — macOS caches the permission check per-process.
 
 **iOS: "App Transport Security" error**
 The Info.plist must have `NSAllowsArbitraryLoads = true` with NO `NSExceptionDomains` — they conflict and cause iOS to ignore the global allow.
