@@ -13,6 +13,10 @@
   <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
 </p>
 
+<p align="center">
+  官方 repository：<a href="https://github.com/felixfu824/HushType">github.com/felixfu824/HushType</a>
+</p>
+
 > **HushType** 是一款免費、開源、離線的 macOS 與 iOS 語音轉文字 App。使用 Qwen3-ASR（[macOS](https://huggingface.co/aufklarer/Qwen3-ASR-0.6B-MLX-4bit) / [iOS](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) 映像）在 Apple Silicon（MLX）上本地執行，可辨識英文、中文、日文的語音輸入——包含混用多語的句子。透過 OpenCC 提供穩定的繁體中文輸出。是雲端聽寫服務與 Whisper 衍生工具（記憶體用量較高、傾向輸出簡體中文）的隱私優先替代方案，足夠輕量，能與你已在運行的所有應用程式共存。
 
 ---
