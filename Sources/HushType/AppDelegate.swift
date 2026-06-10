@@ -544,15 +544,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        // Snapshot resident memory at each step so a user reporting "memory
-        // didn't release" can post the numbers and we can see exactly which
-        // step held the bytes. Output appears in Console.app /
+        // Snapshot the physical footprint at each step so a user reporting
+        // "memory didn't release" can post the numbers and we can see exactly
+        // which step held the bytes. Output appears in Console.app /
         // `log show --predicate 'subsystem == "com.felix.hushtype"'`.
         func snapshot(_ tag: String) {
-            let resident = MemoryUtils.residentMemoryMB()
+            let footprint = MemoryUtils.physFootprintMB()
             let mlxActive = MLX.Memory.activeMemory / (1024 * 1024)
             let mlxCache  = MLX.Memory.cacheMemory  / (1024 * 1024)
-            log.info("unload step=\(tag, privacy: .public) resident=\(resident, privacy: .public)MB mlxActive=\(mlxActive, privacy: .public)MB mlxCache=\(mlxCache, privacy: .public)MB")
+            log.info("unload step=\(tag, privacy: .public) footprint=\(footprint, privacy: .public)MB mlxActive=\(mlxActive, privacy: .public)MB mlxCache=\(mlxCache, privacy: .public)MB")
         }
         snapshot("0_begin")
 

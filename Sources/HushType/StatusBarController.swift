@@ -14,8 +14,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private let statusItem: NSStatusItem
+    /// Combined status + memory row, e.g. "Ready · Memory 2.1 GB".
     private let statusMenuItem: NSMenuItem
-    private let memoryMenuItem: NSMenuItem
     private let languageMenu: NSMenu
     private var languageItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
@@ -23,22 +23,25 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private var numberConversionMenuItem: NSMenuItem!
     private var aiCleanupMenuItem: NSMenuItem!
     private var liveCaptionMenuItem: NSMenuItem!
-    private var liveCaptionSubtitleItem: NSMenuItem!
+    private var liveCaptionStartStopItem: NSMenuItem!
     private var liveCaptionMicItem: NSMenuItem!
     private var liveCaptionSystemItem: NSMenuItem!
     private var liveCaptionChangeSourceItem: NSMenuItem!
     private var liveTranslatedMenuItem: NSMenuItem!
-    private var liveTranslatedSubtitleItem: NSMenuItem!
+    private var liveTranslatedStartStopItem: NSMenuItem!
     private var liveTranslatedMicItem: NSMenuItem!
     private var liveTranslatedSystemItem: NSMenuItem!
     private var liveTranslatedChangeSourceItem: NSMenuItem!
     private var textTranslationMenuItem: NSMenuItem!
-    private var translationSubtitleItem: NSMenuItem!
+    private var textTranslationEnableItem: NSMenuItem!
     private var translateToItem: NSMenuItem!
     private var translationHintItem: NSMenuItem!
     private var unloadMenuItem: NSMenuItem!
     private var dictionaryMenuItem: NSMenuItem!
     private var dictionarySubtitleItem: NSMenuItem!
+    /// Last state passed to `setState` — kept so the combined status+memory
+    /// row can be re-rendered on every menu open without losing the state text.
+    private var currentState: State = .loading(0)
     let iosServerManager = IOSServerManager()
 
     var onLanguageChanged: ((String?) -> Void)?
@@ -120,8 +123,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusMenuItem = NSMenuItem(title: "Loading...", action: nil, keyEquivalent: "")
         statusMenuItem.isEnabled = false
-        memoryMenuItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        memoryMenuItem.isEnabled = false
 
         languageMenu = NSMenu(title: "Speech-to-Text Language")
 
@@ -143,8 +144,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - NSMenuDelegate
 
     func menuWillOpen(_ menu: NSMenu) {
-        // Refresh memory display each time the menu opens
-        memoryMenuItem.title = "Memory used: \(MemoryUtils.formattedMemory())"
+        // Refresh the combined status · memory row each time the menu opens
+        refreshStatusLine()
 
         // Refresh dictionary subtitle (entry count may change if user edited file externally)
         let dictSubAttrs: [NSAttributedString.Key: Any] = [
@@ -159,40 +160,44 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Private
 
+    /// Builds the top-level menu: 9 items + 4 separators (was ~35 flat rows).
+    /// Frequent actions stay top-level; per-feature controls live in
+    /// submenus per the HIG for menu bar extras. Active features show the
+    /// green ✓ on the submenu PARENT so state is visible without opening it.
     private func setupMenu() {
         let menu = NSMenu()
         menu.delegate = self
 
-        // Status line
+        // Combined status + memory row, e.g. "Ready · Memory 2.1 GB"
+        refreshStatusLine()
         menu.addItem(statusMenuItem)
-
-        // Memory display
-        memoryMenuItem.title = "Memory used: \(MemoryUtils.formattedMemory())"
-        menu.addItem(memoryMenuItem)
 
         menu.addItem(.separator())
 
-        // Language submenu
-        let languageItem = NSMenuItem(title: "Speech-to-Text Language", action: nil, keyEquivalent: "")
-        languageItem.submenu = languageMenu
+        // ─────────────────── Live Caption (local Qwen3) ───────────────────
+        liveCaptionMenuItem = NSMenuItem(title: "Live Caption", action: nil, keyEquivalent: "")
+        updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
+        liveCaptionMenuItem.submenu = buildLiveCaptionSubmenu()
+        menu.addItem(liveCaptionMenuItem)
 
-        let languages: [(title: String, value: String?)] = [
-            ("Auto", nil),
-            ("English", "english"),
-            ("中文", "chinese"),
-            ("日本語", "japanese"),
-        ]
+        // ───────── Live Translated Caption (cloud OpenAI translate) ─────────
+        liveTranslatedMenuItem = NSMenuItem(title: "Live Translated Caption", action: nil, keyEquivalent: "")
+        updateToggleAppearance(liveTranslatedMenuItem, title: "Live Translated Caption", checked: false)
+        liveTranslatedMenuItem.submenu = buildLiveTranslatedSubmenu()
+        menu.addItem(liveTranslatedMenuItem)
 
-        for (title, value) in languages {
-            let item = NSMenuItem(title: title, action: #selector(languageSelected(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = value
-            languageMenu.addItem(item)
-            languageItems.append(item)
-        }
+        // ─────────────────────── Text Translation ───────────────────────
+        textTranslationMenuItem = NSMenuItem(title: "Text Translation", action: nil, keyEquivalent: "")
+        updateToggleAppearance(textTranslationMenuItem, title: "Text Translation", checked: AppConfig.shared.textTranslationEnabled)
+        textTranslationMenuItem.submenu = buildTextTranslationSubmenu()
+        menu.addItem(textTranslationMenuItem)
 
-        updateLanguageCheckmarks()
-        menu.addItem(languageItem)
+        menu.addItem(.separator())
+
+        // ────────────────────── Dictation Settings ──────────────────────
+        let dictationSettingsItem = NSMenuItem(title: "Dictation Settings", action: nil, keyEquivalent: "")
+        dictationSettingsItem.submenu = buildDictationSettingsSubmenu()
+        menu.addItem(dictationSettingsItem)
 
         menu.addItem(.separator())
 
@@ -207,294 +212,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                 self?.setIOSServerActive(running)
             }
         }
-
-        menu.addItem(.separator())
-
-        // Edit Customized Dictionary
-        dictionaryMenuItem = NSMenuItem(
-            title: "Edit Customized Dictionary",
-            action: #selector(editDictionary),
-            keyEquivalent: ""
-        )
-        dictionaryMenuItem.target = self
-        menu.addItem(dictionaryMenuItem)
-
-        // Dictionary subtitle (entry count or "no file")
-        dictionarySubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        dictionarySubtitleItem.isEnabled = false
-        let dictSubAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        dictionarySubtitleItem.attributedTitle = NSAttributedString(
-            string: "    \(dictionarySubtitleText())",
-            attributes: dictSubAttrs
-        )
-        menu.addItem(dictionarySubtitleItem)
-
-        menu.addItem(.separator())
-
-        // Floating overlay toggle
-        floatingOverlayMenuItem = NSMenuItem(
-            title: "Show Floating Indicator",
-            action: #selector(toggleFloatingOverlay),
-            keyEquivalent: ""
-        )
-        floatingOverlayMenuItem.target = self
-        updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: AppConfig.shared.floatingOverlayEnabled)
-        menu.addItem(floatingOverlayMenuItem)
-
-        // Number Conversion toggle (deterministic ITN)
-        numberConversionMenuItem = NSMenuItem(
-            title: "Number Conversion",
-            action: #selector(toggleNumberConversion),
-            keyEquivalent: ""
-        )
-        numberConversionMenuItem.target = self
-        updateToggleAppearance(numberConversionMenuItem, title: "Number Conversion", checked: AppConfig.shared.numberConversionEnabled)
-        menu.addItem(numberConversionMenuItem)
-
-        // Number Conversion subtitle
-        let numSubtitle = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        numSubtitle.isEnabled = false
-        let numSubAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        numSubtitle.attributedTitle = NSAttributedString(
-            string: "    Chinese numerals \u{2192} Arabic digits",
-            attributes: numSubAttrs
-        )
-        menu.addItem(numSubtitle)
-
-        // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
-        aiCleanupMenuItem = NSMenuItem(
-            title: "AI Cleanup",
-            action: #selector(toggleAICleanup),
-            keyEquivalent: ""
-        )
-        aiCleanupMenuItem.target = self
-        updateToggleAppearance(aiCleanupMenuItem, title: "AI Cleanup", checked: AppConfig.shared.aiCleanupEnabled)
-        menu.addItem(aiCleanupMenuItem)
-
-        // AI Cleanup subtitle
-        let aiSubtitle = NSMenuItem(title: "    via Apple Foundation Models", action: nil, keyEquivalent: "")
-        aiSubtitle.isEnabled = false
-        let aiSubAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor
-        ]
-        aiSubtitle.attributedTitle = NSAttributedString(string: "    via Apple Foundation Models", attributes: aiSubAttrs)
-        menu.addItem(aiSubtitle)
-
-        // ─────────────────── Live Caption (local Qwen3) ───────────────────
-        // Header is CLICKABLE — clicking it toggles the local product with
-        // the user's last-used source. The radios below let the user pick
-        // explicitly. Making it clickable also keeps the text bright-white
-        // and the green ✓ visible when active (non-clickable menu items get
-        // dimmed by AppKit, which also greys out our attributed colors).
-        liveCaptionMenuItem = NSMenuItem(
-            title: "Live Caption",
-            action: #selector(liveCaptionHeaderClicked),
-            keyEquivalent: ""
-        )
-        liveCaptionMenuItem.target = self
-        updateToggleAppearance(liveCaptionMenuItem, title: "Live Caption", checked: false)
-        menu.addItem(liveCaptionMenuItem)
-
-        liveCaptionSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        liveCaptionSubtitleItem.isEnabled = false
-        let liveSubAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        liveCaptionSubtitleItem.attributedTitle = NSAttributedString(
-            string: "    Local transcription — free, on-device",
-            attributes: liveSubAttrs
-        )
-        menu.addItem(liveCaptionSubtitleItem)
-
-        liveCaptionMicItem = NSMenuItem(
-            title: "    From Microphone",
-            action: #selector(liveCaptionFromMicClicked),
-            keyEquivalent: ""
-        )
-        liveCaptionMicItem.target = self
-        updateRadioAppearance(liveCaptionMicItem, title: "From Microphone", selected: false)
-        menu.addItem(liveCaptionMicItem)
-
-        liveCaptionSystemItem = NSMenuItem(
-            title: "    From System Audio…",
-            action: #selector(liveCaptionFromSystemClicked),
-            keyEquivalent: ""
-        )
-        liveCaptionSystemItem.target = self
-        updateRadioAppearance(liveCaptionSystemItem, title: "From System Audio…", selected: false)
-        menu.addItem(liveCaptionSystemItem)
-
-        let changeSourceAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        liveCaptionChangeSourceItem = NSMenuItem(
-            title: "    Change System Audio Source…",
-            action: #selector(liveCaptionChangeSourceClicked),
-            keyEquivalent: ""
-        )
-        liveCaptionChangeSourceItem.target = self
-        liveCaptionChangeSourceItem.attributedTitle = NSAttributedString(
-            string: "    Change System Audio Source…",
-            attributes: changeSourceAttrs
-        )
-        menu.addItem(liveCaptionChangeSourceItem)
-
-        // ───────── Live Translated Caption (cloud OpenAI translate) ─────────
-        menu.addItem(.separator())
-
-        liveTranslatedMenuItem = NSMenuItem(
-            title: "Live Translated Caption",
-            action: #selector(liveTranslatedHeaderClicked),
-            keyEquivalent: ""
-        )
-        liveTranslatedMenuItem.target = self
-        updateToggleAppearance(liveTranslatedMenuItem, title: "Live Translated Caption", checked: false)
-        menu.addItem(liveTranslatedMenuItem)
-
-        liveTranslatedSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        liveTranslatedSubtitleItem.isEnabled = false
-        liveTranslatedSubtitleItem.attributedTitle = NSAttributedString(
-            string: "    Real-time foreign-language → text via OpenAI · $",
-            attributes: liveSubAttrs
-        )
-        menu.addItem(liveTranslatedSubtitleItem)
-
-        liveTranslatedMicItem = NSMenuItem(
-            title: "    From Microphone",
-            action: #selector(liveTranslatedFromMicClicked),
-            keyEquivalent: ""
-        )
-        liveTranslatedMicItem.target = self
-        updateRadioAppearance(liveTranslatedMicItem, title: "From Microphone", selected: false)
-        menu.addItem(liveTranslatedMicItem)
-
-        liveTranslatedSystemItem = NSMenuItem(
-            title: "    From System Audio…",
-            action: #selector(liveTranslatedFromSystemClicked),
-            keyEquivalent: ""
-        )
-        liveTranslatedSystemItem.target = self
-        updateRadioAppearance(liveTranslatedSystemItem, title: "From System Audio…", selected: false)
-        menu.addItem(liveTranslatedSystemItem)
-
-        liveTranslatedChangeSourceItem = NSMenuItem(
-            title: "    Change System Audio Source…",
-            action: #selector(liveTranslatedChangeSourceClicked),
-            keyEquivalent: ""
-        )
-        liveTranslatedChangeSourceItem.target = self
-        liveTranslatedChangeSourceItem.attributedTitle = NSAttributedString(
-            string: "    Change System Audio Source…",
-            attributes: changeSourceAttrs
-        )
-        menu.addItem(liveTranslatedChangeSourceItem)
-
-        // Translated Caption Settings — cloud-only options: target language,
-        // source-line toggle, cost guardrails, OpenAI key file. (Used to be
-        // "Engine Settings…" when local vs cloud lived in one menu.)
-        let translatedSettingsItem = NSMenuItem(
-            title: "    Translated Caption Settings…",
-            action: #selector(openLiveCaptionEngineSettings),
-            keyEquivalent: ""
-        )
-        translatedSettingsItem.target = self
-        translatedSettingsItem.attributedTitle = NSAttributedString(
-            string: "    Translated Caption Settings…",
-            attributes: changeSourceAttrs
-        )
-        menu.addItem(translatedSettingsItem)
-
-        // ───────── Shared: tuning file (applies to both products) ─────────
-        menu.addItem(.separator())
-
-        let liveCaptionSettingsItem = NSMenuItem(
-            title: "Edit Live Caption Settings",
-            action: #selector(editLiveCaptionSettings),
-            keyEquivalent: ""
-        )
-        liveCaptionSettingsItem.target = self
-        let settingsAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor,
-        ]
-        liveCaptionSettingsItem.attributedTitle = NSAttributedString(
-            string: "Edit Live Caption Settings",
-            attributes: settingsAttrs
-        )
-        menu.addItem(liveCaptionSettingsItem)
-
-        // Text Translation toggle
-        textTranslationMenuItem = NSMenuItem(
-            title: "Text Translation",
-            action: #selector(toggleTextTranslation),
-            keyEquivalent: ""
-        )
-        textTranslationMenuItem.target = self
-        updateToggleAppearance(textTranslationMenuItem, title: "Text Translation", checked: AppConfig.shared.textTranslationEnabled)
-        menu.addItem(textTranslationMenuItem)
-
-        // Text Translation subtitle
-        translationSubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        translationSubtitleItem.isEnabled = false
-        let transSubAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 10),
-            .foregroundColor: NSColor.secondaryLabelColor
-        ]
-        translationSubtitleItem.attributedTitle = NSAttributedString(
-            string: "    via Apple Translation Framework",
-            attributes: transSubAttrs
-        )
-        menu.addItem(translationSubtitleItem)
-
-        // Translate-to submenu (indented)
-        translateToItem = NSMenuItem(title: "    Translate to", action: nil, keyEquivalent: "")
-        let translateToMenu = NSMenu(title: "Translate to")
-        let translateTargets: [(title: String, value: String?)] = [
-            ("Auto", nil),
-            ("English", "en"),
-            ("繁體中文", "zh-Hant-TW"),
-            ("日本語", "ja"),
-            ("한국어", "ko"),
-            ("Français", "fr"),
-            ("Deutsch", "de"),
-            ("Español", "es"),
-        ]
-        for (title, value) in translateTargets {
-            let item = NSMenuItem(title: title, action: #selector(translateTargetSelected(_:)), keyEquivalent: "")
-            item.target = self
-            item.representedObject = value
-            translateToMenu.addItem(item)
-        }
-        translateToItem.submenu = translateToMenu
-        updateTranslateToCheckmarks()
-        menu.addItem(translateToItem)
-
-        // Translation hotkey hint
-        translationHintItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        translationHintItem.isEnabled = false
-        let hintAttrs: [NSAttributedString.Key: Any] = [
-            .font: NSFont.systemFont(ofSize: 11),
-            .foregroundColor: NSColor.tertiaryLabelColor
-        ]
-        translationHintItem.attributedTitle = NSAttributedString(
-            string: "    Tap Right ⌥ to translate selection",
-            attributes: hintAttrs
-        )
-        menu.addItem(translationHintItem)
-
-        // Show/hide translation sub-items based on toggle state
-        updateTranslationSubItems()
-
-        menu.addItem(.separator())
 
         // Unload / Reload model
         unloadMenuItem = NSMenuItem(title: "Unload Speech-to-Text Model", action: #selector(unloadOrReloadModel), keyEquivalent: "")
@@ -518,6 +235,290 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         menu.addItem(quitItem)
 
         statusItem.menu = menu
+    }
+
+    // MARK: - Submenu builders
+
+    /// Small grey 10pt style shared by subtitle/secondary rows.
+    private var subtitleAttributes: [NSAttributedString.Key: Any] {
+        [
+            .font: NSFont.systemFont(ofSize: 10),
+            .foregroundColor: NSColor.secondaryLabelColor,
+        ]
+    }
+
+    /// Adds a disabled small-grey description row to a (sub)menu.
+    private func addSubtitle(_ text: String, to menu: NSMenu) {
+        let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        item.isEnabled = false
+        item.attributedTitle = NSAttributedString(string: text, attributes: subtitleAttributes)
+        menu.addItem(item)
+    }
+
+    private func buildLiveCaptionSubmenu() -> NSMenu {
+        let sub = NSMenu(title: "Live Caption")
+        addSubtitle("Local transcription — free, on-device", to: sub)
+
+        // Replaces the old clickable header: toggles the local product with
+        // the user's last-used source (mirrors the Right ⌘ + / hotkey).
+        // Title flips to "Stop Live Caption" in setLiveCaptionState.
+        liveCaptionStartStopItem = NSMenuItem(
+            title: "Start with Last Source",
+            action: #selector(liveCaptionHeaderClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionStartStopItem.target = self
+        sub.addItem(liveCaptionStartStopItem)
+
+        sub.addItem(.separator())
+
+        liveCaptionMicItem = NSMenuItem(
+            title: "From Microphone",
+            action: #selector(liveCaptionFromMicClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionMicItem.target = self
+        updateRadioAppearance(liveCaptionMicItem, title: "From Microphone", selected: false)
+        sub.addItem(liveCaptionMicItem)
+
+        liveCaptionSystemItem = NSMenuItem(
+            title: "From System Audio…",
+            action: #selector(liveCaptionFromSystemClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionSystemItem.target = self
+        updateRadioAppearance(liveCaptionSystemItem, title: "From System Audio…", selected: false)
+        sub.addItem(liveCaptionSystemItem)
+
+        liveCaptionChangeSourceItem = NSMenuItem(
+            title: "Change System Audio Source…",
+            action: #selector(liveCaptionChangeSourceClicked),
+            keyEquivalent: ""
+        )
+        liveCaptionChangeSourceItem.target = self
+        liveCaptionChangeSourceItem.attributedTitle = NSAttributedString(
+            string: "Change System Audio Source…",
+            attributes: subtitleAttributes
+        )
+        sub.addItem(liveCaptionChangeSourceItem)
+
+        sub.addItem(.separator())
+
+        // Shared tuning file — applies to BOTH caption products, lives here
+        // because the local product is the primary one.
+        let tuningItem = NSMenuItem(
+            title: "Edit Live Caption Settings",
+            action: #selector(editLiveCaptionSettings),
+            keyEquivalent: ""
+        )
+        tuningItem.target = self
+        tuningItem.attributedTitle = NSAttributedString(
+            string: "Edit Live Caption Settings",
+            attributes: subtitleAttributes
+        )
+        sub.addItem(tuningItem)
+
+        return sub
+    }
+
+    private func buildLiveTranslatedSubmenu() -> NSMenu {
+        let sub = NSMenu(title: "Live Translated Caption")
+        addSubtitle("Real-time foreign-language → text via OpenAI · $", to: sub)
+
+        liveTranslatedStartStopItem = NSMenuItem(
+            title: "Start with Last Source",
+            action: #selector(liveTranslatedHeaderClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedStartStopItem.target = self
+        sub.addItem(liveTranslatedStartStopItem)
+
+        sub.addItem(.separator())
+
+        liveTranslatedMicItem = NSMenuItem(
+            title: "From Microphone",
+            action: #selector(liveTranslatedFromMicClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedMicItem.target = self
+        updateRadioAppearance(liveTranslatedMicItem, title: "From Microphone", selected: false)
+        sub.addItem(liveTranslatedMicItem)
+
+        liveTranslatedSystemItem = NSMenuItem(
+            title: "From System Audio…",
+            action: #selector(liveTranslatedFromSystemClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedSystemItem.target = self
+        updateRadioAppearance(liveTranslatedSystemItem, title: "From System Audio…", selected: false)
+        sub.addItem(liveTranslatedSystemItem)
+
+        liveTranslatedChangeSourceItem = NSMenuItem(
+            title: "Change System Audio Source…",
+            action: #selector(liveTranslatedChangeSourceClicked),
+            keyEquivalent: ""
+        )
+        liveTranslatedChangeSourceItem.target = self
+        liveTranslatedChangeSourceItem.attributedTitle = NSAttributedString(
+            string: "Change System Audio Source…",
+            attributes: subtitleAttributes
+        )
+        sub.addItem(liveTranslatedChangeSourceItem)
+
+        sub.addItem(.separator())
+
+        // Translated Caption Settings — cloud-only options: target language,
+        // source-line toggle, cost guardrails, OpenAI key file.
+        let translatedSettingsItem = NSMenuItem(
+            title: "Translated Caption Settings…",
+            action: #selector(openLiveCaptionEngineSettings),
+            keyEquivalent: ""
+        )
+        translatedSettingsItem.target = self
+        translatedSettingsItem.attributedTitle = NSAttributedString(
+            string: "Translated Caption Settings…",
+            attributes: subtitleAttributes
+        )
+        sub.addItem(translatedSettingsItem)
+
+        return sub
+    }
+
+    private func buildTextTranslationSubmenu() -> NSMenu {
+        let sub = NSMenu(title: "Text Translation")
+        addSubtitle("via Apple Translation Framework", to: sub)
+
+        textTranslationEnableItem = NSMenuItem(
+            title: "Enable Text Translation",
+            action: #selector(toggleTextTranslation),
+            keyEquivalent: ""
+        )
+        textTranslationEnableItem.target = self
+        updateToggleAppearance(textTranslationEnableItem, title: "Enable Text Translation", checked: AppConfig.shared.textTranslationEnabled)
+        sub.addItem(textTranslationEnableItem)
+
+        // Translate-to submenu
+        translateToItem = NSMenuItem(title: "Translate to", action: nil, keyEquivalent: "")
+        let translateToMenu = NSMenu(title: "Translate to")
+        let translateTargets: [(title: String, value: String?)] = [
+            ("Auto", nil),
+            ("English", "en"),
+            ("繁體中文", "zh-Hant-TW"),
+            ("日本語", "ja"),
+            ("한국어", "ko"),
+            ("Français", "fr"),
+            ("Deutsch", "de"),
+            ("Español", "es"),
+        ]
+        for (title, value) in translateTargets {
+            let item = NSMenuItem(title: title, action: #selector(translateTargetSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = value
+            translateToMenu.addItem(item)
+        }
+        translateToItem.submenu = translateToMenu
+        updateTranslateToCheckmarks()
+        sub.addItem(translateToItem)
+
+        // Translation hotkey hint
+        translationHintItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        translationHintItem.isEnabled = false
+        let hintAttrs: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 11),
+            .foregroundColor: NSColor.tertiaryLabelColor
+        ]
+        translationHintItem.attributedTitle = NSAttributedString(
+            string: "Tap Right ⌥ to translate selection",
+            attributes: hintAttrs
+        )
+        sub.addItem(translationHintItem)
+
+        // Show/hide translation sub-items based on toggle state
+        updateTranslationSubItems()
+
+        return sub
+    }
+
+    private func buildDictationSettingsSubmenu() -> NSMenu {
+        let sub = NSMenu(title: "Dictation Settings")
+
+        // Language submenu
+        let languageItem = NSMenuItem(title: "Speech-to-Text Language", action: nil, keyEquivalent: "")
+        languageItem.submenu = languageMenu
+
+        let languages: [(title: String, value: String?)] = [
+            ("Auto", nil),
+            ("English", "english"),
+            ("中文", "chinese"),
+            ("日本語", "japanese"),
+        ]
+
+        for (title, value) in languages {
+            let item = NSMenuItem(title: title, action: #selector(languageSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = value
+            languageMenu.addItem(item)
+            languageItems.append(item)
+        }
+
+        updateLanguageCheckmarks()
+        sub.addItem(languageItem)
+
+        sub.addItem(.separator())
+
+        // Number Conversion toggle (deterministic ITN)
+        numberConversionMenuItem = NSMenuItem(
+            title: "Number Conversion",
+            action: #selector(toggleNumberConversion),
+            keyEquivalent: ""
+        )
+        numberConversionMenuItem.target = self
+        updateToggleAppearance(numberConversionMenuItem, title: "Number Conversion", checked: AppConfig.shared.numberConversionEnabled)
+        sub.addItem(numberConversionMenuItem)
+        addSubtitle("    Chinese numerals \u{2192} Arabic digits", to: sub)
+
+        // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
+        aiCleanupMenuItem = NSMenuItem(
+            title: "AI Cleanup",
+            action: #selector(toggleAICleanup),
+            keyEquivalent: ""
+        )
+        aiCleanupMenuItem.target = self
+        updateToggleAppearance(aiCleanupMenuItem, title: "AI Cleanup", checked: AppConfig.shared.aiCleanupEnabled)
+        sub.addItem(aiCleanupMenuItem)
+        addSubtitle("    via Apple Foundation Models", to: sub)
+
+        // Floating overlay toggle
+        floatingOverlayMenuItem = NSMenuItem(
+            title: "Show Floating Indicator",
+            action: #selector(toggleFloatingOverlay),
+            keyEquivalent: ""
+        )
+        floatingOverlayMenuItem.target = self
+        updateToggleAppearance(floatingOverlayMenuItem, title: "Show Floating Indicator", checked: AppConfig.shared.floatingOverlayEnabled)
+        sub.addItem(floatingOverlayMenuItem)
+
+        sub.addItem(.separator())
+
+        // Edit Customized Dictionary
+        dictionaryMenuItem = NSMenuItem(
+            title: "Edit Customized Dictionary",
+            action: #selector(editDictionary),
+            keyEquivalent: ""
+        )
+        dictionaryMenuItem.target = self
+        sub.addItem(dictionaryMenuItem)
+
+        // Dictionary subtitle (entry count or "no file")
+        dictionarySubtitleItem = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        dictionarySubtitleItem.isEnabled = false
+        dictionarySubtitleItem.attributedTitle = NSAttributedString(
+            string: "    \(dictionarySubtitleText())",
+            attributes: subtitleAttributes
+        )
+        sub.addItem(dictionarySubtitleItem)
+
+        return sub
     }
 
     // MARK: - Language
@@ -693,6 +694,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         if let parent = liveTranslatedMenuItem {
             updateToggleAppearance(parent, title: "Live Translated Caption", checked: translatedActive)
         }
+        if let item = liveCaptionStartStopItem {
+            item.title = localActive ? "Stop Live Caption" : "Start with Last Source"
+        }
+        if let item = liveTranslatedStartStopItem {
+            item.title = translatedActive ? "Stop Live Translated Caption" : "Start with Last Source"
+        }
 
         let sourceIsMic: Bool
         let sourceIsSystem: Bool
@@ -854,7 +861,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func toggleTextTranslation() {
         let newValue = !AppConfig.shared.textTranslationEnabled
         AppConfig.shared.textTranslationEnabled = newValue
+        // ✓ on both the submenu parent (visible at top level) and the
+        // Enable item inside the submenu.
         updateToggleAppearance(textTranslationMenuItem, title: "Text Translation", checked: newValue)
+        updateToggleAppearance(textTranslationEnableItem, title: "Enable Text Translation", checked: newValue)
         updateTranslationSubItems()
     }
 
@@ -925,7 +935,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     /// Called by AppDelegate after successful unload to update menu state.
     func setModelUnloaded() {
-        statusMenuItem.title = "Model unloaded"
+        currentState = .unloaded
+        refreshStatusLine()
 
         let reloadAttrs: [NSAttributedString.Key: Any] = [
             .foregroundColor: NSColor.systemGreen
@@ -969,9 +980,9 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         }
     }
 
-    /// Update a radio-style sub-menu item with the same 4-space indent + 12pt
-    /// secondary font used elsewhere in the menu. Selected radios get a green
-    /// ✓ suffix matching the toggle style.
+    /// Update a radio-style sub-menu item (12pt secondary font; the items
+    /// live inside submenus now, so no manual indent). Selected radios get a
+    /// green ✓ suffix matching the toggle style.
     private func updateRadioAppearance(_ item: NSMenuItem, title: String, selected: Bool) {
         item.state = .off
         item.view = nil
@@ -981,8 +992,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             .foregroundColor: NSColor.labelColor,
         ]
 
-        let prefix = "    "  // 4-space indent under parent
-        let str = NSMutableAttributedString(string: prefix + title, attributes: baseAttrs)
+        let str = NSMutableAttributedString(string: title, attributes: baseAttrs)
         if selected {
             str.append(NSAttributedString(
                 string: "  ✓",
@@ -1162,21 +1172,30 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     private func updateStatusText(for state: State) {
+        currentState = state
+        refreshStatusLine()
+    }
+
+    private func statusText(for state: State) -> String {
         switch state {
         case .loading(let progress):
-            let pct = Int(progress * 100)
-            statusMenuItem.title = "Loading model (\(pct)%)..."
+            return "Loading model (\(Int(progress * 100))%)..."
         case .idle:
-            statusMenuItem.title = "Ready"
+            return "Ready"
         case .recording:
-            statusMenuItem.title = "Recording..."
+            return "Recording..."
         case .transcribing:
-            statusMenuItem.title = "Transcribing..."
+            return "Transcribing..."
         case .error(let msg):
-            statusMenuItem.title = "Error: \(msg)"
+            return "Error: \(msg)"
         case .unloaded:
-            statusMenuItem.title = "Model unloaded"
+            return "Model unloaded"
         }
+    }
+
+    /// Re-renders the combined "<status> · Memory <footprint>" row.
+    private func refreshStatusLine() {
+        statusMenuItem.title = "\(statusText(for: currentState)) · Memory \(MemoryUtils.formattedMemory())"
     }
 
     private func updateUnloadMenuItem(for state: State) {
