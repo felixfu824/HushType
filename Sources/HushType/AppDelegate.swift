@@ -43,6 +43,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         print("[HushType] Starting...")
 
+        // Cap MLX's GPU buffer recycle pool process-wide. The dictation path
+        // never bounds this pool (clearCache() runs only on manual Unload and
+        // LiveCaption stop), and LiveCaptionManager.start() was the only place
+        // that set cacheLimit — so a dictation-only session ran on MLX's
+        // unbounded default and phys_footprint climbed to 5+ GB over a session.
+        // Setting it here at launch bounds the pool for every path. Value
+        // mirrors LiveCaptionTuning.mlxCacheLimitMB (1024). This caps only the
+        // *idle* reuse pool, never live inference memory, so it can never
+        // truncate or fail a transcription — at worst a heavy request does a
+        // little more OS alloc/free churn.
+        MLX.Memory.cacheLimit = 1024 * 1024 * 1024  // 1 GB
+
         statusBar = StatusBarController()
         hotkeyManager = HotkeyManager()
         audioCapture = AudioCaptureService()
