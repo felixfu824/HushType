@@ -18,6 +18,8 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     private let statusMenuItem: NSMenuItem
     private let languageMenu: NSMenu
     private var languageItems: [NSMenuItem] = []
+    private let punctuationMenu: NSMenu
+    private var punctuationItems: [NSMenuItem] = []
     private var iosServerMenuItem: NSMenuItem!
     private var floatingOverlayMenuItem: NSMenuItem!
     private var numberConversionMenuItem: NSMenuItem!
@@ -125,6 +127,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         statusMenuItem.isEnabled = false
 
         languageMenu = NSMenu(title: "Speech-to-Text Language")
+        punctuationMenu = NSMenu(title: "Punctuation Cleanup")
 
         super.init()
 
@@ -477,6 +480,26 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         sub.addItem(numberConversionMenuItem)
         addSubtitle("    Chinese numerals \u{2192} Arabic digits", to: sub)
 
+        // Punctuation Cleanup mode (Chinese only; soft/hard/off radio)
+        let punctuationItem = NSMenuItem(title: "Punctuation Cleanup", action: nil, keyEquivalent: "")
+        punctuationItem.submenu = punctuationMenu
+
+        let punctModes: [(title: String, value: String)] = [
+            ("Soft \u{2014} trim inline commas", "soft"),
+            ("Hard \u{2014} trim all marks", "hard"),
+            ("Off \u{2014} keep model output", "off"),
+        ]
+        for (title, value) in punctModes {
+            let item = NSMenuItem(title: title, action: #selector(punctuationModeSelected(_:)), keyEquivalent: "")
+            item.target = self
+            item.representedObject = value
+            punctuationMenu.addItem(item)
+            punctuationItems.append(item)
+        }
+        updatePunctuationCheckmarks()
+        sub.addItem(punctuationItem)
+        addSubtitle("    Trim Chinese over-punctuation", to: sub)
+
         // AI Cleanup toggle (requires macOS 26+ with Apple Intelligence)
         aiCleanupMenuItem = NSMenuItem(
             title: "AI Cleanup",
@@ -790,6 +813,24 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         let newValue = !AppConfig.shared.numberConversionEnabled
         AppConfig.shared.numberConversionEnabled = newValue
         updateToggleAppearance(numberConversionMenuItem, title: "Number Conversion", checked: newValue)
+    }
+
+    // MARK: - Punctuation Cleanup
+
+    @objc private func punctuationModeSelected(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let mode = PunctuationMode(rawValue: raw) else { return }
+        AppConfig.shared.punctuationMode = mode
+        updatePunctuationCheckmarks()
+        log.info("Punctuation mode changed to: \(mode.rawValue, privacy: .public)")
+    }
+
+    private func updatePunctuationCheckmarks() {
+        let current = AppConfig.shared.punctuationMode.rawValue
+        for item in punctuationItems {
+            let value = item.representedObject as? String
+            updateRadioAppearance(item, title: item.title, selected: value == current)
+        }
     }
 
     // MARK: - AI Cleanup

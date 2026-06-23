@@ -13,9 +13,9 @@
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleVersion</key>
-    <string>13</string>
+    <string>15</string>
     <key>CFBundleShortVersionString</key>
-    <string>0.5.2</string>
+    <string>0.5.4</string>
     <key>NSHumanReadableCopyright</key>
     <string>MIT License © 2026 Felix Fu</string>
     <key>CFBundleIconFile</key>

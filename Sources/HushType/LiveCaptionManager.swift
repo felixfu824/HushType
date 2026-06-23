@@ -645,12 +645,18 @@ final class LiveCaptionManager {
             postProcessingQueue.async {
                 switch AppConfig.shared.liveCaptionEngine {
                 case .local:
+                    let script = ScriptDetector.detect(rawText)
                     let afterOpenCC = AppConfig.shared.chineseConversionEnabled
                         ? ChineseConverter.convert(rawText) : rawText
                     guard FillerFilter.keep(afterOpenCC) else {
                         cont.resume(returning: nil); return
                     }
-                    cont.resume(returning: DictionaryReplacer.apply(afterOpenCC))
+                    let afterDict = DictionaryReplacer.apply(afterOpenCC)
+                    // Strip over-aggressive Chinese inline punctuation (zh only).
+                    let finalText = (script == .zh)
+                        ? PunctuationNormalizer.apply(afterDict, mode: AppConfig.shared.punctuationMode)
+                        : afterDict
+                    cont.resume(returning: finalText)
                 case .cloudTranslate:
                     // For zh-Hant we've already been converting per delta, but
                     // the per-delta pass works on a rolling buffer that may

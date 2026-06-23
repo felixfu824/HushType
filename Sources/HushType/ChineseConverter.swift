@@ -26,11 +26,6 @@ struct ChineseConverter {
         return nil
     }()
 
-    /// Returns true if the text contains any CJK Unified Ideographs (U+4E00–U+9FFF).
-    static func containsCJK(_ text: String) -> Bool {
-        text.unicodeScalars.contains { $0.value >= 0x4E00 && $0.value <= 0x9FFF }
-    }
-
     /// Converts Simplified Chinese to Traditional Chinese (Taiwan phrasing) using OpenCC s2twp.
     /// English text and non-CJK characters pass through untouched.
     /// Falls back to original text if opencc is not installed or fails.
@@ -39,7 +34,10 @@ struct ChineseConverter {
             return text
         }
 
-        guard containsCJK(text) else {
+        // Gate to Chinese only. `ScriptDetector.detect` excludes Japanese (kana)
+        // and Korean (hangul), so s2twp no longer corrupts Japanese kanji
+        // (本当→本當) the way the old "any Han char" (`containsCJK`) gate did.
+        guard ScriptDetector.detect(text) == .zh else {
             return text
         }
 

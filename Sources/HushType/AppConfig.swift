@@ -25,6 +25,7 @@ final class AppConfig {
         static let cloudOnboardingShown = "hushtype.cloudOnboardingShown"
         static let lastStartedCaptionMode = "hushtype.lastStartedCaptionMode"
         static let lastStartedCaptionUsesMicSource = "hushtype.lastStartedCaptionUsesMicSource"
+        static let punctuationMode = "hushtype.punctuationMode"
     }
 
     /// Engine for Live Caption — local Qwen3 ASR vs. OpenAI cloud translate.
@@ -102,6 +103,26 @@ final class AppConfig {
         set {
             defaults.set(newValue, forKey: Keys.numberConversionEnabled)
             log.info("Number conversion enabled: \(newValue, privacy: .public)")
+        }
+    }
+
+    /// How aggressively to strip the model's over-aggressive Chinese inline
+    /// punctuation (the 「，、」 it inserts on speech pauses). Applies to
+    /// dictation and local live-caption, CHINESE text only (gated by
+    /// `ScriptDetector`). `.soft` (default) drops the noisy inline marks but
+    /// keeps sentence enders 。！？; `.hard` drops all punctuation; `.off`
+    /// disables the pass. Persisted; falls back to `.soft` on an unknown value.
+    var punctuationMode: PunctuationMode {
+        get {
+            guard let raw = defaults.string(forKey: Keys.punctuationMode),
+                  let mode = PunctuationMode(rawValue: raw) else {
+                return .soft
+            }
+            return mode
+        }
+        set {
+            defaults.set(newValue.rawValue, forKey: Keys.punctuationMode)
+            log.info("Punctuation mode set to: \(newValue.rawValue, privacy: .public)")
         }
     }
 
