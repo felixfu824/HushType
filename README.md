@@ -23,15 +23,13 @@
 
 ## Why HushType
 
-**Private and local-first.** Voice never leaves your machine. The speech model runs on your Mac's GPU — no cloud, no account, no telemetry. The only network call is the one-time model download (~675 MB); after that, fully offline. iPhone audio travels to YOUR Mac over Tailscale or local WiFi. Pre-download the model on another machine and HushType is fully air-gappable.
+**Private and local-first.** Voice never leaves your Mac — the speech model runs on-device, no cloud, no account, no telemetry. One ~675 MB model download, then fully offline (and air-gappable if you pre-download).
 
-**Memory-friendly — coexists with your agents.** Built for how Apple Silicon owners actually use their Macs in 2026: two or three coding agents (Claude Code, Cursor, Codex), a browser, normal workload. Qwen3-ASR-0.6B 4-bit is ~675 MB on disk — less than half of Whisper Large v3 Turbo — yet competitive with models 3× its size. Small enough for an entry-level 8 / 16 GB M-series Mac. One click unloads it and frees ~2 GB; auto-reloads on the next Right ⌥ hold (~3s cold start).
+**Memory-friendly — coexists with your agents.** ~675 MB on disk (under half of Whisper Large v3 Turbo), yet competitive with models 3× its size — small enough to run alongside Claude Code, Cursor and a browser on an 8 GB Mac. One click frees ~2 GB; it auto-reloads on the next Right ⌥ hold.
 
-**Traditional Chinese that actually works.** Whisper's single `zh` code defaults to Simplified with no reliable way to force Traditional; most open-source models mix Simplified or Mainland phrasing (软件, not 軟體). HushType chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-specific output — 軟體, 滑鼠, 品質. Native EN / ZH code-switching in one pass (mix in a single sentence, get one clean transcription). Optional deterministic ITN converts Chinese numerals to Arabic digits in context (`一零一大樓` → `101 大樓`), on by default.
+**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). HushType chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output — 軟體, 滑鼠, 品質 — with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default.
 
-**Live captions in two flavors — local for transcription, cloud for translation.** New in v0.5. **Live Caption** runs your audio through the same on-device Qwen3-ASR pipeline as dictation and writes captions onto a floating panel — fully local, free, works on a plane. **Live Translated Caption** is the opt-in deviation from local-only: it streams audio directly from your Mac to OpenAI's latest `gpt-realtime-translate` model so you can subtitle a Japanese YouTube clip, a Korean podcast, or a Spanish-language meeting in English (or 13 other target languages) in real time.
-
-When you turn it on, **the key is yours, the audio is yours, the bill is yours.** Your API key sits in plaintext at `~/Library/Application Support/HushType/openai.json` (same security profile as `.env`). Audio streams Mac → OpenAI directly over WSS; HushType operates no servers, sees no audio, no key, no spend. Cost guardrails (auto-stop, daily cap) and a per-session cost chip are built in. Cloud mode never auto-starts — first use triggers a one-time disclosure, and the engine resets to local on every app launch.
+**Live captions, two flavors.** Local **Live Caption** runs the same on-device pipeline onto a floating panel — free, offline, works on a plane. Opt-in **Live Translated Caption** streams audio to OpenAI's `gpt-realtime-translate` for real-time foreign-language subtitles in 14 languages — your key, your audio, your bill, never auto-started.
 
 ---
 
