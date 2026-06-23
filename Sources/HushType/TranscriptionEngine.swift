@@ -61,6 +61,10 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
         let asrElapsed = CFAbsoluteTimeGetCurrent() - startTime
         log.info("Raw transcription (\(String(format: "%.2f", asrElapsed))s): \(rawText)")
 
+        // Classify once on the raw ASR text. Gates the Chinese-only stages
+        // (OpenCC, ITN, punctuation strip) so they never touch JP/KO/EN.
+        let script = ScriptDetector.detect(rawText)
+
         // Apply Traditional Chinese conversion
         let convertedText = ChineseConverter.convert(rawText)
         if convertedText != rawText {
@@ -71,7 +75,7 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
         // pass that converts Chinese numerals to Arabic digits. Runs before
         // AI Cleanup so the cleanup prompt doesn't need to handle numbers.
         let itnResult: NumberNormalizer.Result
-        if AppConfig.shared.numberConversionEnabled {
+        if script == .zh && AppConfig.shared.numberConversionEnabled {
             itnResult = NumberNormalizer.normalize(convertedText)
             if itnResult.applied {
                 log.info("After ITN: \(itnResult.text, privacy: .public) [\(itnResult.note, privacy: .public)]")
@@ -97,9 +101,22 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
             log.info("After dictionary: \(dictText)")
         }
 
+        // Final step: strip the model's over-aggressive Chinese inline
+        // punctuation. Chinese only, and last in the chain so nothing downstream
+        // can re-introduce it.
+        let finalText: String
+        if script == .zh {
+            finalText = PunctuationNormalizer.apply(dictText, mode: AppConfig.shared.punctuationMode)
+            if finalText != dictText {
+                log.info("After punctuation: \(finalText)")
+            }
+        } else {
+            finalText = dictText
+        }
+
         let totalElapsed = CFAbsoluteTimeGetCurrent() - startTime
         let inCh = rawText.count
-        let outCh = dictText.count
+        let outCh = finalText.count
         let asrMs = Int(asrElapsed * 1000)
         let totalMs = Int(totalElapsed * 1000)
         let stateLabel = cleanup.state.rawValue
@@ -107,7 +124,7 @@ final class Qwen3TranscriptionEngine: TranscriptionEngine {
         let itnLabel = itnResult.applied ? "applied" : itnResult.note
         log.info("timings asr=\(asrMs, privacy: .public)ms itn=\(itnLabel, privacy: .public) cleanup_init=\(cleanup.initMs, privacy: .public)ms cleanup_respond=\(cleanup.respondMs, privacy: .public)ms cleanup_state=\(stateLabel, privacy: .public) cleanup_entries=\(cleanup.transcriptEntries, privacy: .public) total=\(totalMs, privacy: .public)ms in=\(inCh, privacy: .public)ch out=\(outCh, privacy: .public)ch")
 
-        return dictText
+        return finalText
     }
 
     func unload() {
