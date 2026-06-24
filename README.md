@@ -5,77 +5,85 @@
 <h1 align="center">HushType</h1>
 
 <p align="center">
-  Local voice-to-text for Apple Silicon macOS — plus opt-in cloud captions when you want them.<br>
-  Private by default. Memory-friendly. Steady Traditional Chinese output.
+  專為 Apple Silicon macOS 打造的本地免費語音轉文字 App<br>
+  不回傳數據、低記憶體占用、穩定繁體中文輸出
 </p>
 
 <p align="center">
-  <a href="README.md">English</a> | <a href="README.zh-TW.md">繁體中文</a>
+  <a href="README.en.md">English</a> | <strong>繁體中文</strong>
 </p>
 
 <p align="center">
-  Canonical repository: <a href="https://github.com/felixfu824/HushType">github.com/felixfu824/HushType</a>
+  官方 repository：<a href="https://github.com/felixfu824/HushType">github.com/felixfu824/HushType</a>
 </p>
 
-> **HushType** is a free, open-source, offline speech-to-text app for macOS and iOS. It uses Qwen3-ASR ([macOS](https://huggingface.co/aufklarer/Qwen3-ASR-0.6B-MLX-4bit) / [iOS](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) mirrors) running locally on Apple Silicon (MLX) to transcribe voice input in English, Chinese, and Japanese — including mixed-language sentences. Delivers steady Traditional Chinese (繁體中文) output via OpenCC. A privacy-first alternative to cloud dictation services and Whisper-based tools (higher RAM consumption, tendency to output Simplified Chinese), built to be lightweight enough to coexist with all the applications you're already running.
+> **HushType** 是一款免費、開源、離線的 macOS 與 iOS 語音轉文字 App。使用 Qwen3-ASR（[macOS](https://huggingface.co/aufklarer/Qwen3-ASR-0.6B-MLX-4bit) / [iOS](https://huggingface.co/mlx-community/Qwen3-ASR-0.6B-4bit) 映像）在 Apple Silicon（MLX）上本地執行，支援英文、中文、日文的語音輸入——包含混用多語的句子。透過 OpenCC 提供穩定的繁體中文輸出。是雲端聽寫服務與 Whisper 衍生工具（記憶體用量較高、傾向輸出簡體中文）的隱私優先替代方案，專注在保持輕量，能與你需要同時跑的所有 App 共存。
+
+> 🌐 **HushType** is a free, on-device dictation app for Apple Silicon Macs (and iOS). It runs Qwen3-ASR locally via MLX for English, Chinese, and Japanese — including mixed-language sentences — and is the only Mac dictation tool with genuinely native Traditional Chinese output (via OpenCC), light enough to run alongside your AI agents.<br>→ Read the full English README: [README.en.md](README.en.md)
+
+<p align="center">
+  <img src="Resources/hushtype-memory-zh.svg" alt="常駐記憶體的模型權重：HushType 675 MB（道地繁中）vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB（不支援中文）" width="100%">
+</p>
+
+<sub>數字為各工具預設精度的模型權重大小。另有 4-bit Whisper-turbo（約 464 MB），但中文輸出仍偏簡體、品質平庸——所以我們的定位是「能做出道地繁中的最輕量 ASR」，而非「最小的模型」。</sub>
 
 ---
 
-## Why HushType
+## 為什麼選擇 HushType
 
-**Private and local-first.** Voice never leaves your Mac — the speech model runs on-device, no cloud, no account, no telemetry. One ~675 MB model download, then fully offline (and air-gappable if you pre-download).
+**隱私與本地優先。** 語音永遠不離開你的 Mac——模型完全在本機執行，無雲端、無帳號、無使用追蹤。只有首次一次性模型下載（約 675 MB），之後完全離線。
 
-**Memory-friendly — coexists with your agents.** ~675 MB on disk (under half of Whisper Large v3 Turbo), yet competitive with models 3× its size — small enough to run alongside Claude Code, Cursor and a browser on an 8 GB Mac. One click frees ~2 GB; it auto-reloads on the next Right ⌥ hold.
+**記憶體友善——與你的 AI 助手共存。** 模型只有約 675 MB，小到能在 8 GB 的 Mac 上與 Claude Code/Cowork、Codex、瀏覽器同時運行。更關鍵的是會自動控管記憶體占用：HushType 啟動時就替記憶體暫存設上限，你完全不用管。需要完全釋放記憶體占用亦可在選單一鍵卸載，下次按住 Right ⌥ 自動重新載入。
 
-**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). HushType chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output — 軟體, 滑鼠, 品質 — with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default.
+**真正能用的繁體中文。** Whisper 與多數開源模型預設輸出簡體或大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地輸出——軟體、滑鼠、品質——支援英中同句混用辨識，並可選擇將中文數字依語境轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟。
 
-**Live captions, two flavors.** Local **Live Caption** runs the same on-device pipeline onto a floating panel — free, offline, works on a plane. Opt-in **Live Translated Caption** streams audio to OpenAI's `gpt-realtime-translate` for real-time foreign-language subtitles in 14 languages — your key, your audio, your bill, never auto-started.
+**字幕兩種模式。** 本機 **Live Caption（即時字幕）** 用同一套裝置端管線把字幕顯示在浮動面板上：免費、離線、飛機上也能用（品質普通）。可選的 **Live Translated Caption（即時翻譯字幕）** 把音訊串到 OpenAI 的 `gpt-realtime-translate`，即時產生 14 種語言的字幕（高品質）——金鑰是你的（帳單也是你的！），不自動啟動。
 
 ---
 
-## Key Features
+## 主要功能
 
-| Feature | Default | Requirement |
+| 功能 | 預設 | 系統需求 |
 |---|---|---|
-| Hold Right ⌥ to dictate (macOS) | ON | macOS 15+ |
-| Tap Right ⌥ to translate selected text | OFF | macOS 14+ |
-| **Live Caption** (local, free) — floating panel from mic or system audio | OFF | macOS 15+ |
-| **Live Translated Caption** (cloud, ~$2/hr) — real-time foreign-language subtitles via OpenAI | OFF (opt-in) | Your own OpenAI API key |
-| Right ⌘ + / — toggle whichever caption mode you used last | — | macOS 15+ |
-| EN / ZH / JA + native code-switching | ON | — |
-| 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | — |
-| 阿拉伯數字 conversion (deterministic ITN) | **ON** | — |
-| AI Cleanup — filler removal, self-correction resolution | **OFF** (opt-in beta) | macOS 26 + Apple Intelligence |
-| Customized dictionary (proper nouns / jargon) | File-driven | — |
-| Floating "Listening / Transcribing" pill | ON | — |
-| Unload speech-to-text model | One-click | — |
-| iOS app + custom keyboard (Mac as server) | Optional | iOS 17+, Python on Mac |
+| 按住 Right ⌥ 進行語音輸入（macOS）| ON | macOS 15+ |
+| 輕按 Right ⌥ 翻譯選取的文字 | OFF | macOS 14+ |
+| **Live Caption（本機，免費）** — 浮動字幕面板，麥克風或系統音訊 | OFF | macOS 15+ |
+| **Live Translated Caption（雲端，約 $2/小時）** — 即時外文翻譯字幕，使用 OpenAI | OFF（自行開啟） | 你自己的 OpenAI API key |
+| Right ⌘ + / — 切換上次用過的字幕模式 | — | macOS 15+ |
+| 英文 / 中文 / 日文 + 原生混用 | ON | — |
+| 簡體 → 繁體 後處理（OpenCC `s2twp`）| **ON** | — |
+| 阿拉伯數字轉換（確定性 ITN）| **ON** | — |
+| AI Cleanup——清除贅字、自我修正解析 | **OFF**（opt-in beta）| macOS 26 + Apple Intelligence |
+| 自訂字典（專有名詞 / 行話）| 檔案驅動 | — |
+| 浮動「Listening / Transcribing」指示條 | ON | — |
+| 卸載語音轉文字模型 | 一鍵 | — |
+| iOS App + 自訂鍵盤（以 Mac 為伺服器）| 選用 | iOS 17+、Mac 上需有 Python |
 
 ---
 
-## Use Cases
+## 使用情境
 
-**Talking to AI agents.** Giving Claude or ChatGPT a detailed prompt takes 5 minutes to type, 30 seconds to say. Hold Right ⌥, speak your entire prompt (mixing languages as needed), release — text appears in the chat input. Local transcription means your prompts never leave your machine even if you're driving cloud-hosted agents.
+**與 AI 助手對話。** 給 Claude 或 ChatGPT 一段詳細的 prompt，打字要 5 分鐘，用說的只要 30 秒。按住 Right ⌥，自然地說完整段 prompt（可任意混用語言）、放開——文字立刻出現在聊天輸入框中。本地轉錄意味著：即使你正在使用雲端託管的 AI 助手，你的 prompt 也不會離開你的機器。
 
-**Voice notes on the go.** On the subway, Mac at home. Tap "Start Listening" on iPhone, switch to Notes, tap the mic button on the HushType keyboard. Audio travels over Tailscale to your Mac, transcribes in ~1 second, text appears.
+**通勤時的語音筆記。** 在捷運上，Mac 留在家裡。在 iPhone 上點「Start Listening」，切到備忘錄，按 HushType 鍵盤上的麥克風按鈕。語音透過 Tailscale 傳回你的 Mac，約 1 秒完成轉錄，文字出現。
 
-**Reading in another language.** Select any text in Safari, Mail, Notes — anywhere — and tap Right ⌥. A translucent card pops up with the translation via Apple's on-device Translation Framework. Auto-dismisses after 10s, pauses on hover. No API key, no cloud.
+**閱讀其他語言。** 在 Safari、Mail、備忘錄等任何 App 中選取文字，輕按 Right ⌥。半透明卡片即跳出翻譯結果，使用 Apple 裝置端 Translation Framework。10 秒後自動關閉、游標停留會暫停倒數。無 API 金鑰、無雲端。
 
-**Watching foreign-language content.** Korean drama, Japanese news, Spanish football commentary. Open the source in any app, click **Live Translated Caption → From System Audio…** in the menu bar, pick the app — translated English (or whichever target you set) streams onto a floating caption panel anchored at the bottom of your screen. Right ⌘ + / toggles it on and off. The original-language line shows above the translation as a confidence check; cost chip in the header tracks the session bill against your own OpenAI key.
+**看外語內容。** 韓劇、日本新聞、西語足球轉播。在任何 App 開來源，選單列 → **Live Translated Caption → From System Audio…** 選那個 App — 翻譯後的英文（或你設定的目標語言）會即時顯示在螢幕下方的浮動字幕面板。Right ⌘ + / 開關。原文小灰字在翻譯上方一起顯示，方便確認翻譯沒走偏；面板抬頭的費用條會即時顯示本次工作階段在你 OpenAI 帳戶上的累積花費。
 
 ---
 
-## How It Works
+## 運作原理
 
 ```
-macOS (standalone — zero network required):
-  Hold Right Option (≥0.3s) → speak → release → text at cursor
-  Tap Right Option (<0.3s) with text selected → translation card
-  Pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → ITN → paste
+macOS（獨立運作——不需要網路）：
+  按住 Right Option（≥0.3 秒）→ 說話 → 放開 → 文字出現在游標位置
+  輕按 Right Option（<0.3 秒）+ 選取文字 → 翻譯卡片
+  流程：麥克風 → Qwen3-ASR（MLX、裝置端推論）→ OpenCC s2twp → ITN → 貼上
 
-iOS (via your Mac as server):
-  Open HushType → Start Listening → switch to any app → HushType keyboard → tap mic
-  Pipeline: iPhone mic → WiFi/Tailscale → Mac server → Qwen3-ASR → OpenCC → result back → text inserted
+iOS（透過你的 Mac 作為伺服器）：
+  開啟 HushType → 開始聆聽 → 切到任何 App → HushType 鍵盤 → 按麥克風
+  流程：iPhone 麥克風 → WiFi/Tailscale → Mac 伺服器 → Qwen3-ASR → OpenCC → 結果回傳 → 文字插入
 ```
 
 ```
@@ -88,211 +96,211 @@ iOS (via your Mac as server):
                                      │    → Qwen3-ASR 0.6B (MLX/Metal)  │
                                      │    → OpenCC s2twp                │
                                      │                                  │
-                                     │  HushType.app (menu bar)         │
-                                     │    → Right Option hotkey         │
-                                     │    → Local transcription         │
+                                     │  HushType.app (選單列)            │
+                                     │    → Right Option 快捷鍵          │
+                                     │    → 本地轉錄                     │
                                      └──────────────────────────────────┘
 ```
 
 ---
 
-## Install
+## 安裝
 
-### Option A: Download DMG (no build tools needed)
+### 方案 A：下載 DMG（不需要任何開發工具）
 
-1. Download `HushType.dmg` from the [latest release](https://github.com/felixfu824/HushType/releases)
-2. Open the DMG and drag HushType to Applications
-3. Right-click HushType.app → Open (required on first launch — the app is ad-hoc signed, not notarized)
-4. Grant **Accessibility** and **Microphone** permissions when prompted
-5. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
+1. 從[最新版本](https://github.com/felixfu824/HushType/releases)下載 `HushType.dmg`
+2. 打開 DMG，將 HushType 拖到「應用程式」
+3. 右鍵點擊 HushType.app → 打開（首次啟動時需要——App 使用臨時簽章，未經 Apple 公證）
+4. 授予**輔助使用**與**麥克風**權限
+5. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
-The DMG is self-contained — OpenCC and all dependencies are bundled. No Homebrew, no terminal commands.
+DMG 為完全獨立版本——OpenCC 及所有相依套件皆已內含。不需要 Homebrew、不需要終端機指令。
 
-> **iOS server support:** The DMG also includes the iOS server toggle in the menu bar. It requires Python 3 and additional packages to be installed separately — see the [iOS setup guide](#setup-guide-ios-iphone--mac-server) below. If dependencies are missing, the app will show an error with the exact `pip3 install` command needed.
+> **iOS 伺服器支援：** DMG 也包含選單列中的 iOS 伺服器切換功能。需要額外安裝 Python 3 及相關套件——參見下方 [iOS 安裝指南](#安裝指南ios（iphone--mac-伺服器）)。若缺少相依套件，App 會顯示錯誤訊息及所需的 `pip3 install` 指令。
 
-### Option B: Build from source
+### 方案 B：從原始碼編譯
 
-See [Prerequisites](#prerequisites-and-dependencies) and [macOS Setup Guide](#setup-guide-macos) below.
-
----
-
-## Updating
-
-Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and user data live outside the bundle and are preserved.
-
-**DMG:** quit HushType, drag the new `HushType.app` onto the Applications shortcut in the new DMG (click **Replace**), relaunch from Spotlight.
-
-**From source:** `git pull && make install`.
-
-**Permission re-grant:** because HushType is ad-hoc signed, macOS may require Accessibility to be enabled again after an update. The setup window will show the current permission state. Click **Open System Settings**, enable HushType in Accessibility, then click **Restart HushType** so macOS applies the grant. If you see duplicate HushType entries, cannot find HushType, or the switch does not work, use **Reset Old HushType Entry** in the setup window and add/enable HushType again.
-
-**Full uninstall:** Trash `/Applications/HushType.app`, then optionally `defaults delete com.felix.hushtype` and `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` to remove preferences and the model cache.
+參見下方[前置需求](#前置需求與相依套件)及 [macOS 安裝指南](#安裝指南macos)。
 
 ---
 
-## Prerequisites and Dependencies
+## 更新
 
-> **Note:** If you installed via DMG (Option A), skip this section — everything is bundled. These are only needed for building from source or setting up the iOS server.
+更新等於**覆蓋 `.app` 資料夾**。偏好設定、ASR 模型、使用者資料都存在 `.app` 外面，不會被動到。
 
-**Hardware and OS:**
+**DMG：** 退出 HushType → 開啟新 DMG → 拖 `HushType.app` 到視窗內的 Applications 捷徑（點 **取代 / Replace**）→ 從 Spotlight 重啟。
 
-| Requirement | Purpose |
+**從原始碼編譯：** `git pull && make install`。
+
+**為什麼每次更新都可能要重新授權？** HushType 是 ad-hoc 簽章，macOS 可能會在更新後要求你重新啟用輔助使用權限。設定視窗會顯示目前權限狀態。點 **Open System Settings**，在輔助使用清單裡開啟 HushType，接著點 **Restart HushType** 讓 macOS 套用權限。如果你看到重複的 HushType、找不到 HushType，或開關無法正常運作，請在設定視窗中使用 **Reset Old HushType Entry**，再重新加入或啟用 HushType。
+
+**完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時 `defaults delete com.felix.hushtype` 並 `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` 清掉偏好設定與模型快取。
+
+---
+
+## 前置需求與相依套件
+
+> **注意：** 若你使用 DMG 安裝（方案 A），可跳過此段——所有相依套件皆已內含。以下僅適用於從原始碼編譯或設定 iOS 伺服器。
+
+**硬體與系統：**
+
+| 需求 | 用途 |
 |---|---|
-| Mac with Apple Silicon (M1+) | MLX inference requires Metal GPU |
-| macOS 15.0+ | Minimum OS for speech-swift |
-| iPhone with iOS 17+ | iOS client (optional) |
+| Apple Silicon Mac（M1 以上）| MLX 推論需要 Metal GPU |
+| macOS 15.0+ | speech-swift 最低版本需求 |
+| iPhone（iOS 17+）| iOS 客戶端（選用）|
 
-**Software dependencies (build from source):**
+**軟體相依套件（從原始碼編譯）：**
 
-| Dependency | Purpose | Install | Required for |
+| 套件 | 用途 | 安裝方式 | 需要於 |
 |---|---|---|---|
-| [Homebrew](https://brew.sh) | Package manager | See brew.sh | Build from source |
-| [opencc](https://formulae.brew.sh/formula/opencc) | Simplified → Traditional Chinese | `brew install opencc` | Build from source (bundled in DMG) |
-| [speech-swift](https://github.com/soniqo/speech-swift) | Qwen3-ASR on Apple Silicon (MLX) | Automatic via SPM | Build from source |
-| [Python 3.13+](https://python.org) | iOS server runtime | `brew install python` | iOS only |
-| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | STT server for iOS | `pip3 install "mlx-audio[stt,server]"` | iOS only |
-| [httpx](https://www.python-httpx.org/) | Async HTTP for proxy server | `pip3 install httpx` | iOS only |
-| webrtcvad-wheels, setuptools | mlx-audio runtime deps | `pip3 install webrtcvad-wheels setuptools` | iOS only |
-| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode project generation | `brew install xcodegen` | iOS only |
-| [Xcode 16+](https://developer.apple.com/xcode/) | Building the iOS app | Mac App Store | iOS only |
-| [Tailscale](https://tailscale.com) | Encrypted iPhone-to-Mac from anywhere | See tailscale.com | Optional |
+| [Homebrew](https://brew.sh) | 套件管理器 | 見 brew.sh | 從原始碼編譯 |
+| [opencc](https://formulae.brew.sh/formula/opencc) | 簡體 → 繁體中文 | `brew install opencc` | 從原始碼編譯（DMG 已內含）|
+| [speech-swift](https://github.com/soniqo/speech-swift) | Apple Silicon 上的 Qwen3-ASR（MLX）| SPM 自動安裝 | 從原始碼編譯 |
+| [Python 3.13+](https://python.org) | iOS 伺服器執行環境 | `brew install python` | 僅 iOS |
+| [mlx-audio](https://github.com/Blaizzy/mlx-audio) | iOS 用的 STT 伺服器 | `pip3 install "mlx-audio[stt,server]"` | 僅 iOS |
+| [httpx](https://www.python-httpx.org/) | 代理伺服器用的非同步 HTTP | `pip3 install httpx` | 僅 iOS |
+| webrtcvad-wheels, setuptools | mlx-audio 執行相依 | `pip3 install webrtcvad-wheels setuptools` | 僅 iOS |
+| [xcodegen](https://github.com/yonaskolb/XcodeGen) | iOS Xcode 專案產生器 | `brew install xcodegen` | 僅 iOS |
+| [Xcode 16+](https://developer.apple.com/xcode/) | 編譯 iOS App | Mac App Store | 僅 iOS |
+| [Tailscale](https://tailscale.com) | 加密的 iPhone-to-Mac 連線 | 見 tailscale.com | 選用 |
 
 ---
 
-## Setup Guide: macOS
+## 安裝指南：macOS
 
-### Step 1: Clone and build
+### 步驟 1：下載與編譯
 
 ```bash
 git clone https://github.com/felixfu824/HushType.git
 cd HushType
 
-# Install dependencies
+# 安裝相依套件
 brew install opencc
 
-# Build and install to /Applications
+# 編譯並安裝到 /Applications
 make install
 ```
 
-### Step 2: Launch and grant permissions
+### 步驟 2：啟動並授予權限
 
-1. Launch HushType from Spotlight (Cmd+Space → HushType)
-2. On first launch, the **Set Up HushType** window shows the required permissions: Accessibility and Microphone.
-3. Click **Open System Settings** in the Accessibility card. Find HushType in the Accessibility list and **toggle it on**. If HushType is missing, use the small helper panel to drag HushType into the list.
-4. Click **Allow Microphone** and approve the macOS microphone prompt.
-5. Return to HushType and click **Restart HushType** — the app relaunches itself with the new Accessibility permission active. (macOS caches the permission check per-process, so a restart is mandatory after granting — HushType handles it for you.)
-6. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
+1. 從 Spotlight 啟動 HushType（Cmd+Space → HushType）
+2. 首次啟動時，**Set Up HushType** 視窗會列出需要的權限：輔助使用與麥克風。
+3. 在輔助使用卡片點 **Open System Settings**。在輔助使用清單中找到 HushType 並**開啟開關**。如果清單裡沒有 HushType，可以使用小型提示視窗把 HushType 拖進清單。
+4. 點 **Allow Microphone**，並在 macOS 麥克風權限提示中允許。
+5. 回到 HushType，點擊 **Restart HushType** — App 會自動重新啟動，讓新授予的輔助使用權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟 — HushType 會幫你處理這個步驟。）
+6. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
-### Step 3: Use it
+### 步驟 3：使用
 
-- **Hold Right Option (≥0.3s)** — record. A "Listening" pill with a live audio meter shows at the bottom of the screen.
-- **Release** — pill switches to "Transcribing"; transcribed text pastes at your cursor and stays on the clipboard.
-- **Tap Right Option (<0.3s)** — with text selected, translates via Apple Translation Framework into a floating card. See [Text Translation](#optional-text-translation-macos-14).
+- **按住 Right Option（≥0.3 秒）** — 錄音。螢幕底部出現「Listening」指示條與音量條。
+- **放開** — 指示條切換為「Transcribing」，文字貼到游標並保留在剪貼簿。
+- **輕按 Right Option（<0.3 秒）** — 選取文字後輕按，浮動卡片顯示 Apple Translation Framework 翻譯結果。詳見下方[文字翻譯](#選用功能文字翻譯macos-14)。
 
-**Menu bar:**
+**選單列：**
 
-- **Language** — Auto / English / Chinese / Japanese
-- **Show Floating Indicator** — toggle the listening pill (default on)
-- **Number Conversion** — Chinese numeral → Arabic digit pass (default on)
-- **Text Translation** — enable tap-to-translate (macOS 14+)
-- **AI Cleanup** — Apple Foundation Models post-processing (macOS 26+, off by default)
-- **Unload Speech-to-Text Model** — frees ~2 GB RAM; reload from the same menu (~3s cold start)
-- **Edit Customized Dictionary** — `~/Library/Application Support/HushType/dictionary.txt`, plain text, `source -> target` per line, hot-reloads
+- **Language** — Auto / English / 中文 / 日本語
+- **Show Floating Indicator** — 切換指示條（預設開啟）
+- **Number Conversion** — 中文數字 → 阿拉伯數字（預設開啟）
+- **Text Translation** — 啟用輕按翻譯（macOS 14+）
+- **AI Cleanup** — Apple Foundation Models 後處理（macOS 26+，預設關閉）
+- **Unload Speech-to-Text Model** — 釋放約 2 GB 記憶體；同一選單可重新載入（約 3 秒冷啟動）
+- **Edit Customized Dictionary** — `~/Library/Application Support/HushType/dictionary.txt`，`source -> target` 一行一條，存檔自動熱重載
 
-That's it. No server, no network, no configuration.
+到此結束。不需要伺服器、不需要網路、不需要設定。
 
-### Optional: Live Caption / Live Translated Caption (macOS 15+)
+### 選用功能：Live Caption / Live Translated Caption（macOS 15+）
 
-Two products sharing the same floating caption panel. Mutually exclusive at runtime — starting one auto-stops the other.
+兩種共用同一塊浮動字幕面板的功能，執行時互斥——啟動其中一個會自動停止另一個。
 
-**Live Caption** (free, local, on-device):
+**Live Caption（本機、免費、裝置端）：**
 
-1. Status-bar menu → click **Live Caption** to toggle (uses last-known source — defaults to mic on first use), or pick **From Microphone** / **From System Audio…** explicitly.
-2. System Audio first time → pick the app whose audio you want to caption from the picker.
-3. Captions stream onto a floating panel pinned near the bottom of your screen. The panel is draggable and resizable; its frame is remembered across stops.
+1. 選單列 → 點 **Live Caption** 直接切換（使用上次的音源，首次預設麥克風），或明確選 **From Microphone** / **From System Audio…**。
+2. 第一次選 System Audio 會跳出選擇器讓你挑要監聽的 App。
+3. 字幕會出現在螢幕下方的浮動面板，面板可拖曳、可調整大小，下次開啟會記住位置。
 
-**Live Translated Caption** (~$2/hr against your own OpenAI account):
+**Live Translated Caption（雲端，約 $2/小時，計費於你自己的 OpenAI 帳戶）：**
 
-1. Get an API key at https://platform.openai.com/api-keys.
-2. Status-bar menu → **Live Translated Caption → Translated Caption Settings…** → click **Open file in TextEdit** and paste your key into `openai.json` as the `api_key` field.
-3. Pick a target language in the same settings window (default: English; 13 others including 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch).
-4. Click **Live Translated Caption → From Microphone** (or **From System Audio…**) in the menu. First time you do this, a one-time disclosure modal explains the cost and privacy profile — accept once and it stays accepted.
-5. A cost chip in the caption panel header (e.g. `12:34 · $0.42`) shows session duration and spend. Auto-stop minutes and daily-cap warnings are configurable in the same settings window.
+1. 在 https://platform.openai.com/api-keys 取得 API key。
+2. 選單列 → **Live Translated Caption → Translated Caption Settings…** → 點 **Open file in TextEdit**，把 key 貼進 `openai.json` 的 `api_key` 欄位。
+3. 在同一個設定視窗選目標語言（預設英文；另支援 13 種，含 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch）。
+4. 選單列 → **Live Translated Caption → From Microphone**（或 **From System Audio…**）開始。第一次會跳一次性免責說明，接受一次後不再跳。
+5. 字幕面板抬頭會出現費用條（例如 `12:34 · $0.42`），即時顯示工作階段時間與累積花費。自動停止分鐘數與日花費上限警示都在同一個設定視窗可調。
 
-**Hotkey** (both products): Right ⌘ + / toggles **whichever product you last started**. First-use default is local (Live Caption). The menu items are the authoritative way to pick a specific product + source.
+**快捷鍵（兩種共用）：** Right ⌘ + / 切換**上次用過的那種模式**。首次預設本機 Live Caption。要精確選擇哪個模式 + 哪種音源，從選單列點選是最直接的方式。
 
-**Mid-session switching:** Clicking the other product's menu item while one is running auto-stops the current session and starts the new one. Clicking the same product's other source switches in place without rebuilding the panel.
+**模式切換：** 在一個模式執行中點另一個模式的選單項，會自動停止當前的、啟動新的。同一個模式換音源（mic ↔ system）會原地切換、不重建面板。
 
-### Optional: Text Translation (macOS 14+)
+### 選用功能：文字翻譯（macOS 14+）
 
-On-device translation via Apple Translation Framework. Select any text → tap Right Option (<0.3s) → translucent card appears with the translation, also auto-copied to clipboard. Card auto-dismisses after 10s; hover to pause, click or Escape to dismiss now.
+使用 Apple Translation Framework 在裝置端翻譯。選取任何文字 → 輕按 Right Option（<0.3 秒）→ 浮動卡片顯示翻譯，並自動複製到剪貼簿。卡片 10 秒後自動關閉，游標停留可暫停，點擊或按 Escape 立即關閉。
 
-**Direction:** Chinese → English; everything else → Traditional Chinese. Override via menu bar or `defaults write hushtype.translateTargetLanguage`.
+**方向：** 中文 → 英文；其他 → 繁體中文。可從選單列或 `defaults write hushtype.translateTargetLanguage` 覆寫。
 
-**Enable:** Menu bar → **Text Translation**. The toggle runs a sanity-check; if Translation Framework isn't available, the toggle stays off with a clear error.
+**啟用：** 選單列 → **Text Translation**。會做一次可用性測試，若 Translation Framework 不可用會跳清楚的錯誤訊息。
 
-### Optional: AI Cleanup (opt-in beta, macOS 26+)
+### 選用功能：AI Cleanup（opt-in beta,macOS 26+）
 
-HushType ships with AI Cleanup **off by default**. When enabled, each transcription is passed through Apple's on-device Foundation Models framework, which (1) strips leading filler words (`um`, `uh`, `嗯`, `那個`), (2) collapses immediate duplicates while preserving emphatic repetitions, and (3) resolves explicit self-corrections (`I'll send it Wednesday no actually Friday` → `I'll send it Friday`).
+HushType **預設關閉 AI Cleanup**。啟用後，每段轉錄會經過 Apple 裝置端 Foundation Models 框架做三件事：（1） 清除句首贅字（`um`、`uh`、`嗯`、`那個`),(2) 收縮連續重複但保留強調式重複，（3） 解析明確的自我修正（`I'll send it Wednesday no actually Friday` → `I'll send it Friday`）。
 
-**Why off by default:** AI Cleanup rewrites your transcription content. The deterministic ITN layer (Chinese numeral → Arabic digit) is on by default because it's reversible and bounded; AI Cleanup is opt-in because semantic rewriting is a stronger commitment.
+**為什麼預設關閉：** AI Cleanup 會改寫你的轉錄內容。確定性的 ITN 階層（中文數字 → 阿拉伯數字）預設開啟，因為它可逆且範圍有界；AI Cleanup 則是 opt-in，因為語意層級的改寫是更強的承諾。
 
-**Requirements:** macOS 26 (Tahoe) + Apple Intelligence enabled + Apple Silicon.
+**需求：** macOS 26（Tahoe）+ 已啟用 Apple Intelligence + Apple Silicon。
 
-**How to enable:** Menu bar → AI Cleanup. HushType runs a quick round-trip test against the on-device model; if Apple Intelligence isn't available, you get a clear error and the toggle stays off. On success, future transcriptions are cleaned automatically. If the on-device model errors mid-transcription, HushType silently falls back to the uncleaned text — you never see a broken result.
+**如何啟用：** 選單列 → AI Cleanup。HushType 會對裝置端模型做一次快速 round-trip 測試；若 Apple Intelligence 不可用，會跳出清楚的錯誤訊息，開關保持關閉。成功後，之後的轉錄都會自動清理。若裝置端模型在轉錄途中出錯，HushType 會靜默回退到未清理的文字——你不會看到壞掉的結果。
 
-**Known limitations (beta):** Occasional over-pruning of Chinese adverbs (`我一直都在` may become `我一直在`); trailing particles may leak through after self-correction resolution; English numerals inside Chinese context get converted (`我買了 five 本書` → `我買了 5 本書`, accepted behavior); Japanese is tested minimally.
+**已知限制（beta）：** 偶爾會過度修剪中文副詞（`我一直都在` 可能變成 `我一直在`）；自我修正解析後尾部助詞可能殘留；中文語境下的英文數字會被轉換（`我買了 five 本書` → `我買了 5 本書`，這是產品接受的行為）；語言覆蓋主要驗證中文與英文，日文測試有限。
 
 ---
 
-## Setup Guide: iOS (iPhone + Mac Server)
+## 安裝指南：iOS（iPhone + Mac 伺服器）
 
-The iOS app uses your Mac as the transcription server. Your iPhone sends audio to your Mac over WiFi or Tailscale, and receives the transcribed text back.
+iOS App 使用你的 Mac 作為轉錄伺服器。iPhone 透過 WiFi 或 Tailscale 將音訊傳送到 Mac，再接收轉錄好的文字。
 
-### Step 1: Install server dependencies on Mac
+### 步驟 1：在 Mac 上安裝伺服器相依套件
 
 ```bash
-# Python packages for the transcription server
+# 轉錄伺服器的 Python 套件
 pip3 install "mlx-audio[stt,server]" webrtcvad-wheels setuptools httpx
 
-# OpenCC for Traditional Chinese + xcodegen for iOS project
+# OpenCC（繁體中文轉換）+ xcodegen（iOS 專案產生器）
 brew install opencc xcodegen
 ```
 
-### Step 2: Get your Mac's IP address
+### 步驟 2：取得 Mac 的 IP 位址
 
 ```bash
-# If using Tailscale (works from anywhere):
+# 使用 Tailscale（隨處皆可連線）:
 tailscale ip -4
-# Example output: 100.x.x.x
+# 範例輸出:100.x.x.x
 
-# If using LAN only (same WiFi):
+# 僅使用區域網路（同一 WiFi）:
 ipconfig getifaddr en0
-# Example output: 192.168.50.50
+# 範例輸出:192.168.50.50
 ```
 
-Write down this IP — you'll enter it on your iPhone later.
+記下這個 IP，稍後會在 iPhone 上輸入。
 
-### Step 3: Start the iOS server on Mac
+### 步驟 3：在 Mac 上啟動 iOS 伺服器
 
-**Option A — From HushType menu bar (recommended):**
-Click the HushType icon in menu bar → "Start iOS Server"
+**方法 A — 從 HushType 選單列（推薦）：**
+點擊選單列的 HushType 圖示 → "Start iOS Server"
 
-**Option B — From terminal:**
+**方法 B — 從終端機：**
 ```bash
 cd HushType
 python3 scripts/ios_server.py
-# Server starts on 0.0.0.0:8000
-# First transcription request will download the model (~675 MB)
+# 伺服器啟動在 0.0.0.0:8000
+# 首次轉錄請求會下載模型（約 675 MB）
 ```
 
-Verify the server is running:
+驗證伺服器是否運行：
 ```bash
 curl http://localhost:8000/
-# Should return: {"status":"ok","service":"HushType iOS Server","opencc":true}
+# 應回傳:{"status":"ok","service":"HushType iOS Server","opencc":true}
 ```
 
-### Step 4: Build and install the iOS app
+### 步驟 4：編譯並安裝 iOS App
 
 ```bash
 cd iOS
@@ -300,256 +308,137 @@ xcodegen generate
 open HushType.xcodeproj
 ```
 
-In Xcode:
-1. Click the **HushType** project in the navigator (top left)
-2. Select the **HushType** target → Signing & Capabilities → set **Team** to your Apple ID
-3. Select the **HushTypeKeyboard** target → same thing, set **Team**
-4. If Xcode shows "Update to recommended settings" → click **Perform Changes**
-5. Connect iPhone via USB cable
-6. Select your iPhone as the run destination (top bar)
-7. Click **Run** (Cmd+R)
+在 Xcode 中：
+1. 點擊左側導覽的 **HushType** 專案
+2. 選擇 **HushType** target → Signing & Capabilities → 設定 **Team** 為你的 Apple ID
+3. 選擇 **HushTypeKeyboard** target → 同樣設定 **Team**
+4. 如果 Xcode 顯示 "Update to recommended settings" → 點擊 **Perform Changes**
+5. 用 USB 連接 iPhone
+6. 選擇你的 iPhone 作為執行目標（頂部欄位）
+7. 點擊 **Run**（Cmd+R）
 
-First-time build takes ~1 minute. Subsequent builds are faster.
+首次編譯約需 1 分鐘，之後會更快。
 
-### Step 5: Set up iPhone
+### 步驟 5：設定 iPhone
 
-These steps happen on the iPhone itself:
+以下步驟在 iPhone 上操作：
 
-**5a. Enable Developer Mode** (one-time):
-1. Settings → Privacy & Security → Developer Mode → toggle **On**
-2. iPhone will restart. After restart, confirm "Turn On" when prompted.
+**5a. 啟用開發者模式**（僅首次）：
+1. 設定 → 隱私權與安全性 → 開發者模式 → 開啟
+2. iPhone 會重新啟動。重啟後確認「開啟」。
 
-**5b. Trust the developer** (one-time):
-1. Settings → General → VPN & Device Management
-2. Tap your Apple ID under "Developer App"
-3. Tap **Trust**
+**5b. 信任開發者**（僅首次）：
+1. 設定 → 一般 → VPN 與裝置管理
+2. 點擊「開發者 App」下你的 Apple ID
+3. 點擊**信任**
 
-**5c. Add the HushType keyboard** (one-time):
-1. Settings → General → Keyboard → Keyboards → **Add New Keyboard**
-2. Scroll down to "Third-Party Keyboards" → tap **HushType**
-3. Tap **HushType** in the keyboard list → toggle **Allow Full Access** → confirm
+**5c. 加入 HushType 鍵盤**（僅首次）：
+1. 設定 → 一般 → 鍵盤 → 鍵盤 → **新增鍵盤**
+2. 往下滑到「第三方鍵盤」→ 點擊 **HushType**
+3. 點擊清單中的 **HushType** → 開啟**允許完整取用** → 確認
 
-> **Important:** Full Access must be enabled. Without it, the keyboard cannot communicate with the main app or access the network. If the mic button doesn't respond, this is the most common cause.
+> **重要：** 必須啟用「允許完整取用」。沒有開啟的話，鍵盤無法與主 App 通訊，也無法存取網路。如果按麥克風沒反應，這是最常見的原因。
 
-### Step 6: Configure and test
+### 步驟 6：設定與測試
 
-1. Open the **HushType** app on iPhone
-2. Enter your Mac's IP address: `http://<your-ip>:8000` (the IP from Step 2)
-3. Tap **Test Connection** → should show green "Connected"
-4. Tap **Start Listening** — the orange microphone indicator appears at the top of the screen
-5. The app shows a 5-minute countdown timer
+1. 在 iPhone 上開啟 **HushType** App
+2. 輸入 Mac 的 IP 位址：`http://<你的IP>:8000`（步驟 2 取得的 IP）
+3. 點擊 **Test Connection** → 應顯示綠色 "Connected"
+4. 點擊 **Start Listening** — 螢幕頂部出現橘色麥克風指示燈
+5. App 顯示 5 分鐘倒數計時
 
-### Step 7: Use it
+### 步驟 7：開始使用
 
-1. Switch to any app (Messages, Notes, Safari, etc.)
-2. Long-press the **globe key** on your keyboard → select **HushType**
-3. Tap the **mic button** → speak → tap **stop**
-4. Wait 1-2 seconds → transcribed text appears at your cursor
-5. Use **space**, **backspace**, and **return** buttons for basic editing
+1. 切到任何 App（訊息、備忘錄、Safari 等）
+2. 長按**地球鍵** → 選擇 **HushType**
+3. 點擊**麥克風按鈕** → 說話 → 點擊**停止**
+4. 等待 1-2 秒 → 轉錄的文字出現在游標位置
+5. 使用**空白鍵**、**刪除鍵**和 **return** 進行基本編輯
 
-When the 5-minute session expires, return to the HushType app and tap "Start Listening" again.
+5 分鐘聆聽時間到期後，回到 HushType App 再按一次「Start Listening」。
 
-### After setup: Daily usage
+### 設定完成後：日常使用
 
-You only need to repeat Steps 3 + 6-7 each day:
-1. Make sure the iOS server is running on Mac (menu bar → "Start iOS Server")
-2. Open HushType on iPhone → Start Listening
-3. Switch to your app → use the keyboard
+每天只需重複步驟 3 + 6-7:
+1. 確認 Mac 上的 iOS 伺服器已啟動（選單列 → "Start iOS Server"）
+2. 在 iPhone 開啟 HushType → Start Listening
+3. 切到你的 App → 使用鍵盤
 
-The USB cable is only needed for installing/updating the app from Xcode. Normal usage is wireless.
+USB 線只在安裝/更新 App 時需要。日常使用完全無線。
 
-> **Note:** With free Apple ID provisioning, the app expires every 7 days. When it stops launching, reconnect USB → Xcode → Cmd+R to reinstall. Your settings are preserved. A paid Apple Developer account ($99/year) extends this to 1 year.
+> **注意：** 使用免費 Apple ID 佈署，App 每 7 天會過期。停止運作時，重新接上 USB → Xcode → Cmd+R 重新安裝即可。設定會保留。付費 Apple Developer 帳號（US$99/年）可延長至 1 年。
 
 ---
 
-## Configuration
+## 設定
 
 ### macOS
 
 ```bash
-# View all settings
+# 檢視所有設定
 defaults read com.felix.hushtype
 
-# Language: nil=auto, "english", "chinese", "japanese"
+# 語言:nil=自動, "english", "chinese", "japanese"
 defaults write com.felix.hushtype hushtype.language -string "chinese"
 
-# Model: default "aufklarer/Qwen3-ASR-0.6B-MLX-4bit" on macOS;
-# alternative "mlx-community/Qwen3-ASR-1.7B-8bit" for better quality.
+# 模型:macOS 預設 "aufklarer/Qwen3-ASR-0.6B-MLX-4bit";
+# 可選 "mlx-community/Qwen3-ASR-1.7B-8bit" 以獲得更好品質。
 defaults write com.felix.hushtype hushtype.modelId -string "mlx-community/Qwen3-ASR-1.7B-8bit"
 
-# Traditional Chinese conversion (default: true)
+# 繁體中文轉換（預設:true）
 defaults write com.felix.hushtype hushtype.chineseConversionEnabled -bool false
 
-# Number conversion / ITN — Chinese numeral → Arabic digit (default: true)
+# 中文數字轉阿拉伯數字（ITN,預設:true）
 defaults write com.felix.hushtype hushtype.numberConversionEnabled -bool false
 
-# Floating "Listening / Transcribing" indicator (default: true)
+# 底部浮動「Listening / Transcribing」指示條（預設:true）
 defaults write com.felix.hushtype hushtype.floatingOverlayEnabled -bool false
 
-# AI Cleanup via Apple Foundation Models (default: false, requires macOS 26+)
-# Prefer toggling from the menu bar — the menu validates FoundationModels
-# availability and shows a clear error if Apple Intelligence isn't enabled.
+# 透過 Apple Foundation Models 的 AI Cleanup（預設:false,需要 macOS 26+）
+# 建議從選單列切換——選單會驗證 FoundationModels 可用性,
+# 若 Apple Intelligence 未啟用會顯示清楚的錯誤訊息。
 defaults write com.felix.hushtype hushtype.aiCleanupEnabled -bool true
 
-# Text Translation via Apple Translation Framework (default: false, requires macOS 14+)
+# 透過 Apple Translation Framework 的文字翻譯（預設:false,需要 macOS 14+）
 defaults write com.felix.hushtype hushtype.textTranslationEnabled -bool true
 
-# Translation target language (default: nil = auto — Chinese→English, other→繁體中文)
-# Set to a specific language code to override (e.g., "en", "zh-Hant-TW", "ja")
+# 翻譯目標語言（預設:nil = 自動——中文→英文,其他→繁體中文）
+# 設定特定語言代碼可覆寫（例:"en"、"zh-Hant-TW"、"ja"）
 defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 ```
 
 ### iOS
 
-- Server URL: configured in the app UI (persisted in App Group)
-- Session duration: 5 minutes (hardcoded in BackgroundAudioManager.swift)
-- Model: `mlx-community/Qwen3-ASR-0.6B-4bit` (hardcoded in RemoteTranscriber.swift)
+- 伺服器網址：在 App 介面中設定（儲存在 App Group）
+- 聆聽時間：5 分鐘（寫在 BackgroundAudioManager.swift 中）
+- 模型：`mlx-community/Qwen3-ASR-0.6B-4bit`（寫在 RemoteTranscriber.swift 中）
 
-### Changing the Hotkey (macOS)
+### 更改快捷鍵（macOS）
 
-Edit `Sources/HushType/HotkeyManager.swift`:
+編輯 `Sources/HushType/HotkeyManager.swift`:
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
 
-Common keycodes: Right Option (61), Right Command (54), Left Option (58), Left Control (59), Fn/Globe (63).
+常用鍵碼：Right Option （61）、Right Command （54）、Left Option （58）、Left Control （59）、Fn/Globe （63）。
 
 ---
 
-## Privacy & Security
+## 隱私與安全
 
-- **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk — not on macOS, not on the iOS server.
-- **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
-- **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift) and an optional GitHub releases check for update notifications.
-- **Cloud Live Translated Caption uses YOUR key directly to OpenAI.** Opt-in, off by default, never auto-resumes across launches. Your API key is stored in plaintext at `~/Library/Application Support/HushType/openai.json` (same security profile as `.env`) — `chmod 600 ~/Library/Application\ Support/HushType/openai.json` if you want a tighter mode bit. Audio streams Mac → OpenAI via WSS; HushType operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend. The engine resets to local on every app launch — you re-opt-in each time you want the cloud path.
-- **iOS audio stays on your network.** iPhone audio travels directly to your Mac over local WiFi or Tailscale (WireGuard-encrypted). No third-party server is involved.
-- **Fully air-gappable.** Pre-download the model folder on another machine (`~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/` for the macOS app, `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/` for the iOS server) and copy it over — the app will never need internet.
-
----
-
-## Project Structure
-
-```
-HushType/
-├── Package.swift                      SPM config (macOS target)
-├── Makefile                           build / install / clean / dmg
-├── Sources/HushType/                  macOS menu bar app
-│   ├── main.swift                     NSApplication bootstrap
-│   ├── AppDelegate.swift              Orchestrator + state machine
-│   ├── StatusBarController.swift      Menu bar icon + menus + iOS server toggle
-│   ├── IOSServerManager.swift         Manages ios_server.py subprocess
-│   ├── OnboardingManager.swift        First-launch / repair permission orchestration
-│   ├── OnboardingSetupWindowController.swift  Setup window for Accessibility + Microphone
-│   ├── PermissionSettingsGuidePanel.swift     Floating helper for macOS permission lists
-│   ├── DraggableAppTileView.swift     Draggable HushType.app tile for System Settings
-│   ├── SystemAudioPermissionFlow.swift        Screen & System Audio permission flow
-│   ├── SystemAudioPermissionWindowController.swift  System-audio permission setup panel
-│   ├── HotkeyManager.swift            CGEvent tap for Right Option
-│   ├── AudioCaptureService.swift      AVAudioEngine mic capture (16kHz mono, RMS publisher)
-│   ├── TranscriptionEngine.swift      Protocol + Qwen3ASR wrapper (MLX)
-│   ├── ChineseConverter.swift         OpenCC s2twp (Simplified → Traditional)
-│   ├── NumberNormalizer.swift         Deterministic Chinese-numeral → Arabic-digit ITN
-│   ├── DictionaryReplacer.swift       Customized dictionary (final post-processing step)
-│   ├── TextInserter.swift             Clipboard + Cmd+V paste (result persists on clipboard)
-│   ├── InputSourceManager.swift       CJK input method detection
-│   ├── FloatingOverlayWindow.swift    Borderless NSPanel for the listening pill
-│   ├── FloatingOverlayView.swift      SwiftUI pill: RMS bars + transcribing spinner
-│   ├── AICleaner.swift                Non-gated façade over FoundationModels cleanup
-│   ├── FoundationModelsCleaner.swift  macOS 26+ gated Apple FM wrapper
-│   ├── CleanupPrompt.swift            Phase 4 AI Cleanup prompt (filler + self-correction)
-│   ├── TranslationManager.swift       Apple Translation Framework integration
-│   ├── TranslationCardWindow.swift    Floating translation card NSPanel
-│   ├── TranslationCardView.swift      SwiftUI translation card view
-│   ├── LiveCaptionManager.swift       Local/cloud live caption orchestration
-│   ├── LiveCaptionWindow.swift        Floating live caption panel
-│   ├── LiveCaptionView.swift          SwiftUI live caption panel view
-│   ├── LiveCaptionWorker.swift        Streaming local ASR worker
-│   ├── LocalQwen3Backend.swift        Local Live Caption backend
-│   ├── OpenAITranslateBackend.swift   Cloud translated-caption backend
-│   ├── OpenAIKeyStore.swift           User OpenAI API key file handling
-│   ├── CloudOnboardingAlert.swift     One-time cloud disclosure
-│   ├── SystemAudioSource.swift        ScreenCaptureKit system-audio source
-│   ├── SystemAudioPicker.swift        App/source picker for system audio
-│   ├── MemoryUtils.swift              Process memory reading utilities
-│   └── AppConfig.swift                UserDefaults wrapper
-├── scripts/
-│   ├── ios_server.py                  FastAPI proxy: mlx-audio + OpenCC
-│   └── build_mlx_metallib.sh          MLX Metal shader compilation
-├── Resources/
-│   ├── Info.plist                     LSUIElement, mic usage description
-│   ├── HushType.png                   App icon (1024x1024)
-│   └── HushType.icns                  macOS app icon
-└── iOS/                               iPhone app + keyboard extension
-    ├── project.yml                    xcodegen project spec
-    ├── Shared/                        Shared between app + keyboard extension
-    │   ├── AppGroupConstants.swift    App Group keys + file-based IPC
-    │   ├── IPCConstants.swift         Darwin notification names
-    │   └── WAVEncoder.swift           Float32 → 16-bit PCM WAV
-    ├── VoxKey/                        Main iOS app (directory name kept from v1)
-    │   ├── VoxKeyApp.swift            SwiftUI entry point (@main HushTypeApp)
-    │   ├── Views/ContentView.swift    Server config, listening session, countdown
-    │   ├── Services/
-    │   │   ├── AudioRecorder.swift    AVAudioEngine with listening + recording modes
-    │   │   ├── BackgroundAudioManager.swift  Session timer, IPC polling, background
-    │   │   └── RemoteTranscriber.swift       HTTP multipart POST to Mac server
-    │   ├── Assets.xcassets/           App icon asset catalog
-    │   └── Resources/silence.wav      Background audio fallback
-    └── VoxKeyKeyboard/                Custom keyboard extension
-        └── KeyboardViewController.swift  Mic, space, backspace, return, globe
-```
-
-## Customizing for Your Own Setup
-
-To run HushType on your own devices, change these:
-
-| What | Where | Example |
-|---|---|---|
-| Bundle ID | `iOS/project.yml` (both targets) + `iOS/Shared/AppGroupConstants.swift` | `com.yourname.hushtype` / `group.com.yourname.hushtype` |
-| Server URL default | `iOS/VoxKey/Views/ContentView.swift` | Your Tailscale or LAN IP |
-| Hotkey | `Sources/HushType/HotkeyManager.swift` | Any modifier keycode |
-| Model | `iOS/VoxKey/Services/RemoteTranscriber.swift` + `scripts/ios_server.py` | `mlx-community/Qwen3-ASR-1.7B-8bit` for better quality |
-| Session timeout | `iOS/VoxKey/Services/BackgroundAudioManager.swift` | `sessionDuration` property |
-| OpenCC config | `Sources/HushType/ChineseConverter.swift` + `scripts/ios_server.py` | Change `s2twp` to `s2t` for standard Traditional |
+- **不儲存任何錄音。** 語音資料僅存在於記憶體中（錄音 → 轉錄流程），完成後即丟棄。無論 macOS 或 iOS 伺服器，皆不會將任何音訊寫入磁碟。
+- **設定完成後不需要網路。** 唯一需要連網的是首次啟動時下載模型（約 675 MB）。之後，App 與模型完全離線運行，零對外連線。
+- **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）以及選用的 GitHub releases 更新檢查外，不包含任何網路程式碼。
+- **雲端 Live Translated Caption 用你自己的 key 直接打 OpenAI。** 預設關閉、需自行開啟、不會跨啟動自動恢復。你的 API key 以明文存在 `~/Library/Application Support/HushType/openai.json`（跟 `.env` 同安全等級）— 想嚴格一點可以用 `chmod 600 ~/Library/Application\ Support/HushType/openai.json` 改檔案權限。音訊以 WSS 直送 Mac → OpenAI；HushType 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。每次 App 重啟字幕模式都重設回本機，要用雲端就重新點開。
+- **iOS 音訊留在你的網路中。** iPhone 音訊直接傳送到你的 Mac，透過區域網路 WiFi 或 Tailscale（WireGuard 加密）。不經過任何第三方伺服器。
+- **可完全離網運作。** 事先在另一台機器下載模型資料夾（macOS App 為 `~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/`,iOS 伺服器為 `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`）再複製過來——App 將永遠不需要網路。
 
 ---
 
-## Troubleshooting
+## 已知限制
 
-**macOS: "MLX error: Failed to load the default metallib"**
-Run: `bash scripts/build_mlx_metallib.sh release`
-
-**macOS: Hotkey not working**
-Check Accessibility permission in System Settings → Privacy & Security → Accessibility. HushType must be in the list and toggled on. If HushType is missing or the switch does not work, relaunch HushType and use **Reset Old HushType Entry** from the setup window, then add/enable HushType again. If you just granted Accessibility and the hotkey still does not work, click **Restart HushType** in the setup window or quit and relaunch manually — macOS caches the permission check per-process.
-
-**iOS: "App Transport Security" error**
-The Info.plist must have `NSAllowsArbitraryLoads = true` with NO `NSExceptionDomains` — they conflict and cause iOS to ignore the global allow.
-
-**iOS: Mic button does nothing (no recording starts)**
-Most common cause: **Full Access is not enabled**. Go to Settings > General > Keyboard > Keyboards > HushType > toggle Allow Full Access. Without this, the keyboard extension cannot communicate with the main app.
-
-**iOS: Keyboard stuck on "Transcribing..."**
-The main app isn't receiving commands. Ensure:
-1. HushType app is open and showing "Listening" with the orange mic dot
-2. The Mac server is running (`curl http://<mac-ip>:8000/`)
-3. App Group container works (check Xcode console for "App Group container: /path...")
-
-**iOS: "Open HushType app first"**
-The main app isn't running or the listening session expired (5-min timeout). Open HushType app and tap "Start Listening" again.
-
-**iOS: App stops working after 7 days**
-Free provisioning signing expires. Reconnect iPhone via USB, open Xcode, Cmd+R to reinstall. Settings are preserved.
-
-**Server: Port already in use**
-```bash
-lsof -ti :8000 :8199 | xargs kill
-```
-
----
-
-## Known Limitations
-
-- iOS requires Mac to be on and server running (no cloud fallback)
-- Free provisioning: iOS app expires every 7 days (re-sign via Xcode)
-- Session timeout is fixed at 5 minutes (no UI to change yet)
-- Mac must be reachable from iPhone (same WiFi or Tailscale)
-- DMG is ad-hoc signed (not notarized) — macOS Gatekeeper will warn on first launch. Right-click → Open to bypass.
+- iOS 需要 Mac 開機且伺服器運行中（無雲端備援）
+- 免費佈署：iOS App 每 7 天過期（需透過 Xcode 重新簽署）
+- 聆聽時間固定為 5 分鐘（尚無介面可調整）
+- Mac 必須是 iPhone 可連線的（同一 WiFi 或 Tailscale）
+- DMG 使用臨時簽章（未經 Apple 公證）——首次啟動時 macOS Gatekeeper 會發出警告，需右鍵 → 打開來略過
