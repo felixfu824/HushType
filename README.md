@@ -53,6 +53,7 @@
 | 英文 / 中文 / 日文 + 原生混用 | ON | — |
 | 簡體 → 繁體 後處理（OpenCC `s2twp`）| **ON** | — |
 | 阿拉伯數字轉換（確定性 ITN）| **ON** | — |
+| 中文標點清理——修剪模型過度斷句（soft / hard / off）| **soft** | — |
 | AI Cleanup——清除贅字、自我修正解析 | **OFF**（opt-in beta）| macOS 26 + Apple Intelligence |
 | 自訂字典（專有名詞 / 行話）| 檔案驅動 | — |
 | 浮動「Listening / Transcribing」指示條 | ON | — |
