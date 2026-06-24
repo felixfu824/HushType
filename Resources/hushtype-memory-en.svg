@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 236" font-family="-apple-system,'Segoe UI',Roboto,'PingFang TC',Helvetica,Arial,sans-serif">
+  <rect x="1" y="1" width="878" height="234" rx="16" fill="#fbfcfd" stroke="#e4e7eb"/>
+  <text x="28" y="38" font-size="18" font-weight="700" fill="#1f2933">Model weights resident in RAM</text>
+  <text x="28" y="59" font-size="12.5" fill="#69707a">shorter = lighter (weights only)</text>
+
+  <text x="28" y="100" font-size="14.5" font-weight="700" fill="#1f2933">★ HushType</text>
+  <text x="28" y="116" font-size="10.5" fill="#69707a">Qwen3-ASR 0.6B · 4-bit · default</text>
+  <rect x="236" y="86" width="82" height="30" rx="5" fill="#213063"/>
+  <text x="326" y="106" font-size="13.5" font-weight="700" fill="#213063">675 MB</text>
+  <text x="852" y="106" text-anchor="end" font-size="12.5" font-weight="700" fill="#1e2b57">✓ Native 繁中 (OpenCC)</text>
+
+  <text x="28" y="150" font-size="14.5" font-weight="700" fill="#1f2933">Whisper</text>
+  <text x="28" y="166" font-size="10.5" fill="#69707a">large-v3-turbo · fp16</text>
+  <rect x="236" y="136" width="196" height="30" rx="5" fill="#8a93ad"/>
+  <text x="440" y="156" font-size="13.5" font-weight="700" fill="#475569">1,618 MB · 2.4×</text>
+  <text x="852" y="156" text-anchor="end" font-size="12.5" font-weight="700" fill="#b45309">⚠ leans 简体 · most-used</text>
+
+  <text x="28" y="200" font-size="14.5" font-weight="700" fill="#1f2933">Parakeet</text>
+  <text x="28" y="216" font-size="10.5" fill="#69707a">TDT 0.6B</text>
+  <rect x="236" y="186" width="300" height="30" rx="5" fill="#b4bccf"/>
+  <text x="544" y="206" font-size="13.5" font-weight="700" fill="#475569">2,472 MB · 3.7×</text>
+  <text x="852" y="206" text-anchor="end" font-size="12.5" font-weight="700" fill="#b91c1c">✗ no Chinese · fastest</text>
+</svg>
