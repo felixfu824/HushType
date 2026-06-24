@@ -53,6 +53,7 @@
 | EN / ZH / JA + native code-switching | ON | — |
 | 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | — |
 | 阿拉伯數字 conversion (deterministic ITN) | **ON** | — |
+| Chinese punctuation cleanup — trim the model's over-segmentation (soft / hard / off) | **soft** | — |
 | AI Cleanup — filler removal, self-correction resolution | **OFF** (opt-in beta) | macOS 26 + Apple Intelligence |
 | Customized dictionary (proper nouns / jargon) | File-driven | — |
 | Floating "Listening / Transcribing" pill | ON | — |
