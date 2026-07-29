@@ -66,6 +66,7 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         var reconnectAttempt: Int = 0
         var stopped: Bool = false
         var awaitingGracefulClose: Bool = false
+        var transcriptionModelFellBack: Bool = false
         /// Tracks the in-flight WS receive loop so `stop()` can await its
         /// exit before invalidating the URLSession — without this, the loop
         /// captures `self` and keeps the backend (resampler, accumulator,
@@ -210,19 +211,10 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
         // until we know the right knob for this endpoint specifically; if
         // memory tail re-surfaces, the next lever is explicit
         // malloc_zone_pressure_relief on cloud teardown.
-        let outputLangISO = mapTargetLanguage(targetLanguage)
-        let sessionUpdate: [String: Any] = [
-            "type": "session.update",
-            "session": [
-                "audio": [
-                    "input": [
-                        "transcription": ["model": "gpt-realtime-whisper"],
-                        "noise_reduction": NSNull()
-                    ],
-                    "output": ["language": outputLangISO]
-                ]
-            ]
-        ]
+        // gpt-live-transcribe was probe-verified on this exact endpoint
+        // 2026-07-29; currentTranscriptionModel selects the one-shot legacy
+        // fallback only if the server rejects it.
+        let sessionUpdate = makeSessionUpdate(transcriptionModel: currentTranscriptionModel)
         try await sendClientEvent(task: task, event: sessionUpdate)
 
         // Spin up the inbound receive loop. Each `receive()` is one-shot — we
@@ -324,8 +316,33 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
             flushPendingBuffers()
 
         case "error":
-            let message = (obj["error"] as? [String: Any]).flatMap { $0["message"] as? String } ?? "OpenAI error"
-            let code = (obj["error"] as? [String: Any]).flatMap { $0["code"] as? String }
+            let error = obj["error"] as? [String: Any]
+            let message = error?["message"] as? String ?? "OpenAI error"
+            let code = error?["code"] as? String
+            let param = error?["param"] as? String
+            let isTranscriptionModelError =
+                param?.hasPrefix("session.audio.input.transcription") == true ||
+                message.contains("gpt-live-transcribe")
+            let fallback = stateQueue.sync { () -> (shouldFallback: Bool, task: URLSessionWebSocketTask?) in
+                guard isTranscriptionModelError, !state.transcriptionModelFellBack else {
+                    return (false, nil)
+                }
+                state.transcriptionModelFellBack = true
+                return (true, state.task)
+            }
+            if fallback.shouldFallback {
+                let fallbackModel = currentTranscriptionModel
+                log.warning(
+                    "WS rejected gpt-live-transcribe: \(message, privacy: .public) param=\(param ?? "-", privacy: .public); falling back to \(fallbackModel, privacy: .public)"
+                )
+                let sessionUpdate = makeSessionUpdate(transcriptionModel: fallbackModel)
+                if let fallbackTask = fallback.task {
+                    Task {
+                        await sendClientEvent(task: fallbackTask, event: sessionUpdate)
+                    }
+                }
+                return
+            }
             log.error("WS error: \(message, privacy: .public) code=\(code ?? "-", privacy: .public)")
             let nsError = NSError(
                 domain: "OpenAITranslate",
@@ -628,6 +645,29 @@ final class OpenAITranslateBackend: TranscriptionBackend, @unchecked Sendable {
     }
 
     // MARK: - Helpers
+
+    private var currentTranscriptionModel: String {
+        stateQueue.sync {
+            state.transcriptionModelFellBack
+                ? "gpt-realtime-whisper"
+                : "gpt-live-transcribe"
+        }
+    }
+
+    private func makeSessionUpdate(transcriptionModel: String) -> [String: Any] {
+        [
+            "type": "session.update",
+            "session": [
+                "audio": [
+                    "input": [
+                        "transcription": ["model": transcriptionModel],
+                        "noise_reduction": NSNull()
+                    ],
+                    "output": ["language": mapTargetLanguage(targetLanguage)]
+                ]
+            ]
+        ]
+    }
 
     /// Map our target-language UI value to the two-letter ISO code the
     /// endpoint expects. `zh-Hant` and `zh-Hans` both collapse to `"zh"`;
