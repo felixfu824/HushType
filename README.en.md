@@ -263,6 +263,8 @@ On-device proofreading via Apple's Foundation Models framework — the Apple Int
 - **Declines code.** Code-shaped selections are refused with an alert; URLs, file paths, and backtick content inside normal text are left as-is.
 - **Fails loudly, never silently.** If the model output looks corrupted (wrong length, dropped language), you get an alert and your text stays exactly as it was.
 
+**Honest limits:** this runs on Apple's small on-device model, and the trade-offs show — **English corrections are the most reliable**; **Chinese fixes are conservative** and syntax-dependent typos (的/得, 在/再) are often missed; **longer selections tend to come back "No changes needed"** — one or two sentences at a time works best. That bias is deliberate: when the model is unsure it returns your text unchanged — it would rather miss a fix than make one up.
+
 **Speed:** typically ~1–3 s. HushType keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
 
 **Custom rules:** menu bar → **Edit Polish Instructions** opens `~/Library/Application Support/HushType/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt — e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
