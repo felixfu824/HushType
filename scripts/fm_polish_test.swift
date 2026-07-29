@@ -138,6 +138,14 @@ let cases: [TestCase] = [
     // only 我門→我們 — a safe partial, so both partial and full fixes pass.
     .init(category: "TRAIL", label: "zh multi-error", input: "我門明天早上開會，他跑的很快就先過去了，在麻煩你把資料帶來。", expected: "我們明天早上開會，他跑的很快就先過去了，在麻煩你把資料帶來。", accepted: ["我們明天早上開會，他跑得很快就先過去了，再麻煩你把資料帶來。", "我們明天早上開會，他跑的很快就先過去了，再麻煩你把資料帶來。"]),
 
+    // zh-dominant spaceless-mixed selections (translation-attractor regression, 2026-07-29) (6)
+    .init(category: "MIX2", label: "felix long mixed verbatim", input: "我們稍微debate一下，呃，報道獎金這件事情呢。如果我們今天要價超過九月的那一包，我們就要有一個合理的論述。所以我想一下哈，還是我們這樣說：我們說，我原本至少會在庫鵬待滿一年。所以我們就計算到十一月的gross proceeds，會因為我九月中間離職，失去多少。這樣如何？因為你這個RSU的價值的失去，再怎麼樣我也不可能要求他補四年的RSU價值吧。這個論點我們是守不住的。", expected: "我們稍微debate一下，呃，報道獎金這件事情呢。如果我們今天要價超過九月的那一包，我們就要有一個合理的論述。所以我想一下哈，還是我們這樣說：我們說，我原本至少會在庫鵬待滿一年。所以我們就計算到十一月的gross proceeds，會因為我九月中間離職，失去多少。這樣如何？因為你這個RSU的價值的失去，再怎麼樣我也不可能要求他補四年的RSU價值吧。這個論點我們是守不住的。", accepted: ["我們稍微debate一下，呃，報到獎金這件事情呢。如果我們今天要價超過九月的那一包，我們就要有一個合理的論述。所以我想一下哈，還是我們這樣說：我們說，我原本至少會在庫鵬待滿一年。所以我們就計算到十一月的gross proceeds，會因為我九月中間離職，失去多少。這樣如何？因為你這個RSU的價值的失去，再怎麼樣我也不可能要求他補四年的RSU價值吧。這個論點我們是守不住的。"]),
+    .init(category: "MIX2", label: "spaceless EN typo", input: "我們稍微debate一下這個proposal，他的argment有點弱。", expected: "我們稍微debate一下這個proposal，他的argument有點弱。", accepted: ["我們稍微debate一下這個 proposal，他的 argument 有點弱。", "我們稍微 debate 一下這個 proposal，他的 argument 有點弱。"]),
+    .init(category: "MIX2", label: "spaceless 在→再 (known ceiling)", input: "我們可以在sync一次進度，然後把proposal寄給他。", expected: "我們可以再sync一次進度，然後把proposal寄給他。", accepted: ["我們可以再 sync 一次進度，然後把 proposal 寄給他。", "我們可以在 sync 一次進度，然後把 proposal 寄給他。"]),
+    .init(category: "MIX2", label: "zh-dominant 因該→應該", input: "今天的standup我們聊了一下Q3的roadmap，呃，我覺得我們因該先把infra的技術債處理掉，不然之後每個sprint都會被拖慢。", expected: "今天的standup我們聊了一下Q3的roadmap，呃，我覺得我們應該先把infra的技術債處理掉，不然之後每個sprint都會被拖慢。"),
+    .init(category: "MIX2", label: "pure zh 在→再確認", input: "這個報告的結論太過複雜，我們得在確認一次數據來源。", expected: "這個報告的結論太過複雜，我們得再確認一次數據來源。"),
+    .init(category: "MIX2", label: "pure EN recieved alot", input: "The new design recieved alot of positive feedback from the team.", expected: "The new design received a lot of positive feedback from the team."),
+
     // Strong code signals are rejected before generation (3)
     .init(category: "CODE", label: "fence", input: "```swift\nlet userProfileURL = make_user_profile()\n```", expected: "GUARD", mode: .codeGuard),
     .init(category: "CODE", label: "identifiers", input: "userProfileURL make_user_profile parseJSONValue", expected: "GUARD", mode: .codeGuard),
@@ -273,8 +281,15 @@ let MIX_RETRY_REMINDER =
 func generate(_ input: String, reminder: String) async throws -> String {
     let session = LanguageModelSession(instructions: POLISH_PROMPT)
     let options = GenerationOptions(temperature: 0.0)
+    // Mirrors PolishPrompt.isChineseDominantMix + mixPreReminder: clearly
+    // Chinese-dominant mixed selections get a strong English instruction
+    // BEFORE the input to suppress the translation attractor (2026-07-29).
+    let latinWords = input.split { !($0.isLetter && $0.isASCII) }.count
+    let pre = (hanCount(input) >= 2 && latinLetterCount(input) >= 2 && hanCount(input) > 2 * latinWords)
+        ? "The selection mixes Chinese and English words. Copy every English word EXACTLY as written — translating any English word into Chinese is an error.\n"
+        : ""
     let response = try await session.respond(
-        to: "Input: <selection>\(input)</selection>\(reminder)\nOutput:",
+        to: pre + "Input: <selection>\(input)</selection>\(reminder)\nOutput:",
         options: options
     )
     return sanitize(response.content, input: input)

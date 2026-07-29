@@ -78,6 +78,39 @@ Output: The report is ready.
     static let mixRetryReminder =
         "\nReminder: the selection mixes Chinese and English. Keep every word in its original language; never translate."
 
+    /// Prepended to the user turn for clearly Chinese-dominant mixed
+    /// selections. The model has a translation attractor on that shape —
+    /// sparse embedded English (「稍微debate一下」) gets sinicized wholesale,
+    /// which the mix guard then rejects, so the polish used to die with an
+    /// error alert. An English instruction BEFORE the input suppresses the
+    /// attractor entirely (an appended reminder is ignored; eval 2026-07-29),
+    /// and also stops these selections from tripping the framework's
+    /// `unsupportedLanguageOrLocale` error.
+    ///
+    /// Deliberately one-directional (keep English) and gated to
+    /// Chinese-dominant inputs only: symmetric or reversed wordings make the
+    /// model translate Latin-dominant selections INTO English (or Simplified
+    /// Chinese) instead, and on pure-Chinese text any always-on reminder
+    /// suppresses legitimate 錯別字 fixes.
+    static let mixPreReminder =
+        "The selection mixes Chinese and English words. Copy every English word EXACTLY as written — translating any English word into Chinese is an error.\n"
+
+    /// Whether a selection is clearly Chinese-dominant mixed text — the only
+    /// shape that gets `mixPreReminder`. Latin letters are counted in words
+    /// (an English word carries many letters per unit of meaning); requiring
+    /// Han characters to outnumber twice the Latin word count keeps
+    /// English-framed mixed sentences ("Please 幫我確認 meeting time.") on the
+    /// unmodified baseline path, where the model already behaves.
+    static func isChineseDominantMix(_ text: String) -> Bool {
+        let han = text.unicodeScalars.lazy.filter { ScriptDetector.isHan($0.value) }.count
+        let latin = text.unicodeScalars.lazy.filter {
+            (0x41...0x5A).contains($0.value) || (0x61...0x7A).contains($0.value)
+        }.count
+        guard han >= 2 && latin >= 2 else { return false }
+        let latinWords = text.split { !($0.isLetter && $0.isASCII) }.count
+        return han > 2 * latinWords
+    }
+
     /// Prompt resolution order:
     /// 1. `polish_prompt.txt` — full replacement (hidden power-user override).
     /// 2. `polish_rules.txt` — user preferences merged into the baked-in

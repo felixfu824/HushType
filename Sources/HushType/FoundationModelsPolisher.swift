@@ -103,13 +103,33 @@ enum FoundationModelsPolisher {
 
         let options = GenerationOptions(temperature: 0.0)
         let reminder = mixRetry ? PolishPrompt.mixRetryReminder : ""
-        let userPrompt = "Input: <selection>\(text)</selection>\(reminder)\nOutput:"
+        // Chinese-dominant mixed selections get a strong English instruction
+        // BEFORE the input — the only placement the model obeys — to stop it
+        // from translating the embedded English (see PolishPrompt).
+        let preReminder = PolishPrompt.isChineseDominantMix(text) ? PolishPrompt.mixPreReminder : ""
+        let userPrompt = preReminder + "Input: <selection>\(text)</selection>\(reminder)\nOutput:"
 
         defer { replenishStandby(prompt: prompt) }
         do {
             let response = try await session.respond(to: userPrompt, options: options)
             log.debug("Polish response fingerprint=\(fingerprint, privacy: .public) standby_hit=\(standbyHit, privacy: .public) transcript_entries=\(response.transcriptEntries.count, privacy: .public)")
             return .success(sanitize(response.content, input: text))
+        } catch LanguageModelSession.GenerationError.unsupportedLanguageOrLocale where preReminder.isEmpty {
+            // The framework misclassifies some mixed selections as an
+            // unsupported language. An English pre-reminder changes that
+            // detection outcome (probe-verified 2026-07-29), so retry once
+            // with it forced before surfacing the error.
+            log.info("unsupportedLanguageOrLocale — retrying once with mix pre-reminder")
+            do {
+                let retrySession = LanguageModelSession(instructions: prompt)
+                let retryPrompt = PolishPrompt.mixPreReminder
+                    + "Input: <selection>\(text)</selection>\(reminder)\nOutput:"
+                let response = try await retrySession.respond(to: retryPrompt, options: options)
+                return .success(sanitize(response.content, input: text))
+            } catch {
+                log.error("Polish failed after language retry: \(error.localizedDescription, privacy: .public)")
+                return .failure(error)
+            }
         } catch {
             log.error("Polish failed: \(error.localizedDescription, privacy: .public)")
             return .failure(error)
