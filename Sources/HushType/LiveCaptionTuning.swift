@@ -6,8 +6,8 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaption
 /// User-editable knobs for Live Caption. Mirrors the dictionary-file pattern:
 /// the file lives in `~/Library/Application Support/HushType/live_caption.json`,
 /// edits take effect on the next `LiveCaptionManager.start()` (toggle off →
-/// on). The status bar menu has an "Edit Live Caption Settings" item that
-/// opens the file in the default editor.
+/// on). The Caption pane has an advanced-tuning button that opens the file in
+/// the default editor.
 ///
 /// Keep the schema small and inline-documented — comment keys are siblings
 /// (`"_comment_X": "..."`), so the file remains valid JSON while explaining
@@ -113,6 +113,21 @@ struct LiveCaptionTuning: Codable, Sendable {
         writeKey("resetPanelOnNextStart", value: false)
     }
 
+    /// Persist the shared default size used by local and translated caption.
+    /// The URL overload is internal so tests can use a temporary directory.
+    static func setPanelSize(w: Double, h: Double, at url: URL = fileURL) {
+        writeKeys([
+            "panelDefaultWidth": w,
+            "panelDefaultHeight": h,
+        ], to: url)
+    }
+
+    /// Persist the one-shot panel-position reset flag. The manager clears it
+    /// after applying it on the next start.
+    static func setResetPanelOnNextStart(_ enabled: Bool, at url: URL = fileURL) {
+        writeKey("resetPanelOnNextStart", value: enabled, to: url)
+    }
+
     /// Persist a new audio source ("mic" | "system") chosen via the menu.
     static func setAudioSource(_ source: String) {
         writeKey("audioSource", value: source)
@@ -126,13 +141,22 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// Partial in-place rewrite that preserves `_comment_*` keys and other
     /// user edits. Used by `clearResetFlag` / `setAudioSource` /
     /// `setSystemAudioBundleID`.
-    private static func writeKey(_ key: String, value: Any) {
-        let url = fileURL
+    private static func writeKey(_ key: String, value: Any, to url: URL = fileURL) {
+        writeKeys([key: value], to: url)
+    }
+
+    /// Partial rewrite used by production setters and Phase 4 temporary-file
+    /// tests. A missing file is initialized from the complete template before
+    /// mutation; malformed existing JSON is left untouched.
+    private static func writeKeys(_ updates: [String: Any], to url: URL) {
+        createTemplateIfMissing(at: url)
         guard
             let data = try? Data(contentsOf: url),
             var obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
         else { return }
-        obj[key] = value
+        for (key, value) in updates {
+            obj[key] = value
+        }
         guard let out = try? JSONSerialization.data(
             withJSONObject: obj,
             options: [.prettyPrinted, .sortedKeys]
@@ -143,7 +167,10 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// Creates the JSON template with inline `_comment_*` annotations on
     /// first run. No-op if the file already exists.
     static func createTemplateIfMissing() {
-        let url = fileURL
+        createTemplateIfMissing(at: fileURL)
+    }
+
+    static func createTemplateIfMissing(at url: URL) {
         let dir = url.deletingLastPathComponent()
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -175,7 +202,7 @@ struct LiveCaptionTuning: Codable, Sendable {
             defaults.set(true, forKey: migrationKey)
             let appDefaults: Set<Double> = [700, 800, 900, 1000, 1100, 1300, 1500]
             if appDefaults.contains(current.panelDefaultWidth) {
-                writeKey("panelDefaultWidth", value: 1350)
+                writeKey("panelDefaultWidth", value: 1350, to: url)
                 current.panelDefaultWidth = 1350
                 log.info("Migration: settled panelDefaultWidth → 1350")
             }

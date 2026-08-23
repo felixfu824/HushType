@@ -71,5 +71,9 @@ final class HushTypeSettingsWindowController {
             self.onSwitchEngine = onSwitchEngine
         }
         packageController.show(pane: pane?.identifier)
+        packageController.window?.title = L10n.string(
+            "settings.window.title",
+            fallback: "Settings"
+        )
     }
 }

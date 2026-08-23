@@ -48,21 +48,6 @@
 		</dict>
 	</dict>
 
-	<key>settings.usage.today</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringFormatSpecTypeInt</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>l</string>
-			<key>other</key>
-			<string>今天的費用：%1$@（%2$d 分鐘）</string>
-		</dict>
-	</dict>
-
 	<key>notification.caption.auto_stop.body</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>

@@ -40,9 +40,7 @@
 
 "common.button.retry_cloud" = "重試雲端";
 
-/* New top-level status-menu submenu; distinct from speech-recognition language. */
 
-"menu.interface_language" = "介面語言";
 
 /* Interface-language preference that follows ordered macOS app/process language preferences. */
 
@@ -186,13 +184,9 @@
 
 "menu.text_polish.validating" = "文字校對（正在驗證…）";
 
-/* Opens polish_rules.txt. */
 
-"menu.edit_polish_instructions" = "編輯校對指示";
 
-/* Status-menu submenu for dictation engine and processing options. */
 
-"menu.dictation_settings" = "語音輸入設定";
 
 /* Starts the local iOS companion server. */
 
@@ -220,7 +214,7 @@
 
 /* Privacy/cost subtitle for local Live Caption. */
 
-"menu.live_caption.subtitle" = "本機轉錄 — 免費、在裝置上執行";
+"menu.live_caption.subtitle" = "本機轉錄：免費、在裝置上執行";
 
 /* Cloud/provider/cost marker subtitle; dollar glyph is retained. */
 
@@ -250,13 +244,9 @@
 
 "menu.live_translated_caption.stop" = "停止即時翻譯字幕";
 
-/* Opens live_caption.json. */
 
-"menu.live_caption.edit_settings" = "編輯即時字幕設定";
 
-/* Opens translated-caption cloud settings. */
 
-"menu.live_translated_caption.settings" = "即時翻譯字幕設定…";
 
 /* Provider/framework subtitle for selected-text translation. */
 
@@ -278,9 +268,7 @@
 
 "menu.choice.auto" = "自動";
 
-/* Dictation engine submenu and settings heading. */
 
-"menu.dictation_engine" = "語音輸入引擎";
 
 /* Local dictation engine choice; model name is immutable. */
 
@@ -294,17 +282,15 @@
 
 "menu.engine.gemini_cloud" = "Gemini 雲端";
 
-/* Opens Dictation Engine Settings. */
 
-"menu.engine_settings" = "引擎設定…";
 
 /* Recognition-language submenu; explicitly not interface language. */
 
-"menu.speech_to_text_language" = "語音轉文字語言";
+"menu.speech_to_text_language" = "語音轉文字語言：";
 
 /* Toggle for deterministic Chinese numeral conversion. */
 
-"menu.number_conversion" = "數字轉換";
+"menu.number_conversion" = "數字轉換：";
 
 /* Disabled explanation beneath Number Conversion. */
 
@@ -312,31 +298,27 @@
 
 /* Punctuation cleanup submenu. */
 
-"menu.punctuation_cleanup" = "標點清理";
+"menu.punctuation_cleanup" = "標點清理：";
 
 /* Punctuation mode that trims inline Chinese commas. */
 
-"menu.punctuation.soft" = "溫和 — 移除行內逗號";
+"menu.punctuation.soft" = "溫和：移除行內逗號";
 
 /* Punctuation mode that trims all configured marks. */
 
-"menu.punctuation.hard" = "強力 — 移除所有標點";
+"menu.punctuation.hard" = "強力：移除所有標點";
 
 /* Punctuation mode that preserves model output. */
 
-"menu.punctuation.off" = "關閉 — 保留模型輸出";
+"menu.punctuation.off" = "關閉：保留模型輸出";
 
-/* Disabled explanation beneath Punctuation Cleanup. */
 
-"menu.punctuation.subtitle" = "移除中文裡過多的標點";
 
 /* Toggle for the dictation state overlay. */
 
 "menu.floating_indicator" = "顯示浮動指示器";
 
-/* Creates/opens dictionary.txt. */
 
-"menu.edit_dictionary" = "編輯自訂字典";
 
 /* Dictionary subtitle before dictionary.txt is created. */
 
@@ -618,17 +600,11 @@
 
 "alert.cloud.safety.title" = "Gemini 已封鎖這次轉錄";
 
-/* Dictation settings window title. */
 
-"window.dictation_engine_settings.title" = "語音輸入引擎設定";
 
-/* High-risk privacy architecture summary; preserve direct-to-provider/no-relay/no-HushType-server claims. */
 
-"settings.dictation.description" = "選擇要在哪裡將語音轉成文字。本機處理私密且免費。雲端引擎會使用你自己的 API 金鑰，將音訊直接傳送給服務供應商；中間沒有轉送服務，也不會經過 HushType 伺服器。";
 
-/* Dictation engine section heading. */
 
-"settings.dictation.engine_section" = "引擎";
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
@@ -666,17 +642,11 @@
 
 "settings.engine.cloud_unloads_local" = "選取雲端引擎時，語音模型會維持卸載狀態。iOS 伺服器一律使用本機模型。";
 
-/* HushType local cloud-spend guardrail heading; not a provider billing cap. */
 
-"settings.daily_spend.title" = "每日費用警示";
 
-/* Local upload-block threshold label. */
 
-"settings.daily_spend.block_at" = "達到此金額時阻擋新的雲端上傳：";
 
-/* API-key settings section heading. */
 
-"settings.api_keys.title" = "API 金鑰";
 
 /* Initial key-status placeholder. */
 
@@ -706,17 +676,11 @@
 
 "format.usd_total" = "US$%1$.2f";
 
-/* Translated-caption settings window title. */
 
-"window.translated_caption_settings.title" = "即時翻譯字幕設定";
 
-/* High-risk privacy/billing copy; preserve direct path, no-middle claim, approximation, hourly amount, and user-owned billing account. */
 
-"settings.translated_caption.description" = "透過 OpenAI 的即時翻譯端點進行即時雲端翻譯。音訊會直接從 Mac 串流至 OpenAI，HushType 絕不介入其中。費用約為每小時 US$2，由你自己的 OpenAI API 金鑰計費。";
 
-/* Translated-caption options section heading. */
 
-"settings.translated_caption.options" = "翻譯選項";
 
 /* Cloud translated-caption target-language label. */
 
@@ -726,45 +690,29 @@
 
 "settings.translated_caption.show_source" = "在翻譯上方顯示原文";
 
-/* Translated-caption cost-protection section heading. */
 
-"settings.cost_guardrails.title" = "費用防護";
 
 /* Auto-stop duration control label. */
 
 "settings.cost_guardrails.auto_stop" = "自動停止時間：";
 
-/* Daily translated-caption warning threshold label. */
 
-"settings.cost_guardrails.daily_warning" = "每日費用達到此金額時警示：";
 
-/* Initial translated-caption usage placeholder. */
 
-"settings.usage.placeholder" = "今天的費用：—";
 
 /* Resets translated-caption auto-stop and daily warning defaults. */
 
 "settings.reset_defaults" = "重設雲端費用設定";
 
-/* Singular API key section heading. */
 
-"settings.api_key.title" = "API 金鑰";
 
-/* OpenAI key status without Status prefix. */
 
-"settings.key.loaded" = "✓ 已載入金鑰";
 
-/* Empty OpenAI key status. */
 
-"settings.key.empty_cloud_disabled" = "金鑰空白 — 雲端功能已停用";
 
-/* OpenAI key-format warning; prefix stays exact. */
 
-"settings.key.unusual_sk" = "金鑰格式不常見（不是以 sk- 開頭）— 仍會照原樣使用";
 
-/* Wraps a localized key-status line. */
 
-"settings.key.status_format" = "狀態：%1$@";
 
 /* Onboarding/permission-repair panel title and heading. */
 
@@ -1276,7 +1224,7 @@
 
 /* High-risk privacy claim for on-device Text Polish. */
 
-"polish.card.privacy" = "在裝置上使用 Apple Intelligence — 任何內容都不會離開你的 Mac。";
+"polish.card.privacy" = "在裝置上使用 Apple Intelligence；任何內容都不會離開你的 Mac。";
 
 /* Track-changes deletion legend. */
 
@@ -1300,7 +1248,7 @@
 
 /* High-risk opt-in/privacy/billing disclosure. Preserve exact data path, key visibility, approximate hourly cost, billing account, local fallback, and one-time behavior. Product naming needs review. */
 
-"alert.cloud_caption_disclosure.message" = "即時翻譯字幕會將你的音訊傳送至 OpenAI 進行即時翻譯。\n\n• 費用：約每小時 US$2，由你的 OpenAI 帳戶計費\n• 使用你的 API 金鑰 — HushType 絕不會看到金鑰\n• 中間沒有 HushType 伺服器；音訊會直接從 Mac 傳至 OpenAI\n• 你可以隨時停止工作階段，或切換回本機\n\n這是選擇加入的功能。你只會看到這則通知一次。";
+"alert.cloud_caption_disclosure.message" = "即時翻譯字幕會將你的音訊傳送至 OpenAI 進行即時翻譯。\n\n• 費用：約每小時 US$2，由你的 OpenAI 帳戶計費\n• 使用你的 API 金鑰；HushType 絕不會看到金鑰\n• 中間沒有 HushType 伺服器；音訊會直接從 Mac 傳至 OpenAI\n• 你可以隨時停止工作階段，或切換回本機\n\n這是選擇加入的功能。你只會看到這則通知一次。";
 
 /* Accepts the one-time cloud disclosure. */
 
@@ -1474,6 +1422,78 @@
 
 "picker.autonym.it" = "Italiano";
 
-/* Initial dictation settings usage line before the async snapshot returns. */
 
-"settings.daily_usage.placeholder" = "今天的雲端費用：—";
+/* 統一設定視窗標題。 */
+"settings.window.title" = "設定";
+
+/* 一般設定介面語言列標籤。 */
+"settings.general.language" = "介面語言：";
+
+/* 跟隨系統值，參數為目前系統語言。 */
+"settings.general.language.value" = "跟隨系統（%1$@）";
+
+/* 一般設定介面語言行為說明。 */
+"settings.general.language.note" = "下次啟動時套用。選單列、設定視窗與字幕面板都會跟著這個設定。";
+
+/* 一般設定指示器列標籤。 */
+"settings.general.indicator" = "指示器：";
+
+/* 一般設定浮動指示器說明。 */
+"settings.general.indicator.note" = "螢幕下方那個「聆聽中 / 轉錄中」的小標籤。";
+
+/* 一般設定關於列標籤。 */
+"settings.general.about" = "關於：";
+
+/* 語音輸入自訂字典列標籤。 */
+"settings.dictation.dictionary" = "自訂字典：";
+
+/* 語音輸入自訂字典行為說明。 */
+"settings.dictation.dictionary.note" = "一行一組替換，在轉錄完成後套用，三個語音輸入引擎（含雲端）都會套。";
+
+/* 語音輸入標點清理說明。 */
+"settings.dictation.punctuation.note" = "移除模型在停頓處插入的過多中文標點。只作用於中文。";
+
+/* 字幕面板區段標題。 */
+"settings.caption.panel_title" = "字幕面板";
+
+/* 字幕面板本機與共用行為副標。 */
+"settings.caption.local_sub" = "兩種字幕模式共用。本機字幕跑 Qwen3：免費，不離開這台 Mac。";
+
+/* 字幕面板預設尺寸列標籤。 */
+"settings.caption.panel_size" = "字幕面板預設尺寸：";
+
+/* 字幕面板下次開始位置重設 checkbox。 */
+"settings.caption.reset_position" = "下次開始即時字幕時重設面板位置";
+
+/* 字幕面板進階調校列標籤。 */
+"settings.caption.advanced" = "進階調校：";
+
+/* 字幕面板進階調校說明。 */
+"settings.caption.advanced.note" = "VAD 門檻、maxTokens、MLX 快取上限等引擎參數維持在檔案裡，不進 UI。";
+
+/* 文字校對區段標題。 */
+"settings.text.polish_title" = "文字校對";
+
+/* 文字校對裝置上副標。 */
+"settings.text.polish_sub" = "Apple Foundation Models · 在裝置上執行";
+
+/* 文字校對啟用 checkbox。 */
+"settings.text.polish.cb" = "連按兩下右 ⌥ 校對選取的文字";
+
+/* 文字校對指示列標籤。 */
+"settings.text.instructions" = "校對指示：";
+
+/* 文字校對指示說明。 */
+"settings.text.instructions.note" = "純文字指示，每次校對請求都會一併送出。";
+
+/* 文字翻譯裝置上副標。 */
+"settings.text.translation_sub" = "Apple Translation Framework · 在裝置上執行";
+
+/* 文字翻譯啟用 checkbox。 */
+"settings.text.translation.cb" = "輕點右 ⌥ 翻譯選取的文字";
+
+/* 文字翻譯目標列標籤。 */
+"settings.text.translate_to" = "翻譯成：";
+
+/* 共用右 Option 行為說明。 */
+"settings.text.note" = "「自動」會翻成偵測語言的另一邊。兩個功能共用右 ⌥：點一下翻譯，點兩下校對。";

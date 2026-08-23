@@ -4,6 +4,21 @@ import SwiftUI
 
 @MainActor
 final class CaptionSettingsModel: ObservableObject {
+    @Published var panelWidth: Double {
+        didSet { persistPanelSizeIfNeeded() }
+    }
+
+    @Published var panelHeight: Double {
+        didSet { persistPanelSizeIfNeeded() }
+    }
+
+    @Published var resetPanelOnNextStart: Bool {
+        didSet {
+            guard !isRefreshing else { return }
+            LiveCaptionTuning.setResetPanelOnNextStart(resetPanelOnNextStart)
+        }
+    }
+
     @Published var targetLanguage: String {
         didSet { AppConfig.shared.cloudTargetLanguage = targetLanguage }
     }
@@ -16,16 +31,55 @@ final class CaptionSettingsModel: ObservableObject {
         didSet { AppConfig.shared.cloudAutoStopMinutes = autoStopMinutes }
     }
 
+    private var isRefreshing = false
+
     init() {
+        let tuning = LiveCaptionTuning.load()
+        panelWidth = tuning.panelDefaultWidth
+        panelHeight = tuning.panelDefaultHeight
+        resetPanelOnNextStart = tuning.resetPanelOnNextStart
         targetLanguage = AppConfig.shared.cloudTargetLanguage
         showSourceLine = AppConfig.shared.cloudShowSourceLine
         autoStopMinutes = AppConfig.shared.cloudAutoStopMinutes
     }
 
     func refresh() {
+        isRefreshing = true
+        let tuning = LiveCaptionTuning.load()
+        panelWidth = tuning.panelDefaultWidth
+        panelHeight = tuning.panelDefaultHeight
+        resetPanelOnNextStart = tuning.resetPanelOnNextStart
         targetLanguage = AppConfig.shared.cloudTargetLanguage
         showSourceLine = AppConfig.shared.cloudShowSourceLine
         autoStopMinutes = AppConfig.shared.cloudAutoStopMinutes
+        isRefreshing = false
+    }
+
+    func openAdvancedTuning() {
+        LiveCaptionTuning.createTemplateIfMissing()
+        let url = LiveCaptionTuning.fileURL
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            let alert = NSAlert()
+            alert.messageText = L10n.string(
+                "alert.file_create.live_caption.title",
+                fallback: "Could not open Live Caption settings"
+            )
+            alert.informativeText = L10n.format(
+                "alert.file_create.live_caption.message",
+                "Failed to create the Live Caption settings file at:\n%1$@",
+                arguments: [url.path]
+            )
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: L10n.string("common.button.ok", fallback: "OK"))
+            alert.runModal()
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
+    private func persistPanelSizeIfNeeded() {
+        guard !isRefreshing else { return }
+        LiveCaptionTuning.setPanelSize(w: panelWidth, h: panelHeight)
     }
 }
 
@@ -51,23 +105,97 @@ struct CaptionPane: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(L10n.string(
+            SettingsSectionHeader(
+                title: L10n.string(
+                    "settings.caption.panel_title",
+                    fallback: "Caption Panel"
+                ),
+                subtitle: L10n.string(
+                    "settings.caption.local_sub",
+                    fallback: "Shared by both caption modes. Local caption runs on Qwen3: free, nothing leaves the Mac."
+                )
+            )
+
+            SettingsRow(L10n.string(
+                "settings.caption.panel_size",
+                fallback: "Default caption panel size:"
+            )) {
+                HStack(spacing: 6) {
+                    Stepper(value: Binding(
+                        get: { model.panelWidth },
+                        set: { model.panelWidth = max(400, min(2400, $0)) }
+                    ), in: 400...2400, step: 10) {
+                        Text("\(Int(model.panelWidth))")
+                            .monospacedDigit()
+                            .frame(minWidth: 38, alignment: .trailing)
+                    }
+                    Text("×")
+                        .foregroundStyle(.secondary)
+                    Stepper(value: Binding(
+                        get: { model.panelHeight },
+                        set: { model.panelHeight = max(80, min(800, $0)) }
+                    ), in: 80...800, step: 10) {
+                        Text("\(Int(model.panelHeight))")
+                            .monospacedDigit()
+                            .frame(minWidth: 32, alignment: .trailing)
+                    }
+                    Text("pt")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            SettingsRow {
+                Toggle(L10n.string(
+                    "settings.caption.reset_position",
+                    fallback: "Reset panel position on next Live Caption start"
+                ), isOn: $model.resetPanelOnNextStart)
+            }
+
+            SettingsRow(L10n.string(
+                "settings.caption.advanced",
+                fallback: "Advanced tuning:"
+            )) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(LiveCaptionTuning.fileURL.path)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundStyle(.secondary)
+                        .textSelection(.enabled)
+                    Button(L10n.string(
+                        "common.button.open_in_textedit",
+                        fallback: "Open file in TextEdit"
+                    )) {
+                        model.openAdvancedTuning()
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    Text(L10n.string(
+                        "settings.caption.advanced.note",
+                        fallback: "VAD thresholds, maxTokens and the MLX cache cap stay in the file, out of the UI."
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            Divider()
+                .frame(width: 476)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.vertical, 12)
+
+            SettingsSectionHeader(
+                title: L10n.string(
                     "menu.live_translated_caption",
                     fallback: "Live Translated Caption"
-                ))
-                .font(.headline)
-                Text(L10n.string(
+                ),
+                subtitle: L10n.string(
                     "settings.caption.cloud_sub",
                     fallback: "OpenAI realtime · ~$2/hour · these three settings apply to translated caption only"
-                ))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            }
-            .frame(width: 476, alignment: .leading)
-            .frame(maxWidth: .infinity, alignment: .center)
+                )
+            )
 
-            settingsRow(L10n.string(
+            SettingsRow(L10n.string(
                 "settings.translated_caption.target",
                 fallback: "Target language:"
             )) {
@@ -79,14 +207,14 @@ struct CaptionPane: View {
                 .labelsHidden()
             }
 
-            settingsRow("") {
+            SettingsRow {
                 Toggle(L10n.string(
                     "settings.translated_caption.show_source",
                     fallback: "Show source text above translation"
                 ), isOn: $model.showSourceLine)
             }
 
-            settingsRow(L10n.string(
+            SettingsRow(L10n.string(
                 "settings.cost_guardrails.auto_stop",
                 fallback: "Auto-stop session after:"
             )) {
@@ -104,7 +232,7 @@ struct CaptionPane: View {
                 }
             }
 
-            settingsRow("") {
+            SettingsRow {
                 Text(L10n.string(
                     "settings.caption.note",
                     fallback: "Audio streams Mac → OpenAI directly; HushType is never in the middle. Spend counts against the daily cap on the Cloud tab."
@@ -136,16 +264,4 @@ struct CaptionPane: View {
         }
     }
 
-    private func settingsRow<Content: View>(
-        _ label: String,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 6) {
-            Text(label)
-                .frame(width: 170, alignment: .trailing)
-            content()
-                .frame(width: 300, alignment: .leading)
-        }
-        .frame(maxWidth: .infinity, alignment: .center)
-    }
 }

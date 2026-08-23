@@ -40,9 +40,7 @@
 
 "common.button.retry_cloud" = "Retry Cloud";
 
-/* New top-level status-menu submenu; distinct from speech-recognition language. */
 
-"menu.interface_language" = "Interface Language";
 
 /* Interface-language preference that follows ordered macOS app/process language preferences. */
 
@@ -186,13 +184,9 @@
 
 "menu.text_polish.validating" = "Text Polish (validating…)";
 
-/* Opens polish_rules.txt. */
 
-"menu.edit_polish_instructions" = "Edit Polish Instructions";
 
-/* Status-menu submenu for dictation engine and processing options. */
 
-"menu.dictation_settings" = "Dictation Settings";
 
 /* Starts the local iOS companion server. */
 
@@ -220,7 +214,7 @@
 
 /* Privacy/cost subtitle for local Live Caption. */
 
-"menu.live_caption.subtitle" = "Local transcription — free, on-device";
+"menu.live_caption.subtitle" = "Local transcription: free, on-device";
 
 /* Cloud/provider/cost marker subtitle; dollar glyph is retained. */
 
@@ -250,13 +244,9 @@
 
 "menu.live_translated_caption.stop" = "Stop Live Translated Caption";
 
-/* Opens live_caption.json. */
 
-"menu.live_caption.edit_settings" = "Edit Live Caption Settings";
 
-/* Opens translated-caption cloud settings. */
 
-"menu.live_translated_caption.settings" = "Translated Caption Settings…";
 
 /* Provider/framework subtitle for selected-text translation. */
 
@@ -278,9 +268,7 @@
 
 "menu.choice.auto" = "Auto";
 
-/* Dictation engine submenu and settings heading. */
 
-"menu.dictation_engine" = "Dictation Engine";
 
 /* Local dictation engine choice; model name is immutable. */
 
@@ -294,17 +282,15 @@
 
 "menu.engine.gemini_cloud" = "Gemini Cloud";
 
-/* Opens Dictation Engine Settings. */
 
-"menu.engine_settings" = "Engine Settings…";
 
 /* Recognition-language submenu; explicitly not interface language. */
 
-"menu.speech_to_text_language" = "Speech-to-Text Language";
+"menu.speech_to_text_language" = "Speech-to-Text Language:";
 
 /* Toggle for deterministic Chinese numeral conversion. */
 
-"menu.number_conversion" = "Number Conversion";
+"menu.number_conversion" = "Number Conversion:";
 
 /* Disabled explanation beneath Number Conversion. */
 
@@ -312,31 +298,27 @@
 
 /* Punctuation cleanup submenu. */
 
-"menu.punctuation_cleanup" = "Punctuation Cleanup";
+"menu.punctuation_cleanup" = "Punctuation Cleanup:";
 
 /* Punctuation mode that trims inline Chinese commas. */
 
-"menu.punctuation.soft" = "Soft — trim inline commas";
+"menu.punctuation.soft" = "Soft: trim inline commas";
 
 /* Punctuation mode that trims all configured marks. */
 
-"menu.punctuation.hard" = "Hard — trim all marks";
+"menu.punctuation.hard" = "Hard: trim all marks";
 
 /* Punctuation mode that preserves model output. */
 
-"menu.punctuation.off" = "Off — keep model output";
+"menu.punctuation.off" = "Off: keep model output";
 
-/* Disabled explanation beneath Punctuation Cleanup. */
 
-"menu.punctuation.subtitle" = "Trim Chinese over-punctuation";
 
 /* Toggle for the dictation state overlay. */
 
-"menu.floating_indicator" = "Show Floating Indicator";
+"menu.floating_indicator" = "Show floating indicator";
 
-/* Creates/opens dictionary.txt. */
 
-"menu.edit_dictionary" = "Edit Customized Dictionary";
 
 /* Dictionary subtitle before dictionary.txt is created. */
 
@@ -352,7 +334,7 @@
 
 /* Explains GPU-memory conflict between local caption and iOS server. */
 
-"alert.caption_conflict.stop_live_caption.message" = "Live Caption is running. Stop it before starting the iOS Server — they share GPU memory.";
+"alert.caption_conflict.stop_live_caption.message" = "Live Caption is running. Stop it before starting the iOS Server; they share GPU memory.";
 
 /* Resource-conflict alert title. */
 
@@ -360,11 +342,11 @@
 
 /* Explains GPU-memory conflict before local caption. */
 
-"alert.caption_conflict.stop_ios_server.local_message" = "The iOS Server is running. Stop it before starting Live Caption — they share GPU memory.";
+"alert.caption_conflict.stop_ios_server.local_message" = "The iOS Server is running. Stop it before starting Live Caption; they share GPU memory.";
 
 /* Explains GPU-memory conflict before cloud translated caption. */
 
-"alert.caption_conflict.stop_ios_server.translated_message" = "The iOS Server is running. Stop it before starting Live Translated Caption — they share GPU memory.";
+"alert.caption_conflict.stop_ios_server.translated_message" = "The iOS Server is running. Stop it before starting Live Translated Caption; they share GPU memory.";
 
 /* Shown when live_caption.json could not be created/opened. */
 
@@ -416,7 +398,7 @@
 
 /* Privacy-sensitive consent copy; do not broaden or weaken the data claim. */
 
-"alert.update_consent.message" = "HushType will connect to GitHub to check for new releases.\n\nNo personal data is sent — only a public API call to compare version numbers.";
+"alert.update_consent.message" = "HushType will connect to GitHub to check for new releases.\n\nNo personal data is sent; only a public API call is made to compare version numbers.";
 
 /* Explicitly authorizes the one-time GitHub network request. */
 
@@ -618,17 +600,11 @@
 
 "alert.cloud.safety.title" = "Gemini blocked this transcription";
 
-/* Dictation settings window title. */
 
-"window.dictation_engine_settings.title" = "Dictation Engine Settings";
 
-/* High-risk privacy architecture summary; preserve direct-to-provider/no-relay/no-HushType-server claims. */
 
-"settings.dictation.description" = "Choose where speech becomes text. Local is private and free. Cloud engines send audio directly to the provider using your own API key — no relay, no HushType server in the middle.";
 
-/* Dictation engine section heading. */
 
-"settings.dictation.engine_section" = "Engine";
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
@@ -666,17 +642,11 @@
 
 "settings.engine.cloud_unloads_local" = "While a cloud engine is selected the speech model stays unloaded. The iOS companion server always uses the local model.";
 
-/* HushType local cloud-spend guardrail heading; not a provider billing cap. */
 
-"settings.daily_spend.title" = "Daily spend warning";
 
-/* Local upload-block threshold label. */
 
-"settings.daily_spend.block_at" = "Block new cloud uploads at:";
 
-/* API-key settings section heading. */
 
-"settings.api_keys.title" = "API keys";
 
 /* Initial key-status placeholder. */
 
@@ -706,17 +676,11 @@
 
 "format.usd_total" = "$%1$.2f";
 
-/* Translated-caption settings window title. */
 
-"window.translated_caption_settings.title" = "Translated Caption Settings";
 
-/* High-risk privacy/billing copy; preserve direct path, no-middle claim, approximation, hourly amount, and user-owned billing account. */
 
-"settings.translated_caption.description" = "Real-time cloud translation via OpenAI's realtime translate endpoint. Audio streams Mac → OpenAI directly; HushType is never in the middle. Costs ~$2/hour against your own OpenAI API key.";
 
-/* Translated-caption options section heading. */
 
-"settings.translated_caption.options" = "Translation options";
 
 /* Cloud translated-caption target-language label. */
 
@@ -726,45 +690,29 @@
 
 "settings.translated_caption.show_source" = "Show source text above translation";
 
-/* Translated-caption cost-protection section heading. */
 
-"settings.cost_guardrails.title" = "Cost guardrails";
 
 /* Auto-stop duration control label. */
 
 "settings.cost_guardrails.auto_stop" = "Auto-stop session after:";
 
-/* Daily translated-caption warning threshold label. */
 
-"settings.cost_guardrails.daily_warning" = "Warn me when daily spend hits:";
 
-/* Initial translated-caption usage placeholder. */
 
-"settings.usage.placeholder" = "Today's usage: —";
 
 /* Resets translated-caption auto-stop and daily warning defaults. */
 
 "settings.reset_defaults" = "Reset cloud cost settings";
 
-/* Singular API key section heading. */
 
-"settings.api_key.title" = "API key";
 
-/* OpenAI key status without Status prefix. */
 
-"settings.key.loaded" = "✓ Key loaded";
 
-/* Empty OpenAI key status. */
 
-"settings.key.empty_cloud_disabled" = "Key empty — cloud features disabled";
 
-/* OpenAI key-format warning; prefix stays exact. */
 
-"settings.key.unusual_sk" = "Key format unusual (does not start with sk-) — passing through anyway";
 
-/* Wraps a localized key-status line. */
 
-"settings.key.status_format" = "Status: %1$@";
 
 /* Onboarding/permission-repair panel title and heading. */
 
@@ -956,7 +904,7 @@
 
 /* High-risk privacy claim: only audio is captured; screen contents never are. */
 
-"picker.system_audio.description" = "Choose which app's audio Live Caption should listen to. Only audio is captured — never screen contents.";
+"picker.system_audio.description" = "Choose which app's audio Live Caption should listen to. Only audio is captured; never screen contents.";
 
 /* Picker loading state. */
 
@@ -1220,7 +1168,7 @@
 
 /* Guardrail result; selected user content remains untouched. */
 
-"error.polish.code_detected" = "Selection looks like code — not polished.";
+"error.polish.code_detected" = "Selection looks like code; not polished.";
 
 /* Model result validation error. */
 
@@ -1276,7 +1224,7 @@
 
 /* High-risk privacy claim for on-device Text Polish. */
 
-"polish.card.privacy" = "On-device Apple Intelligence — nothing leaves your Mac.";
+"polish.card.privacy" = "On-device Apple Intelligence; nothing leaves your Mac.";
 
 /* Track-changes deletion legend. */
 
@@ -1300,7 +1248,7 @@
 
 /* High-risk opt-in/privacy/billing disclosure. Preserve exact data path, key visibility, approximate hourly cost, billing account, local fallback, and one-time behavior. Product naming needs review. */
 
-"alert.cloud_caption_disclosure.message" = "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Your API key — HushType never sees it\n• No HushType server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once.";
+"alert.cloud_caption_disclosure.message" = "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Uses your API key; HushType never sees it\n• No HushType server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once.";
 
 /* Accepts the one-time cloud disclosure. */
 
@@ -1320,7 +1268,7 @@
 
 /* Per-session privacy/billing disclosure; argument is provider. Preserve direct path, own-key, no-relay, and local warning semantics. */
 
-"alert.cloud_dictation_consent.base" = "HushType will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server — audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.";
+"alert.cloud_dictation_consent.base" = "HushType will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server; audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.";
 
 /* Provider-policy claim copied from current product source; preserve may/does-not distinction without embellishment. */
 
@@ -1474,6 +1422,78 @@
 
 "picker.autonym.it" = "Italiano";
 
-/* Initial dictation settings usage line before the async snapshot returns. */
 
-"settings.daily_usage.placeholder" = "Today's cloud usage: —";
+/* Unified Settings window title. */
+"settings.window.title" = "Settings";
+
+/* General Settings interface language row label. */
+"settings.general.language" = "Interface Language:";
+
+/* Follow-System value with the current system language. */
+"settings.general.language.value" = "Follow System (%1$@)";
+
+/* General Settings interface language behavior note. */
+"settings.general.language.note" = "Applied next launch. Menu bar, settings and the caption panel all follow this.";
+
+/* General Settings indicator row label. */
+"settings.general.indicator" = "Indicator:";
+
+/* General Settings floating indicator note. */
+"settings.general.indicator.note" = "The small \"Listening / Transcribing\" pill near the bottom of the screen.";
+
+/* General Settings About row label. */
+"settings.general.about" = "About:";
+
+/* Dictation customized dictionary row label. */
+"settings.dictation.dictionary" = "Customized Dictionary:";
+
+/* Dictation customized dictionary behavior note. */
+"settings.dictation.dictionary.note" = "One replacement per line. Applied after transcription, on every dictation engine including cloud.";
+
+/* Dictation punctuation cleanup note. */
+"settings.dictation.punctuation.note" = "Trims the over-eager Chinese punctuation the model inserts on pauses. Chinese text only.";
+
+/* Caption panel section title. */
+"settings.caption.panel_title" = "Caption Panel";
+
+/* Caption panel local/shared behavior subtitle. */
+"settings.caption.local_sub" = "Shared by both caption modes. Local caption runs on Qwen3: free, nothing leaves the Mac.";
+
+/* Caption panel default size row label. */
+"settings.caption.panel_size" = "Default caption panel size:";
+
+/* Caption panel next-start position reset checkbox. */
+"settings.caption.reset_position" = "Reset panel position on next Live Caption start";
+
+/* Caption panel advanced tuning row label. */
+"settings.caption.advanced" = "Advanced tuning:";
+
+/* Caption panel advanced tuning note. */
+"settings.caption.advanced.note" = "VAD thresholds, maxTokens and the MLX cache cap stay in the file, out of the UI.";
+
+/* Text Polish section title. */
+"settings.text.polish_title" = "Text Polish";
+
+/* Text Polish on-device subtitle. */
+"settings.text.polish_sub" = "Apple Foundation Models · on-device";
+
+/* Text Polish enable checkbox. */
+"settings.text.polish.cb" = "Proofread selection on double-tap Right ⌥";
+
+/* Text Polish instructions row label. */
+"settings.text.instructions" = "Polish instructions:";
+
+/* Text Polish instructions note. */
+"settings.text.instructions.note" = "Plain-text instructions sent with every proofread request.";
+
+/* Text Translation on-device subtitle. */
+"settings.text.translation_sub" = "Apple Translation Framework · on-device";
+
+/* Text Translation enable checkbox. */
+"settings.text.translation.cb" = "Translate selection on tap Right ⌥";
+
+/* Text Translation target row label. */
+"settings.text.translate_to" = "Translate to:";
+
+/* Shared Right Option behavior note. */
+"settings.text.note" = "Auto picks the opposite of the detected language. Both features share the Right ⌥ key: one tap translates, two taps proofread.";

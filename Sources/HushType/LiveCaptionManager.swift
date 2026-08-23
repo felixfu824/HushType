@@ -128,7 +128,7 @@ final class LiveCaptionManager {
         log.info("Tuning: maxTokens=\(self.tuning.maxTokens, privacy: .public) cacheLimitMB=\(self.tuning.mlxCacheLimitMB, privacy: .public) vadOnset=\(self.tuning.vadOnset, privacy: .public) backpressure=\(self.tuning.backpressureMaxPending, privacy: .public)")
 
         if tuning.resetPanelOnNextStart {
-            UserDefaults.standard.removeObject(forKey: "hushtype.liveCaption.panelFrame")
+            UserDefaults.standard.removeObject(forKey: "hushtype.liveCaption.panelFrame.v3")
             panel?.close()
             panel = nil
             LiveCaptionTuning.clearResetFlag()
