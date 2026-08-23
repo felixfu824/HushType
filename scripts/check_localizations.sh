@@ -239,10 +239,6 @@ def catalog_value(e, locale):
         v = v.replace("雲端即時字幕", "即時翻譯字幕")
     if (t, k) == ("Localizable", "notification.caption.auto_stop.title"):  # D3
         v = "Live Translated Caption auto-stopped" if locale == "en" else "即時翻譯字幕已自動停止"
-    if (t, k) == ("Localizable", "alert.caption.cloud_key_missing.message"):  # D4
-        v = ("Live Translated Caption needs an OpenAI API key. Open Translated Caption Settings and paste your key into openai.json."
-             if locale == "en" else
-             "即時翻譯字幕需要 OpenAI API 金鑰。請開啟「翻譯字幕設定」，並將金鑰貼到 openai.json。")
     if (t, k) == ("Templates", "template.openai.overview"):  # D5
         v = v.replace("Live Caption Engine settings", "Translated Caption Settings")
         v = v.replace("即時字幕引擎設定", "翻譯字幕設定")

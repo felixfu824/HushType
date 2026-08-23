@@ -413,7 +413,7 @@ extension CloudUsageTracker {
         return L10n.plural(
             "usage.daily_breakdown",
             count: dictationMinutes,
-            fallback: "Today's cloud usage: %1$@ total — dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)",
+            fallback: "Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)",
             arguments: [
                 formatDollars(snapshot.dayDollars),
                 formatDollars(snapshot.dictationDollars),

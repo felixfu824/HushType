@@ -279,19 +279,21 @@ final class LocalizationTests: XCTestCase {
         }
     }
 
-    func testPluralWithExplicitArgumentsInBothLanguages() {
+    func testDailyBreakdownWithExplicitArgumentsInBothLanguages() {
         defaults.set("en", forKey: "hushtype.interfaceLanguage")
         L10n.resetLaunchStateForTests()
         underBothStrategies { _ in
-            XCTAssertEqual(
-                L10n.plural(
-                    "settings.usage.today",
-                    count: 3,
-                    fallback: "Today's usage: %1$@ (%2$d min)",
-                    arguments: ["$0.12", 3]
-                ),
-                "Today's usage: $0.12 (3 min)"
-            )
+            for count in [1, 3] {
+                XCTAssertEqual(
+                    L10n.plural(
+                        "usage.daily_breakdown",
+                        count: count,
+                        fallback: "Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)",
+                        arguments: ["$0.44", "$0.12", count, "$0.32", 10]
+                    ),
+                    "Today's cloud usage: $0.44 total; dictation $0.12 (\(count) min), translated caption $0.32 (10 min)"
+                )
+            }
         }
 
         defaults.set("zh-Hant-TW", forKey: "hushtype.interfaceLanguage")
@@ -299,12 +301,12 @@ final class LocalizationTests: XCTestCase {
         underBothStrategies { _ in
             XCTAssertEqual(
                 L10n.plural(
-                    "settings.usage.today",
+                    "usage.daily_breakdown",
                     count: 3,
-                    fallback: "Today's usage: %1$@ (%2$d min)",
-                    arguments: ["US$0.12", 3]
+                    fallback: "Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)",
+                    arguments: ["US$0.44", "US$0.12", 3, "US$0.32", 10]
                 ),
-                "今天的費用：US$0.12（3 分鐘）"
+                "今天的雲端費用：合計 US$0.44；語音輸入 US$0.12（3 分鐘），即時翻譯字幕 US$0.32（10 分鐘）"
             )
         }
     }

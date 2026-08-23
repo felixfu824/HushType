@@ -31,9 +31,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>l</string>
 			<key>one</key>
-			<string>Today's cloud usage: %1$@ total — dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
+			<string>Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
 			<key>other</key>
-			<string>Today's cloud usage: %1$@ total — dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
+			<string>Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
 		</dict>
 	</dict>
 

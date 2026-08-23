@@ -1025,13 +1025,13 @@ final class LiveCaptionManager {
         )
         alert.informativeText = L10n.string(
             "alert.caption.cloud_key_missing.message",
-            fallback: "Cloud Live Caption needs an OpenAI API key. Open Live Caption → Engine Settings and paste your key into openai.json."
+            fallback: "Live Translated Caption needs an OpenAI API key. Open the Cloud pane in Settings and paste your key into openai.json."
         )
         alert.addButton(withTitle: L10n.string("common.button.open_settings", fallback: "Open Settings"))
         alert.addButton(withTitle: L10n.string("common.button.cancel", fallback: "Cancel"))
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            LiveCaptionEngineSettingsWindowController.shared.presentAndFocus()
+            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
         }
     }
 
@@ -1051,7 +1051,7 @@ final class LiveCaptionManager {
         if response == .alertFirstButtonReturn {
             OpenAIKeyStore.openInDefaultEditor()
         } else {
-            LiveCaptionEngineSettingsWindowController.shared.presentAndFocus()
+            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
         }
     }
 

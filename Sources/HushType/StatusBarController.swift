@@ -589,28 +589,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         )
         sub.addItem(liveTranslatedChangeSourceItem)
 
-        sub.addItem(.separator())
-
-        // Translated Caption Settings — cloud-only options: target language,
-        // source-line toggle, cost guardrails, OpenAI key file.
-        let translatedSettingsItem = NSMenuItem(
-            title: L10n.string(
-                "menu.live_translated_caption.settings",
-                fallback: "Translated Caption Settings…"
-            ),
-            action: #selector(openLiveCaptionEngineSettings),
-            keyEquivalent: ""
-        )
-        translatedSettingsItem.target = self
-        translatedSettingsItem.attributedTitle = NSAttributedString(
-            string: L10n.string(
-                "menu.live_translated_caption.settings",
-                fallback: "Translated Caption Settings…"
-            ),
-            attributes: subtitleAttributes
-        )
-        sub.addItem(translatedSettingsItem)
-
         return sub
     }
 
@@ -708,14 +686,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             dictationEngineMenu.addItem(item)
             dictationEngineItems.append(item)
         }
-        dictationEngineMenu.addItem(.separator())
-        let settingsItem = NSMenuItem(
-            title: L10n.string("menu.engine_settings", fallback: "Engine Settings…"),
-            action: #selector(openDictationEngineSettings),
-            keyEquivalent: ""
-        )
-        settingsItem.target = self
-        dictationEngineMenu.addItem(settingsItem)
         updateDictationEngineCheckmarks()
         sub.addItem(engineItem)
 
@@ -834,8 +804,17 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     // MARK: - Dictation Engine
 
     @objc private func openSettings() {
-        Task { @MainActor in
-            HushTypeSettingsWindowController.shared.presentAndFocus()
+        Task { @MainActor [weak self] in
+            guard let self else { return }
+            HushTypeSettingsWindowController.shared.presentAndFocus(
+                onSwitchEngine: { [weak self] engine in
+                    guard let self else { return }
+                    self.onDictationEngineChanged?(engine)
+                    self.updateDictationEngineCheckmarks()
+                    self.refreshStatusLine()
+                    self.updateUnloadMenuItem(for: self.currentState)
+                }
+            )
         }
     }
 
@@ -846,21 +825,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         updateDictationEngineCheckmarks()
         refreshStatusLine()
         updateUnloadMenuItem(for: currentState)
-    }
-
-    @objc private func openDictationEngineSettings() {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            DictationEngineSettingsWindowController.shared.presentAndFocus(
-                onSwitchEngine: { [weak self] engine in
-                    guard let self else { return }
-                    self.onDictationEngineChanged?(engine)
-                    self.updateDictationEngineCheckmarks()
-                    self.refreshStatusLine()
-                    self.updateUnloadMenuItem(for: self.currentState)
-                }
-            )
-        }
     }
 
     private func updateDictationEngineCheckmarks() {
@@ -1112,15 +1076,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Tracks state for the Live Caption mutex check.
     func setIOSServerActive(_ active: Bool) {
         iosServerActive = active
-    }
-
-    @objc private func openLiveCaptionEngineSettings() {
-        // Lazy-instantiate via the singleton accessor. Window retains itself
-        // (`isReleasedWhenClosed = false`) so reopening from this menu just
-        // re-foregrounds the same window with its persisted frame.
-        Task { @MainActor in
-            LiveCaptionEngineSettingsWindowController.shared.presentAndFocus()
-        }
     }
 
     @objc private func editLiveCaptionSettings() {

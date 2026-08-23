@@ -80,6 +80,28 @@
 
 "settings.tab.cloud" = "Cloud";
 
+/* Phase 2 unified Settings pane copy. */
+
+"settings.dictation.engine_label" = "Engine:";
+
+"settings.caption.cloud_sub" = "OpenAI realtime · ~$2/hour · these three settings apply to translated caption only";
+
+"settings.caption.note" = "Audio streams Mac → OpenAI directly; HushType is never in the middle. Spend counts against the daily cap on the Cloud tab.";
+
+"settings.cloud.cap" = "Daily spend cap:";
+
+"settings.cloud.effect.dictation" = "Stops uploading at the cap. No further cloud requests that day.";
+
+"settings.cloud.effect.caption" = "Notifies at the cap. The running session is not interrupted.";
+
+"settings.cloud.key.openai" = "OpenAI key:";
+
+"settings.cloud.key.gemini" = "Gemini key:";
+
+"settings.cloud.key.note" = "Before loading, status shows a placeholder. Loaded and unusual-format status are shared. Empty OpenAI disables OpenAI cloud features; empty Gemini disables Gemini cloud dictation.";
+
+"settings.cloud.reset_cost.note" = "Resets translated-caption auto-stop to 60 minutes and the daily spend cap to $5.00. Other settings are unchanged.";
+
 /* Informational alert title after changing the next-launch interface language. */
 
 "alert.language_saved.title" = "Language Saved";
@@ -534,7 +556,7 @@
 
 /* Argument 1 is provider name. */
 
-"alert.cloud.no_key.message" = "Add your %1$@ API key in Dictation Engine Settings before using cloud dictation.";
+"alert.cloud.no_key.message" = "Add your %1$@ API key in the Cloud pane in Settings before using cloud dictation.";
 
 /* Argument 1 is provider name; do not imply HushType rejected it. */
 
@@ -610,7 +632,7 @@
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
-"settings.engine.local.detail" = "Private · Free · ~2.1 GB RAM when loaded";
+"settings.engine.local.detail" = "Private · Free · ~2.1 GB RAM when loaded (1 GB cache cap)";
 
 /* Argument 1 is a rate string with exact three-decimal USD precision. */
 
@@ -658,7 +680,7 @@
 
 /* Initial key-status placeholder. */
 
-"settings.key.status.placeholder" = "Status: —";
+"settings.key.status.placeholder" = "Status: Not loaded yet";
 
 /* Provider API-key load status. */
 
@@ -666,15 +688,15 @@
 
 /* Empty OpenAI key state. */
 
-"settings.key.status.openai_empty" = "Status: Key empty — OpenAI cloud features disabled";
+"settings.key.status.openai_empty" = "Status: Key empty; OpenAI cloud features disabled";
 
 /* Empty Gemini key state. */
 
-"settings.key.status.gemini_empty" = "Status: Key empty — Gemini cloud dictation disabled";
+"settings.key.status.gemini_empty" = "Status: Key empty; Gemini cloud dictation disabled";
 
 /* Warns that an unusual key is not rejected locally. */
 
-"settings.key.status.unusual" = "Status: Key format unusual — passing through anyway";
+"settings.key.status.unusual" = "Status: Key format unusual; passing through anyway";
 
 /* Cloud rate with exactly three decimals; do not use generic currency rounding. */
 
@@ -722,7 +744,7 @@
 
 /* Resets translated-caption auto-stop and daily warning defaults. */
 
-"settings.reset_defaults" = "Reset to defaults";
+"settings.reset_defaults" = "Reset cloud cost settings";
 
 /* Singular API key section heading. */
 
@@ -1090,7 +1112,7 @@
 
 /* Source breadcrumb no longer exactly matches current menu labels and source says Cloud Live Caption rather than Live Translated Caption. Safest literal draft; product behavior/naming must be resolved before implementation. */
 
-"alert.caption.cloud_key_missing.message" = "Live Translated Caption needs an OpenAI API key. Open Translated Caption Settings and paste your key into openai.json.";
+"alert.caption.cloud_key_missing.message" = "Live Translated Caption needs an OpenAI API key. Open the Cloud pane in Settings and paste your key into openai.json.";
 
 /* Provider authentication failure title. */
 

@@ -80,6 +80,28 @@
 
 "settings.tab.cloud" = "雲端";
 
+/* Phase 2 unified Settings pane copy. */
+
+"settings.dictation.engine_label" = "引擎：";
+
+"settings.caption.cloud_sub" = "OpenAI realtime · 約每小時 US$2 · 以下三項只作用於翻譯字幕";
+
+"settings.caption.note" = "音訊會直接從 Mac 串流至 OpenAI，HushType 絕不介入其中。費用計入「雲端」分頁的每日上限。";
+
+"settings.cloud.cap" = "每日費用上限：";
+
+"settings.cloud.effect.dictation" = "達到上限即停止上傳，當天不再送出雲端請求。";
+
+"settings.cloud.effect.caption" = "達到上限時發出通知，不中斷進行中的工作階段。";
+
+"settings.cloud.key.openai" = "OpenAI 金鑰：";
+
+"settings.cloud.key.gemini" = "Gemini 金鑰：";
+
+"settings.cloud.key.note" = "載入前顯示占位狀態。已載入與格式不尋常為共用狀態。OpenAI 金鑰空白會停用 OpenAI 雲端功能；Gemini 金鑰空白會停用 Gemini 雲端語音輸入。";
+
+"settings.cloud.reset_cost.note" = "將即時翻譯字幕的自動停止時間重設為 60 分鐘，並將每日費用上限重設為 US$5.00。其他設定不變。";
+
 /* Informational alert title after changing the next-launch interface language. */
 
 "alert.language_saved.title" = "語言已儲存";
@@ -534,7 +556,7 @@
 
 /* Argument 1 is provider name. */
 
-"alert.cloud.no_key.message" = "使用雲端語音輸入前，請先在「語音輸入引擎設定」中加入你的 %1$@ API 金鑰。";
+"alert.cloud.no_key.message" = "使用雲端語音輸入前，請先在「設定」的「雲端」分頁中加入你的 %1$@ API 金鑰。";
 
 /* Argument 1 is provider name; do not imply HushType rejected it. */
 
@@ -610,7 +632,7 @@
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
-"settings.engine.local.detail" = "隱私 · 免費 · 載入時約佔 2.1 GB RAM";
+"settings.engine.local.detail" = "隱私 · 免費 · 載入時約佔 2.1 GB RAM（快取上限 1 GB）";
 
 /* Argument 1 is a rate string with exact three-decimal USD precision. */
 
@@ -658,7 +680,7 @@
 
 /* Initial key-status placeholder. */
 
-"settings.key.status.placeholder" = "狀態：—";
+"settings.key.status.placeholder" = "狀態：尚未載入";
 
 /* Provider API-key load status. */
 
@@ -666,15 +688,15 @@
 
 /* Empty OpenAI key state. */
 
-"settings.key.status.openai_empty" = "狀態：金鑰空白 — OpenAI 雲端功能已停用";
+"settings.key.status.openai_empty" = "狀態：金鑰空白；OpenAI 雲端功能已停用";
 
 /* Empty Gemini key state. */
 
-"settings.key.status.gemini_empty" = "狀態：金鑰空白 — Gemini 雲端語音輸入已停用";
+"settings.key.status.gemini_empty" = "狀態：金鑰空白；Gemini 雲端語音輸入已停用";
 
 /* Warns that an unusual key is not rejected locally. */
 
-"settings.key.status.unusual" = "狀態：金鑰格式不常見 — 仍會照原樣使用";
+"settings.key.status.unusual" = "狀態：金鑰格式不常見；仍會照原樣使用";
 
 /* Cloud rate with exactly three decimals; do not use generic currency rounding. */
 
@@ -710,7 +732,7 @@
 
 /* Auto-stop duration control label. */
 
-"settings.cost_guardrails.auto_stop" = "經過以下時間後自動停止工作階段：";
+"settings.cost_guardrails.auto_stop" = "自動停止時間：";
 
 /* Daily translated-caption warning threshold label. */
 
@@ -722,7 +744,7 @@
 
 /* Resets translated-caption auto-stop and daily warning defaults. */
 
-"settings.reset_defaults" = "重設為預設值";
+"settings.reset_defaults" = "重設雲端費用設定";
 
 /* Singular API key section heading. */
 
@@ -1090,7 +1112,7 @@
 
 /* Source breadcrumb no longer exactly matches current menu labels and source says Cloud Live Caption rather than Live Translated Caption. Safest literal draft; product behavior/naming must be resolved before implementation. */
 
-"alert.caption.cloud_key_missing.message" = "即時翻譯字幕需要 OpenAI API 金鑰。請開啟「翻譯字幕設定」，並將金鑰貼到 openai.json。";
+"alert.caption.cloud_key_missing.message" = "即時翻譯字幕需要 OpenAI API 金鑰。請開啟「設定」的「雲端」分頁，並將金鑰貼到 openai.json。";
 
 /* Provider authentication failure title. */
 
