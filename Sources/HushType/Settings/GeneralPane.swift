@@ -72,7 +72,7 @@ struct GeneralPane: View {
     @StateObject private var model = GeneralSettingsModel()
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: SettingsGrid.rowSpacing) {
             SettingsRow(L10n.string(
                 "settings.general.language",
                 fallback: "Interface Language:"
@@ -121,10 +121,7 @@ struct GeneralPane: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
 
-            Divider()
-                .frame(width: 476)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 12)
+            SettingsDivider()
 
             SettingsRow(L10n.string(
                 "settings.general.indicator",
@@ -145,10 +142,7 @@ struct GeneralPane: View {
                 }
             }
 
-            Divider()
-                .frame(width: 476)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 12)
+            SettingsDivider()
 
             SettingsRow(L10n.string(
                 "settings.general.about",
@@ -157,8 +151,7 @@ struct GeneralPane: View {
                 Text("HushType \(appVersion)")
             }
         }
-        .padding(.vertical, 20)
-        .frame(width: 720)
+        .settingsPaneLayout()
     }
 
     static func makeSettingsPane() -> AppSettings.Pane<GeneralPane> {

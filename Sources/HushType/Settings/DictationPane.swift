@@ -120,7 +120,7 @@ struct DictationPane: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: SettingsGrid.rowSpacing) {
             SettingsRow(L10n.string("settings.dictation.engine_label", fallback: "Engine:")) {
                 Picker("", selection: $model.engine) {
                     engineChoice(
@@ -155,6 +155,7 @@ struct DictationPane: View {
                 .labelsHidden()
                 .pickerStyle(.radioGroup)
             }
+            .padding(.bottom, 8)
 
             SettingsRow(L10n.string("settings.engine.openai_model", fallback: "OpenAI model:")) {
                 Picker("", selection: $model.openAIModel) {
@@ -185,6 +186,7 @@ struct DictationPane: View {
                 .labelsHidden()
                 .disabled(model.engine != .gemini)
             }
+            .padding(.bottom, 8)
 
             SettingsRow {
                 Text(L10n.string(
@@ -196,10 +198,7 @@ struct DictationPane: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
 
-            Divider()
-                .frame(width: 476)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 12)
+            SettingsDivider()
 
             SettingsRow(L10n.string(
                 "menu.speech_to_text_language",
@@ -258,10 +257,7 @@ struct DictationPane: View {
                 }
             }
 
-            Divider()
-                .frame(width: 476)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 12)
+            SettingsDivider()
 
             SettingsRow(L10n.string(
                 "settings.dictation.dictionary",
@@ -279,7 +275,6 @@ struct DictationPane: View {
                         model.openDictionary()
                     }
                     .buttonStyle(.bordered)
-                    .controlSize(.small)
                     Text(model.dictionaryStatus)
                         .font(.caption)
                         .foregroundStyle(.secondary)
@@ -293,8 +288,7 @@ struct DictationPane: View {
                 }
             }
         }
-        .padding(.vertical, 20)
-        .frame(width: 720)
+        .settingsPaneLayout()
         .onAppear { model.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()

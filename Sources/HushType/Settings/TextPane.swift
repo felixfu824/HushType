@@ -14,7 +14,7 @@ struct TextPane: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: SettingsGrid.rowSpacing) {
             SettingsSectionHeader(
                 title: L10n.string("settings.text.polish_title", fallback: "Text Polish"),
                 subtitle: L10n.string(
@@ -42,6 +42,7 @@ struct TextPane: View {
                     Button(L10n.string("common.button.open_in_textedit", fallback: "Open in TextEdit")) {
                         model.editPolishInstructions()
                     }
+                    .buttonStyle(.bordered)
                     Text(L10n.string(
                         "settings.text.instructions.note",
                         fallback: "Plain-text instructions sent with every proofread request."
@@ -52,7 +53,7 @@ struct TextPane: View {
                 }
             }
 
-            Divider().padding(.vertical, 10)
+            SettingsDivider()
 
             SettingsSectionHeader(
                 title: L10n.string("menu.text_translation", fallback: "Text Translation"),
@@ -90,6 +91,7 @@ struct TextPane: View {
                 .labelsHidden()
                 .disabled(!model.translationEnabled)
             }
+            .padding(.bottom, 8)
 
             SettingsRow {
                 Text(L10n.string(
@@ -101,8 +103,7 @@ struct TextPane: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 20)
-        .frame(width: 720)
+        .settingsPaneLayout()
         .onAppear { model.refreshFromConfig() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refreshFromConfig(polishAvailability: TextPolisher.isAvailableCached)

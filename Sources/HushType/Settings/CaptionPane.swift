@@ -104,7 +104,7 @@ struct CaptionPane: View {
     ]}
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: SettingsGrid.rowSpacing) {
             SettingsSectionHeader(
                 title: L10n.string(
                     "settings.caption.panel_title",
@@ -168,7 +168,6 @@ struct CaptionPane: View {
                         model.openAdvancedTuning()
                     }
                     .buttonStyle(.bordered)
-                    .controlSize(.small)
                     Text(L10n.string(
                         "settings.caption.advanced.note",
                         fallback: "VAD thresholds, maxTokens and the MLX cache cap stay in the file, out of the UI."
@@ -179,10 +178,7 @@ struct CaptionPane: View {
                 }
             }
 
-            Divider()
-                .frame(width: 476)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.vertical, 12)
+            SettingsDivider()
 
             SettingsSectionHeader(
                 title: L10n.string(
@@ -231,6 +227,7 @@ struct CaptionPane: View {
                     .monospacedDigit()
                 }
             }
+            .padding(.bottom, 8)
 
             SettingsRow {
                 Text(L10n.string(
@@ -242,8 +239,7 @@ struct CaptionPane: View {
                 .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(.vertical, 20)
-        .frame(width: 720)
+        .settingsPaneLayout()
         .onAppear { model.refresh() }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()
