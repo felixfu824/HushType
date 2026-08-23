@@ -275,6 +275,15 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         dictationSettingsItem.submenu = buildDictationSettingsSubmenu()
         menu.addItem(dictationSettingsItem)
 
+        let settingsItem = NSMenuItem(
+            title: L10n.string("menu.settings", fallback: "Settings…"),
+            action: #selector(openSettings),
+            keyEquivalent: ","
+        )
+        settingsItem.keyEquivalentModifierMask = [.command]
+        settingsItem.target = self
+        menu.addItem(settingsItem)
+
         menu.addItem(.separator())
 
         // iOS Server toggle
@@ -823,6 +832,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     }
 
     // MARK: - Dictation Engine
+
+    @objc private func openSettings() {
+        Task { @MainActor in
+            HushTypeSettingsWindowController.shared.presentAndFocus()
+        }
+    }
 
     @objc private func dictationEngineSelected(_ sender: NSMenuItem) {
         guard let raw = sender.representedObject as? String,

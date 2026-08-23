@@ -64,6 +64,22 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "介面語言會在你下次開啟 HushType 時套用";
 
+/* Opens the unified five-pane HushType Settings window. */
+
+"menu.settings" = "設定…";
+
+/* Unified Settings toolbar pane titles. */
+
+"settings.tab.general" = "一般";
+
+"settings.tab.dictation" = "語音輸入";
+
+"settings.tab.caption" = "字幕";
+
+"settings.tab.text" = "文字";
+
+"settings.tab.cloud" = "雲端";
+
 /* Informational alert title after changing the next-launch interface language. */
 
 "alert.language_saved.title" = "語言已儲存";

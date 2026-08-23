@@ -64,6 +64,22 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "Language applies the next time you open HushType";
 
+/* Opens the unified five-pane HushType Settings window. */
+
+"menu.settings" = "Settings…";
+
+/* Unified Settings toolbar pane titles. */
+
+"settings.tab.general" = "General";
+
+"settings.tab.dictation" = "Dictation";
+
+"settings.tab.caption" = "Caption";
+
+"settings.tab.text" = "Text";
+
+"settings.tab.cloud" = "Cloud";
+
 /* Informational alert title after changing the next-launch interface language. */
 
 "alert.language_saved.title" = "Language Saved";
