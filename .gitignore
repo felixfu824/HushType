@@ -10,10 +10,10 @@ iOS/HushType.xcodeproj/
 iOS/build/
 xcuserdata/
 
-# Local transient docs (not for public repo)
+# Local agent and transient docs (not for public repo)
 HANDOVER.md
-
-# Canonical agent context is tracked: AGENTS.md points every agent to CLAUDE.md.
+CLAUDE.md
+AGENTS.md
 
 # Workstream folders and docs (local planning, not for public repo)
 Product_WS/
