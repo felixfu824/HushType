@@ -132,7 +132,7 @@ iOS（透過你的 Mac 作為伺服器）：
 
 DMG 為完全獨立版本，OpenCC 及所有相依套件皆已內含。不需要 Homebrew、不需要終端機指令。
 
-> **iOS 伺服器支援：** DMG 也包含選單列中的 iOS 伺服器切換功能。需要額外安裝 Python 3 及相關套件，參見下方 [iOS 安裝指南](#安裝指南iosiphone--mac-伺服器)。若缺少相依套件，App 會顯示錯誤訊息及所需的 `pip3 install` 指令。
+> **iOS 伺服器支援（尚未測試）：** DMG 也包含 iOS 伺服器控制，位於 **設定… → iOS**。這項功能已明確標示為尚未測試，需要額外安裝 Python 3 及相關套件，參見下方 [iOS 安裝指南](#安裝指南iosiphone--mac-伺服器)。若缺少相依套件，App 會顯示錯誤訊息及所需的 `pip3 install` 指令。
 
 ### 方案 B：從原始碼編譯
 
@@ -214,20 +214,16 @@ make install
 - **輕按 Right Option（<0.3 秒）**：選取文字後輕按，浮動卡片顯示 Apple Translation Framework 翻譯結果。詳見下方[文字翻譯](#選用功能文字翻譯)。
 - **雙擊 Right Option**：選取文字後雙擊，就地校對並替換。詳見下方 [Text Polish](#選用功能text-polishmacos-26)。
 
-**選單列：**
+**設定視窗（選單列 → 設定…）：**
 
-- **語音輸入設定**（子選單，集中所有聽寫相關設定）：
-  - **語音輸入引擎**：本機（Qwen3-ASR）/ OpenAI / Gemini，含「引擎設定…」視窗（見下方[雲端語音輸入](#選用功能雲端語音輸入openai--gemini)）
-  - **語音轉文字語言**：Auto / English / 中文 / 日本語（辨識語言，非介面語言）
-  - **Number Conversion**：中文數字 → 阿拉伯數字（預設開啟）
-  - **標點清理**：溫和 / 強力 / 關閉（預設溫和）
-  - **Show Floating Indicator**：切換指示條（預設開啟）
-  - **Edit Customized Dictionary**：`~/Library/Application Support/HushType/dictionary.txt`，`source -> target` 一行一條，存檔自動熱重載
-- **Interface Language（介面語言）**：跟隨系統 / English / 繁體中文（台灣）（預設跟隨系統，下次啟動生效）
-- **Text Translation**：啟用輕按翻譯
-- **Text Polish (double-tap ⌥)**：開關雙擊校對（macOS 26+，預設開啟）
-- **Edit Polish Instructions**：`polish_rules.txt`，你自己的校對規則，存檔自動熱重載
-- **Unload Speech-to-Text Model**：一鍵釋放本機模型記憶體；同一選單可重新載入（約 3 秒冷啟動）
+- **一般**：介面語言、浮動指示條與快捷鍵
+- **語音輸入**：本機 / OpenAI / Gemini 引擎與模型、辨識語言、Number Conversion、標點清理及自訂字典
+- **字幕**：字幕面板、Live Translated Caption 目標語言與自動停止時間
+- **文字**：Text Polish、`polish_rules.txt` 及 Text Translation
+- **雲端**：每日費用上限、今日用量，以及 OpenAI / Gemini 金鑰檔案
+- **iOS**：尚未測試的 iOS 伺服器控制
+
+選單列仍提供 Live Caption、Live Translated Caption、Text Translation、Text Polish 的快速開關，以及 **Unload Speech-to-Text Model**，可一鍵釋放本機模型記憶體並從同一選單重新載入（約 3 秒冷啟動）。
 
 到此結束。預設模式不需要伺服器、不需要網路、不需要設定。
 
@@ -236,8 +232,8 @@ make install
 同一顆 Right ⌥、同一套繁中後處理，但轉錄改由 OpenAI 或 Gemini 完成，**模型記憶體歸零**，品質同級或更好，代價是每句多幾秒的網路延遲與依時長計費（Gemini Free tier：$0）。
 
 1. **取得金鑰：** OpenAI 在 [platform.openai.com/api-keys](https://platform.openai.com/api-keys)；Gemini 在 [aistudio.google.com/apikey](https://aistudio.google.com/apikey)（有免費方案）。
-2. **填入金鑰：** 選單列 → **語音輸入設定 → 語音輸入引擎 → 引擎設定…** → 開啟對應的 `openai.json` / `gemini.json`，把金鑰貼進 `api_key` 欄位。金鑰留空 = 雲端功能完全停用。
-3. **選擇引擎與模型：** 同一個設定視窗切換 本機 / OpenAI / Gemini。預設模型：OpenAI `gpt-4o-mini-transcribe`（可改選 `gpt-transcribe`）；Gemini `gemini-3.5-flash-lite`（經濟，Free tier 可用），可改選 `gemini-3.7-flash`（品質）。
+2. **填入金鑰：** 選單列 → **設定… → 雲端** → 開啟對應的 `openai.json` / `gemini.json`，把金鑰貼進 `api_key` 欄位。金鑰留空 = 雲端功能完全停用。
+3. **選擇引擎與模型：** 選單列 → **設定… → 語音輸入** → 切換本機 / OpenAI / Gemini。預設模型：OpenAI `gpt-4o-mini-transcribe`（可改選 `gpt-transcribe`）；Gemini `gemini-3.5-flash-lite`（經濟，Free tier 可用），可改選 `gemini-3.7-flash`（品質）。
 4. **知情同意與護欄：** 每個工作階段第一次雲端轉錄前會出現同意視窗，說明音訊將直接從你的 Mac 傳給供應商（沒有轉送伺服器）。每日花費警示（預設 $5，可調 0.5-100）會在上傳**之前**就擋下超標的請求並鎖定當日雲端，「重設今日計數」可解鎖；錄音過長也會在上傳前被擋下。網路逾時（180 秒）會給你三個明確選項：**重試雲端 / 這次用本機 / 取消**，音訊都還在，不會憑空消失，也絕不暗中重試。
 5. **引擎選擇跨重啟保留**（刻意設計）：常用雲端的人，下次啟動本機模型完全不載入，模型記憶體從 0 開始。切回本機引擎時自動重新載入模型。
 
@@ -256,10 +252,10 @@ make install
 **Live Translated Caption（雲端，約 $2/小時，計費於你自己的 OpenAI 帳戶）：**
 
 1. 在 https://platform.openai.com/api-keys 取得 API key。
-2. 選單列 → **Live Translated Caption → Translated Caption Settings…** → 點 **Open file in TextEdit**，把 key 貼進 `openai.json` 的 `api_key` 欄位。
-3. 在同一個設定視窗選目標語言（預設英文；另支援 13 種，含 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch）。
+2. 選單列 → **設定… → 雲端** → 在 OpenAI 金鑰欄位點 **在 TextEdit 中開啟檔案**，把 key 貼進 `openai.json` 的 `api_key` 欄位。
+3. 前往 **設定… → 字幕** 選目標語言（預設英文；另支援 13 種，含 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch）。
 4. 選單列 → **Live Translated Caption → From Microphone**（或 **From System Audio…**）開始。第一次會跳一次性免責說明，接受一次後不再跳。
-5. 字幕面板抬頭會出現費用條（例如 `12:34 · $0.42`），即時顯示工作階段時間與累積花費。自動停止分鐘數與日花費上限警示都在同一個設定視窗可調。
+5. 字幕面板抬頭會出現費用條（例如 `12:34 · $0.42`），即時顯示工作階段時間與累積花費。自動停止分鐘數在 **設定… → 字幕** 調整，每日花費上限則在 **設定… → 雲端** 調整。
 
 **快捷鍵（兩種共用）：** Right ⌘ + / 切換**上次用過的那種模式**。首次預設本機 Live Caption。要精確選擇哪個模式 + 哪種音源，從選單列點選是最直接的方式。
 
@@ -327,8 +323,8 @@ ipconfig getifaddr en0
 
 ### 步驟 3：在 Mac 上啟動 iOS 伺服器
 
-**方法 A，從 HushType 選單列（推薦）：**
-點擊選單列的 HushType 圖示 → "Start iOS Server"
+**方法 A，從 HushType 設定（尚未測試）：**
+點擊選單列的 HushType 圖示 → **設定… → iOS → 啟動 iOS 伺服器（尚未測試）**
 
 **方法 B，從終端機：**
 ```bash
@@ -405,7 +401,7 @@ open HushType.xcodeproj
 ### 設定完成後：日常使用
 
 每天只需重複步驟 3 + 6-7:
-1. 確認 Mac 上的 iOS 伺服器已啟動（選單列 → "Start iOS Server"）
+1. 確認 Mac 上的 iOS 伺服器已啟動（選單列 → **設定… → iOS**）
 2. 在 iPhone 開啟 HushType → Start Listening
 3. 切到你的 App → 使用鍵盤
 

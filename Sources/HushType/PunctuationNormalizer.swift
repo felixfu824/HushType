@@ -1,7 +1,7 @@
 import Foundation
 
 /// How aggressively to strip the model's Chinese inline punctuation.
-enum PunctuationMode: String {
+enum PunctuationMode: String, Hashable {
     case soft  // drop inline 「，、；：」, keep sentence enders 。！？ (default)
     case hard  // drop all punctuation, keep neighbour-aware spacing
     case off   // passthrough

@@ -41,8 +41,8 @@ enum TranslationError: LocalizedError {
 /// through a hidden SwiftUI bridge window to invoke `TranslationSession`.
 ///
 /// Language routing:
-///   - Chinese input → translate to English
-///   - Everything else → translate to zh-Hant-TW (繁體中文)
+///   - An explicit target from Settings is always respected.
+///   - In Auto, Chinese input → English and everything else → zh-Hant-TW.
 ///
 /// The bridge window must be visible (not off-screen) for `.translationTask`
 /// to fire reliably. It is cleaned up immediately after the result arrives.
@@ -102,20 +102,14 @@ final class TranslationManager {
 
         let sourceIdentifier = detected.rawValue  // BCP 47: "en", "th", "ja", etc.
         let sourceLanguage = Locale.Language(identifier: sourceIdentifier)
-        let targetLanguage: Locale.Language
         let sourceName = Self.languageNames[sourceIdentifier] ?? sourceIdentifier
-        let targetName: String
-
-        if detected == .simplifiedChinese || detected == .traditionalChinese {
-            targetLanguage = Locale.Language(identifier: "en")
-            targetName = Self.languageNames["en"] ?? L10n.string(
-                "language.name.english",
-                fallback: "English"
-            )
-        } else {
-            targetLanguage = Locale.Language(identifier: "zh-Hant-TW")
-            targetName = "繁體中文"
-        }
+        let targetIdentifier = Self.resolveTargetIdentifier(
+            sourceIdentifier: sourceIdentifier,
+            preferredTargetIdentifier: AppConfig.shared.translateTargetLanguage
+        )
+        let targetLanguage = Locale.Language(identifier: targetIdentifier)
+        let targetName = Self.languageNames[targetIdentifier]
+            ?? (targetIdentifier == "zh-Hant-TW" ? "繁體中文" : targetIdentifier)
 
         let directionLabel = L10n.format(
             "translation.direction",
@@ -152,6 +146,24 @@ final class TranslationManager {
             }
         }
 
+    }
+
+    /// Resolves the target without invoking Translation.framework so routing
+    /// remains deterministic and regression-testable. A non-nil persisted
+    /// target is an explicit user choice; nil preserves the original smart
+    /// Auto direction.
+    static func resolveTargetIdentifier(
+        sourceIdentifier: String,
+        preferredTargetIdentifier: String?
+    ) -> String {
+        if let preferredTargetIdentifier {
+            return preferredTargetIdentifier
+        }
+
+        return sourceIdentifier == NLLanguage.simplifiedChinese.rawValue
+            || sourceIdentifier == NLLanguage.traditionalChinese.rawValue
+            ? "en"
+            : "zh-Hant-TW"
     }
 
     // MARK: - Private

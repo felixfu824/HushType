@@ -8,7 +8,7 @@ import os
 /// `translateTargetLanguage` / `cloudTargetLanguage`. Selecting a value
 /// persists the *next-launch* preference only; it never restarts, quits,
 /// terminates, cancels, or stops any work (SPEC §4.6, §5.6, §5.7).
-enum InterfaceLanguage: String, Equatable, Sendable {
+enum InterfaceLanguage: String, Hashable, Sendable {
     case system
     case english = "en"
     case traditionalChineseTaiwan = "zh-Hant-TW"

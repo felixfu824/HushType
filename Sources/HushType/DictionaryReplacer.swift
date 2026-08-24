@@ -54,6 +54,15 @@ enum DictionaryReplacer {
     /// `lastModified` to detect file deletion.
     private static var fileExisted: Bool = false
 
+    /// Internal test seam. Production always resolves to AppConfig's standard
+    /// Application Support location; tests may point the same loading and
+    /// hot-reload code at an isolated temporary file.
+    private static var dictionaryFileURLOverride: URL?
+
+    private static var dictionaryFileURL: URL {
+        dictionaryFileURLOverride ?? AppConfig.dictionaryFileURL
+    }
+
     // MARK: - Public API
 
     /// Reload entries from disk if the file has changed since last load.
@@ -63,7 +72,7 @@ enum DictionaryReplacer {
         lock.lock()
         defer { lock.unlock() }
 
-        let url = AppConfig.dictionaryFileURL
+        let url = dictionaryFileURL
         let fm = FileManager.default
 
         guard fm.fileExists(atPath: url.path) else {
@@ -158,7 +167,7 @@ enum DictionaryReplacer {
     /// Whether the dictionary file currently exists on disk.
     /// Used by the menu to show "No dictionary file" vs "{N} entries loaded".
     static var fileExists: Bool {
-        FileManager.default.fileExists(atPath: AppConfig.dictionaryFileURL.path)
+        FileManager.default.fileExists(atPath: dictionaryFileURL.path)
     }
 
     /// Create the dictionary file with a friendly template at the standard
@@ -166,7 +175,7 @@ enum DictionaryReplacer {
     /// file already exists, returns false without overwriting.
     @discardableResult
     static func createTemplateIfMissing() -> Bool {
-        let url = AppConfig.dictionaryFileURL
+        let url = dictionaryFileURL
         let fm = FileManager.default
 
         if fm.fileExists(atPath: url.path) {
@@ -185,7 +194,7 @@ enum DictionaryReplacer {
         let template = L10n.string(
             "template.dictionary.starter_document",
             table: "Templates",
-            fallback: "# HushType Customized Dictionary\n# =============================\n#\n# One rule per line, in this format:\n#\n#     what you say  ->  what gets typed\n#\n# Use this to fix recurring transcription errors — proper nouns the\n# speech model always mishears, acronyms that come out spelled out,\n# technical terms with non-standard phonetics, etc.\n#\n# Rules:\n#   • Lines starting with #  are comments (ignored)\n#   • Blank lines are ignored\n#   • Source is CASE-INSENSITIVE: \"cloud code\", \"Cloud Code\", and\n#     \"CLOUD CODE\" all match the same rule. The target is inserted\n#     literally, so the output always matches what you wrote.\n#   • Plain string match only — no regex, no wildcards\n#   • Longest match wins when rules overlap\n#   • Changes take effect on the next transcription (no restart)\n#\n# ---------------------------------------------------------------\n# Examples (delete the # at the start of a line to activate it)\n# ---------------------------------------------------------------\n\n# Proper nouns the model mis-transcribes:\n# 拍粉       -> Python\n# Cloud code -> Claude Code\n# Enfropic   -> Anthropic\n\n# Acronym normalization:\n# U I U X    -> UI/UX\n\n# Technical jargon:\n# J.S.O.N    -> JSON\n\n# ---------------------------------------------------------------\n# Your entries below:\n# ---------------------------------------------------------------\n"
+            fallback: "# HushType Customized Dictionary\n# =============================\n#\n# One rule per line, in this format:\n#\n#     what you say  ->  what gets typed\n#\n# Use this to fix recurring transcription errors: proper nouns the\n# speech model always mishears, acronyms that come out spelled out,\n# technical terms with non-standard phonetics, etc.\n#\n# Rules:\n#   • Lines starting with #  are comments (ignored)\n#   • Blank lines are ignored\n#   • Source is CASE-INSENSITIVE: \"cloud code\", \"Cloud Code\", and\n#     \"CLOUD CODE\" all match the same rule. The target is inserted\n#     literally, so the output always matches what you wrote.\n#   • Plain string match only; no regex, no wildcards\n#   • Longest match wins when rules overlap\n#   • Changes take effect on the next transcription (no restart)\n#\n# ---------------------------------------------------------------\n# Examples (delete the # at the start of a line to activate it)\n# ---------------------------------------------------------------\n\n# Proper nouns the model mis-transcribes:\n# 拍粉       -> Python\n# Cloud code -> Claude Code\n# Enfropic   -> Anthropic\n\n# Acronym normalization:\n# U I U X    -> UI/UX\n\n# Technical jargon:\n# J.S.O.N    -> JSON\n\n# ---------------------------------------------------------------\n# Your entries below:\n# ---------------------------------------------------------------\n"
         )
 
         do {
@@ -199,6 +208,17 @@ enum DictionaryReplacer {
     }
 
     // MARK: - Private
+
+    /// Redirects dictionary I/O for unit tests and resets all cached file
+    /// state. Passing nil restores the production URL.
+    static func setDictionaryFileURLForTesting(_ url: URL?) {
+        lock.lock()
+        dictionaryFileURLOverride = url
+        entries = []
+        lastModified = nil
+        fileExisted = false
+        lock.unlock()
+    }
 
     private static func load(from url: URL, mtime: Date?) {
         guard let contents = try? String(contentsOf: url, encoding: .utf8) else {

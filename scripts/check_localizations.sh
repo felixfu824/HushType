@@ -232,24 +232,38 @@ def catalog_value(e, locale):
         ("Localizable", "alert.caption.connection_lost.title"),
         ("Localizable", "alert.caption.cloud_start_failed.title"),
         ("Localizable", "alert.cloud_caption_disclosure.title"),
-        ("Localizable", "alert.cloud_caption_disclosure.message"),
     }
     if D2:
         v = v.replace("Cloud Live Caption", "Live Translated Caption")
         v = v.replace("雲端即時字幕", "即時翻譯字幕")
     if (t, k) == ("Localizable", "notification.caption.auto_stop.title"):  # D3
         v = "Live Translated Caption auto-stopped" if locale == "en" else "即時翻譯字幕已自動停止"
-    if (t, k) == ("Localizable", "alert.caption.cloud_key_missing.message"):  # D4
-        v = ("Live Translated Caption needs an OpenAI API key. Open Translated Caption Settings and paste your key into openai.json."
-             if locale == "en" else
-             "即時翻譯字幕需要 OpenAI API 金鑰。請開啟「翻譯字幕設定」，並將金鑰貼到 openai.json。")
     if (t, k) == ("Templates", "template.openai.overview"):  # D5
         v = v.replace("Live Caption Engine settings", "Translated Caption Settings")
         v = v.replace("即時字幕引擎設定", "翻譯字幕設定")
     if (t, k) == ("Templates", "template.live_caption.backpressure"):  # D6
         v = v.replace("a cold first-cold transcribe", "the first cold transcription")
     return v
-    return v
+
+
+def contains_long_dash(value):
+    if isinstance(value, str):
+        return "\u2013" in value or "\u2014" in value
+    if isinstance(value, dict):
+        return any(contains_long_dash(item) for item in value.values())
+    if isinstance(value, list):
+        return any(contains_long_dash(item) for item in value)
+    return False
+
+
+# The Settings revamp deliberately standardized punctuation in the two
+# Localizable catalogs. Keep this invariant in the ordinary l10n gate so a
+# future manifest edit cannot silently reintroduce either long-dash codepoint.
+for table in ("Localizable", "Localizable.stringsdict"):
+    for locale in LOCALES:
+        value = manifest["tables"][table].get(locale)
+        if contains_long_dash(value):
+            fail(f"{table} {locale}: U+2013/U+2014 long dash is forbidden")
 
 for (table, key), e in catalog_entries.items():
     got_en = manifest["tables"][table]["en"].get(key) if isinstance(manifest["tables"][table].get("en"), dict) else None

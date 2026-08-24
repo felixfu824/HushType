@@ -198,8 +198,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.onReloadModel = { [weak self] in
             self?.reloadModel()
         }
-        statusBar.onDictationEngineChanged = { [weak self] engine in
+        let switchEngine: (AppConfig.DictationEngine) -> Void = { [weak self] engine in
             self?.switchDictationEngine(to: engine)
+        }
+        statusBar.onDictationEngineChanged = switchEngine
+        HushTypeSettingsWindowController.shared.onSwitchEngine = switchEngine
+        HushTypeSettingsWindowController.shared.onCheckForUpdates = {
+            UpdateCheckCoordinator.shared.checkForUpdates()
+        }
+        HushTypeSettingsWindowController.shared.onResetCaptionPanelFrame = { [weak self] in
+            self?.liveCaptionManager?.resetPanelSizeAndPosition()
         }
 
         // Wire Live Caption (local) submenu. The manager exists from launch;
@@ -1374,7 +1382,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
             hideOverlay()
-            DictationEngineSettingsWindowController.shared.presentAndFocus(
+            HushTypeSettingsWindowController.shared.presentAndFocus(
+                pane: .cloud,
                 onSwitchEngine: { [weak self] engine in
                     self?.switchDictationEngine(to: engine)
                 }
@@ -1440,7 +1449,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
             hideOverlay()
-            DictationEngineSettingsWindowController.shared.presentAndFocus(
+            HushTypeSettingsWindowController.shared.presentAndFocus(
+                pane: .cloud,
                 onSwitchEngine: { [weak self] engine in
                     self?.switchDictationEngine(to: engine)
                 }
@@ -1515,7 +1525,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             alert.informativeText = L10n.format(
                 "alert.cloud.no_key.message",
-                "Add your %1$@ API key in Dictation Engine Settings before using cloud dictation.",
+                "Add your %1$@ API key in the Cloud pane in Settings before using cloud dictation.",
                 arguments: [provider]
             )
             alert.addButton(withTitle: L10n.string("common.button.open_settings", fallback: "Open Settings"))

@@ -128,7 +128,7 @@ enum OpenAIKeyStore {
         let overview = L10n.jsonStringLiteral(L10n.string(
             "template.openai.overview",
             table: "Templates",
-            fallback: "HushType cloud features — OpenAI API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://platform.openai.com/api-keys. Cloud features stay disabled until 'api_key' is filled in AND you choose an OpenAI engine in Dictation Engine or Live Caption Engine settings."
+            fallback: "HushType cloud features: OpenAI API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://platform.openai.com/api-keys. Cloud features stay disabled until 'api_key' is filled in AND you choose an OpenAI engine in Dictation Engine or Live Caption Engine settings."
         ))
         let apiKeyComment = L10n.jsonStringLiteral(L10n.string(
             "template.openai.api_key",

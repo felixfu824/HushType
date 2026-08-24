@@ -31,9 +31,9 @@
 			<key>NSStringFormatValueTypeKey</key>
 			<string>l</string>
 			<key>one</key>
-			<string>Today's cloud usage: %1$@ total — dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
+			<string>Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
 			<key>other</key>
-			<string>Today's cloud usage: %1$@ total — dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
+			<string>Today's cloud usage: %1$@ total; dictation %2$@ (%3$d min), translated caption %4$@ (%5$d min)</string>
 		</dict>
 	</dict>
 
@@ -51,23 +51,6 @@
 			<string>%1$d min</string>
 			<key>other</key>
 			<string>%1$d min</string>
-		</dict>
-	</dict>
-
-	<key>settings.usage.today</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>%#@count@</string>
-		<key>count</key>
-		<dict>
-			<key>NSStringFormatSpecTypeKey</key>
-			<string>NSStringFormatSpecTypeInt</string>
-			<key>NSStringFormatValueTypeKey</key>
-			<string>l</string>
-			<key>one</key>
-			<string>Today's usage: %1$@ (%2$d min)</string>
-			<key>other</key>
-			<string>Today's usage: %1$@ (%2$d min)</string>
 		</dict>
 	</dict>
 
