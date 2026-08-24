@@ -15,7 +15,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaption
 struct LiveCaptionTuning: Codable, Sendable {
     /// ASR decoder max generated tokens per segment. Larger budgets cost
     /// more decoder KV cache per call and risk runaway generation past EOS.
-    /// Speech-swift default is 448 — validated stable on the 15-min long
+    /// Speech-swift default is 448, validated stable on the 15-min long
     /// session test.
     var maxTokens: Int = 448
 
@@ -24,7 +24,7 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// and slowed every call). 1024 is generous on Apple Silicon.
     var mlxCacheLimitMB: Int = 1024
 
-    /// VAD probability threshold to enter speech state (0.0–1.0). Lower = more
+    /// VAD probability threshold to enter speech state (0.0-1.0). Lower = more
     /// sensitive (fires on quieter audio). Silero default 0.5.
     var vadOnset: Float = 0.5
     /// VAD probability threshold to drop out of speech state. Silero default 0.35.
@@ -42,17 +42,6 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// worker actor. 50 ≈ 2 s of audio at the AVAudioEngine buffer cadence.
     var backpressureMaxPending: Int = 50
 
-    /// Default panel size. Persisted overrides from window drag/resize take
-    /// precedence — see UserDefaults key `hushtype.liveCaption.panelFrame.v3`.
-    var panelDefaultWidth: Double = 1350
-    var panelDefaultHeight: Double = 160
-
-    /// One-shot signal: set to `true` in the JSON file to force the next
-    /// Live Caption start to ignore any persisted frame and re-apply
-    /// `panelDefaultWidth`/`panelDefaultHeight`. The app clears the persisted
-    /// frame and resets this flag back to `false` after applying.
-    var resetPanelOnNextStart: Bool = false
-
     /// Audio source for Live Caption: `"mic"` or `"system"`.
     /// Switch via the menu submenu or by editing here + toggling Live Caption
     /// off → on. The menu always wins on conflict (last write).
@@ -62,6 +51,26 @@ struct LiveCaptionTuning: Codable, Sendable {
     /// Set automatically by `SystemAudioPicker`; can be hand-edited.
     /// Empty string means "no app picked yet — show picker on next start".
     var systemAudioBundleID: String = ""
+
+    init() {}
+
+    /// Decode every knob independently so an older tuning file remains valid
+    /// when newer fields (notably `audioSource`) have not been written yet.
+    /// Synthesized Codable would reject the whole file on the first missing
+    /// non-optional key and silently discard all of the user's tuned values.
+    init(from decoder: Decoder) throws {
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        maxTokens = try values.decodeIfPresent(Int.self, forKey: .maxTokens) ?? 448
+        mlxCacheLimitMB = try values.decodeIfPresent(Int.self, forKey: .mlxCacheLimitMB) ?? 1024
+        vadOnset = try values.decodeIfPresent(Float.self, forKey: .vadOnset) ?? 0.5
+        vadOffset = try values.decodeIfPresent(Float.self, forKey: .vadOffset) ?? 0.35
+        vadMinSpeechSeconds = try values.decodeIfPresent(Float.self, forKey: .vadMinSpeechSeconds) ?? 0.25
+        vadMinSilenceSeconds = try values.decodeIfPresent(Float.self, forKey: .vadMinSilenceSeconds) ?? 0.1
+        forceSplitSeconds = try values.decodeIfPresent(Double.self, forKey: .forceSplitSeconds) ?? 10
+        backpressureMaxPending = try values.decodeIfPresent(Int.self, forKey: .backpressureMaxPending) ?? 50
+        audioSource = try values.decodeIfPresent(String.self, forKey: .audioSource) ?? "mic"
+        systemAudioBundleID = try values.decodeIfPresent(String.self, forKey: .systemAudioBundleID) ?? ""
+    }
 
     // MARK: - File location
 
@@ -79,10 +88,9 @@ struct LiveCaptionTuning: Codable, Sendable {
 
     /// Reads `live_caption.json`. Missing or malformed → returns defaults
     /// and (if missing) writes the template so the user can find it.
-    static func load() -> LiveCaptionTuning {
-        let url = fileURL
+    static func load(at url: URL = fileURL) -> LiveCaptionTuning {
         if !FileManager.default.fileExists(atPath: url.path) {
-            createTemplateIfMissing()
+            createTemplateIfMissing(at: url)
             return LiveCaptionTuning()
         }
 
@@ -97,35 +105,11 @@ struct LiveCaptionTuning: Codable, Sendable {
             // the user's file yet, write them in (with defaults) so the user
             // can edit them in place without losing their other tweaks.
             migrateMissingKeysIfNeeded(url: url, decoded: decoded)
-            // Apply one-shot value bumps (e.g. panel width default raised
-            // between builds — see runOneOffMigrationsIfNeeded).
-            return runOneOffMigrationsIfNeeded(url: url, decoded: decoded)
+            return decoded
         } catch {
             log.error("Failed to parse live_caption.json (\(error.localizedDescription, privacy: .public)) — falling back to defaults")
             return LiveCaptionTuning()
         }
-    }
-
-    /// Flip `resetPanelOnNextStart` back to `false` after the manager honored
-    /// the one-shot reset. Preserves `_comment_*` keys and other user edits
-    /// by doing a partial in-place rewrite.
-    static func clearResetFlag() {
-        writeKey("resetPanelOnNextStart", value: false)
-    }
-
-    /// Persist the shared default size used by local and translated caption.
-    /// The URL overload is internal so tests can use a temporary directory.
-    static func setPanelSize(w: Double, h: Double, at url: URL = fileURL) {
-        writeKeys([
-            "panelDefaultWidth": w,
-            "panelDefaultHeight": h,
-        ], to: url)
-    }
-
-    /// Persist the one-shot panel-position reset flag. The manager clears it
-    /// after applying it on the next start.
-    static func setResetPanelOnNextStart(_ enabled: Bool, at url: URL = fileURL) {
-        writeKey("resetPanelOnNextStart", value: enabled, to: url)
     }
 
     /// Persist a new audio source ("mic" | "system") chosen via the menu.
@@ -139,8 +123,7 @@ struct LiveCaptionTuning: Codable, Sendable {
     }
 
     /// Partial in-place rewrite that preserves `_comment_*` keys and other
-    /// user edits. Used by `clearResetFlag` / `setAudioSource` /
-    /// `setSystemAudioBundleID`.
+    /// user edits. Used by the audio-source and system-app setters.
     private static func writeKey(_ key: String, value: Any, to url: URL = fileURL) {
         writeKeys([key: value], to: url)
     }
@@ -183,32 +166,6 @@ struct LiveCaptionTuning: Codable, Sendable {
     }
 
     // MARK: - Internals
-
-    /// One-shot migrations that bump existing values (as opposed to filling in
-    /// new keys). Tracked via UserDefaults flags so each migration runs at
-    /// most once. New users (no file) never hit these because the template
-    /// already carries the latest defaults.
-    private static func runOneOffMigrationsIfNeeded(url: URL, decoded: LiveCaptionTuning) -> LiveCaptionTuning {
-        var current = decoded
-        let defaults = UserDefaults.standard
-
-        // panelDefaultWidth v3 settle (→ 1350). The v2 bump went from 1300 →
-        // 1500 but in testing 1500 ran a touch off the edge of usable screen
-        // on Felix's setup. Anything that looks like an unedited prior app
-        // default — including the v2 default of 1500 — gets nudged to 1350.
-        // Custom widths the user picked outside that exact set are respected.
-        let migrationKey = "hushtype.liveCaption.tuningMigration.panelWidth.v3"
-        if !defaults.bool(forKey: migrationKey) {
-            defaults.set(true, forKey: migrationKey)
-            let appDefaults: Set<Double> = [700, 800, 900, 1000, 1100, 1300, 1500]
-            if appDefaults.contains(current.panelDefaultWidth) {
-                writeKey("panelDefaultWidth", value: 1350, to: url)
-                current.panelDefaultWidth = 1350
-                log.info("Migration: settled panelDefaultWidth → 1350")
-            }
-        }
-        return current
-    }
 
     private static func migrateMissingKeysIfNeeded(url: URL, decoded: LiveCaptionTuning) {
         guard
@@ -256,12 +213,12 @@ struct LiveCaptionTuning: Codable, Sendable {
         {
           "_comment_about": \(localizedTemplateComment(
               "template.live_caption.about",
-              fallback: "HushType — Live Caption tunables. Edit values then toggle Live Caption off and on for changes to apply. Keys prefixed _comment_ are documentation only and are ignored by the parser."
+              fallback: "HushType: Live Caption tunables. Edit values then toggle Live Caption off and on for changes to apply. Keys prefixed _comment_ are documentation only and are ignored by the parser."
           )),
 
           "_comment_maxTokens": \(localizedTemplateComment(
               "template.live_caption.max_tokens",
-              fallback: "ASR decoder max generated tokens per segment. Larger budgets cost more decoder KV cache per call and risk runaway generation past EOS. Speech-swift default is 448 — validated stable on the 15-min long session test. Bumping past 1024 has been observed to push unified memory off a cliff."
+              fallback: "ASR decoder max generated tokens per segment. Larger budgets cost more decoder KV cache per call and risk runaway generation past EOS. Speech-swift default is 448, validated stable on the 15-min long session test. Bumping past 1024 has been observed to push unified memory off a cliff."
           )),
           "maxTokens": 448,
 
@@ -273,7 +230,7 @@ struct LiveCaptionTuning: Codable, Sendable {
 
           "_comment_vad_thresholds": \(localizedTemplateComment(
               "template.live_caption.vad_thresholds",
-              fallback: "VAD probability thresholds to enter and exit speech state (0.0–1.0). Silero defaults 0.5 / 0.35. Lower onset = more sensitive (more fragments in noisy rooms)."
+              fallback: "VAD probability thresholds to enter and exit speech state (0.0-1.0). Silero defaults 0.5 / 0.35. Lower onset = more sensitive (more fragments in noisy rooms)."
           )),
           "vadOnset": 0.5,
           "vadOffset": 0.35,
@@ -293,22 +250,9 @@ struct LiveCaptionTuning: Codable, Sendable {
 
           "_comment_backpressure": \(localizedTemplateComment(
               "template.live_caption.backpressure",
-              fallback: "Drop new audio buffers when more than this many feeds are pending at the worker actor. 50 ≈ 2 s of audio — enough room for a cold first-cold transcribe without unbounded queueing."
+              fallback: "Drop new audio buffers when more than this many feeds are pending at the worker actor. 50 ≈ 2 s of audio, enough room for a cold first-cold transcribe without unbounded queueing."
           )),
           "backpressureMaxPending": 50,
-
-          "_comment_panel": \(localizedTemplateComment(
-              "template.live_caption.panel",
-              fallback: "Default panel size (pixels). Window drag / resize values persist separately and override this on next launch."
-          )),
-          "panelDefaultWidth": 1350,
-          "panelDefaultHeight": 160,
-
-          "_comment_resetPanelOnNextStart": \(localizedTemplateComment(
-              "template.live_caption.reset_panel",
-              fallback: "Set to true to discard any persisted frame and re-apply panelDefaultWidth/Height the next time Live Caption is toggled on. The app flips it back to false after applying."
-          )),
-          "resetPanelOnNextStart": false,
 
           "_comment_audioSource": \(localizedTemplateComment(
               "template.live_caption.audio_source",

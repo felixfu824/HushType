@@ -19,7 +19,7 @@ struct TextPane: View {
                 title: L10n.string("settings.text.polish_title", fallback: "Text Polish"),
                 subtitle: L10n.string(
                     "settings.text.polish_sub",
-                    fallback: "Apple Foundation Models · on-device"
+                    fallback: "Apple Foundation Models · on-device · limited capability"
                 )
             )
 
@@ -59,7 +59,7 @@ struct TextPane: View {
                 title: L10n.string("menu.text_translation", fallback: "Text Translation"),
                 subtitle: L10n.string(
                     "settings.text.translation_sub",
-                    fallback: "Apple Translation Framework · on-device"
+                    fallback: "Apple Translation Framework · on-device · limited language support"
                 )
             )
 

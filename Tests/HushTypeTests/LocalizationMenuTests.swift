@@ -144,16 +144,19 @@ final class LocalizationMenuTests: XCTestCase {
         XCTAssertFalse(source.contains("role.label =="))
     }
 
-    func testCaptionPositionResetClearsCurrentV3FrameKey() throws {
-        let source = try String(
+    func testCaptionPositionResetUsesCentralFrameStore() throws {
+        let managerSource = try String(
             contentsOf: sourceURL(named: "LiveCaptionManager.swift"),
             encoding: .utf8
         )
-        XCTAssertTrue(source.contains(
-            "removeObject(forKey: \"hushtype.liveCaption.panelFrame.v3\")"
-        ))
-        XCTAssertFalse(source.contains(
-            "removeObject(forKey: \"hushtype.liveCaption.panelFrame\")"
+        let windowSource = try String(
+            contentsOf: sourceURL(named: "LiveCaptionWindow.swift"),
+            encoding: .utf8
+        )
+        XCTAssertTrue(managerSource.contains("LiveCaptionPanelFrameStore.clear()"))
+        XCTAssertFalse(managerSource.contains("hushtype.liveCaption.panelFrame"))
+        XCTAssertTrue(windowSource.contains(
+            "static let frameKey = \"hushtype.liveCaption.panelFrame.v3\""
         ))
     }
 

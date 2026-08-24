@@ -26,7 +26,6 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// Combined status + memory row, e.g. "Ready · Memory 2.1 GB".
     private let statusMenuItem: NSMenuItem
     private let textSettingsModel: TextSettingsModel
-    private var iosServerMenuItem: NSMenuItem!
     private var liveCaptionMenuItem: NSMenuItem!
     private var liveCaptionStartStopItem: NSMenuItem!
     private var liveCaptionMicItem: NSMenuItem!
@@ -144,6 +143,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         super.init()
 
         setupMenu()
+        wireIOSServerSettings()
         textSettingsModel.onMenuRefresh = { [weak self] in
             self?.refreshTextMenuItems()
         }
@@ -172,7 +172,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Private
 
-    /// Builds the top-level menu: 10 items + 4 separators (was ~35 flat rows).
+    /// Builds the top-level menu: 9 items + 4 separators (was ~35 flat rows).
     /// Frequent actions stay top-level; per-feature controls live in
     /// submenus per the HIG for menu bar extras. Active features show the
     /// green ✓ on the submenu PARENT so state is visible without opening it.
@@ -241,21 +241,14 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         menu.addItem(.separator())
 
-        // iOS Server toggle
-        iosServerMenuItem = NSMenuItem(
-            title: L10n.string("menu.ios_server.start", fallback: "Start iOS Server"),
-            action: #selector(toggleIOSServer),
-            keyEquivalent: ""
-        )
-        iosServerMenuItem.target = self
-        menu.addItem(iosServerMenuItem)
-
         iosServerManager.onStatusChanged = { [weak self] running in
             DispatchQueue.main.async {
-                self?.iosServerMenuItem.title = running
-                    ? L10n.string("menu.ios_server.stop", fallback: "Stop iOS Server (port 8000)")
-                    : L10n.string("menu.ios_server.start", fallback: "Start iOS Server")
                 self?.setIOSServerActive(running)
+                NotificationCenter.default.post(
+                    name: .iosServerStatusDidChange,
+                    object: self,
+                    userInfo: [IOSServerPane.runningUserInfoKey: running]
+                )
             }
         }
 
@@ -514,6 +507,12 @@ final class StatusBarController: NSObject, NSMenuDelegate {
                     self.onDictationEngineChanged?(engine)
                     self.refreshStatusLine()
                     self.updateUnloadMenuItem(for: self.currentState)
+                },
+                onToggleIOSServer: { [weak self] in
+                    self?.toggleIOSServer()
+                },
+                isIOSServerRunning: { [weak self] in
+                    self?.iosServerManager.isRunning ?? false
                 }
             )
         }
@@ -522,7 +521,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - iOS Server
 
-    @objc private func toggleIOSServer() {
+    private func toggleIOSServer() {
         if iosServerManager.isRunning {
             iosServerManager.stop()
             return
@@ -542,6 +541,20 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             return
         }
         iosServerManager.start(port: 8000)
+    }
+
+    /// The Settings pane owns only presentation. All iOS Server actions keep
+    /// routing through this controller so the Live Caption GPU-memory mutex
+    /// cannot be bypassed and the manager retains its single status callback.
+    private func wireIOSServerSettings() {
+        Task { @MainActor [weak self] in
+            HushTypeSettingsWindowController.shared.onToggleIOSServer = { [weak self] in
+                self?.toggleIOSServer()
+            }
+            HushTypeSettingsWindowController.shared.isIOSServerRunning = { [weak self] in
+                self?.iosServerManager.isRunning ?? false
+            }
+        }
     }
 
     // MARK: - Live Caption

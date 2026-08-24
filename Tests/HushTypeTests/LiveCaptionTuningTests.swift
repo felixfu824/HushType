@@ -1,61 +1,64 @@
 import Foundation
+import AppKit
 import XCTest
 @testable import HushType
 
 final class LiveCaptionTuningTests: XCTestCase {
-    func testPanelSizeSetterCreatesCompleteTemplateWhenFileIsMissing() throws {
+    func testLegacyFileMissingNewKeysLoadsAndPreservesExistingValues() throws {
+        let url = try temporaryTuningURL()
+        let legacy: [String: Any] = [
+            "_comment_about": "legacy comment",
+            "maxTokens": 777,
+            "vadOnset": 0.42,
+            "forceSplitSeconds": 18.5,
+        ]
+        try JSONSerialization.data(
+            withJSONObject: legacy,
+            options: [.prettyPrinted]
+        ).write(to: url, options: .atomic)
+
+        let loaded = LiveCaptionTuning.load(at: url)
+
+        XCTAssertEqual(loaded.maxTokens, 777)
+        XCTAssertEqual(loaded.vadOnset, 0.42, accuracy: 0.0001)
+        XCTAssertEqual(loaded.forceSplitSeconds, 18.5)
+        XCTAssertEqual(loaded.audioSource, "mic")
+        XCTAssertEqual(loaded.systemAudioBundleID, "")
+
+        let migrated = try jsonObject(at: url)
+        XCTAssertEqual(migrated["maxTokens"] as? Int, 777)
+        XCTAssertEqual(migrated["_comment_about"] as? String, "legacy comment")
+        XCTAssertEqual(migrated["audioSource"] as? String, "mic")
+        XCTAssertEqual(migrated["systemAudioBundleID"] as? String, "")
+    }
+
+    func testTemplateOmitsObsoletePanelGeometryKnobs() throws {
         let url = try temporaryTuningURL()
         XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
 
-        LiveCaptionTuning.setPanelSize(w: 912.5, h: 244, at: url)
+        LiveCaptionTuning.createTemplateIfMissing(at: url)
 
         let written = try jsonObject(at: url)
-        let template = try templateObject()
-        XCTAssertEqual(Set(written.keys), Set(template.keys))
-        XCTAssertEqual((written["panelDefaultWidth"] as? NSNumber)?.doubleValue, 912.5)
-        XCTAssertEqual((written["panelDefaultHeight"] as? NSNumber)?.doubleValue, 244)
-        XCTAssertEqual(written["audioSource"] as? String, "mic")
-        XCTAssertEqual(try commentValueBytes(in: written), try commentValueBytes(in: template))
+        XCTAssertNil(written["panelDefaultWidth"])
+        XCTAssertNil(written["panelDefaultHeight"])
+        XCTAssertNil(written["resetPanelOnNextStart"])
+        XCTAssertNil(written["_comment_panel"])
+        XCTAssertNil(written["_comment_resetPanelOnNextStart"])
     }
 
-    func testResetSetterCreatesCompleteTemplateWhenFileIsMissing() throws {
+    func testLegacyPanelGeometryKeysAreIgnoredWithoutDiscardingOtherValues() throws {
         let url = try temporaryTuningURL()
-        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        let legacy: [String: Any] = [
+            "panelDefaultWidth": 912.5,
+            "panelDefaultHeight": 244,
+            "resetPanelOnNextStart": true,
+            "maxTokens": 777,
+        ]
+        try JSONSerialization.data(withJSONObject: legacy).write(to: url)
 
-        LiveCaptionTuning.setResetPanelOnNextStart(true, at: url)
-
-        let written = try jsonObject(at: url)
-        let template = try templateObject()
-        XCTAssertEqual(Set(written.keys), Set(template.keys))
-        XCTAssertEqual(written["resetPanelOnNextStart"] as? Bool, true)
-        XCTAssertEqual((written["panelDefaultWidth"] as? NSNumber)?.doubleValue, 1350)
-        XCTAssertEqual((written["panelDefaultHeight"] as? NSNumber)?.doubleValue, 160)
-        XCTAssertEqual(try commentValueBytes(in: written), try commentValueBytes(in: template))
-    }
-
-    func testPanelAndResetMutationsPreserveEveryExistingCommentValueByteIdentically() throws {
-        let url = try temporaryTuningURL()
-        var seeded = try templateObject()
-        let commentKeys = seeded.keys.filter { $0.hasPrefix("_comment_") }.sorted()
-        XCTAssertFalse(commentKeys.isEmpty)
-
-        for (index, key) in commentKeys.enumerated() {
-            seeded[key] = "comment \(index): quote \" slash \\ line\n繁體中文 🐑"
-        }
-        let seedData = try JSONSerialization.data(withJSONObject: seeded, options: [.prettyPrinted, .sortedKeys])
-        try seedData.write(to: url, options: .atomic)
-        let before = try commentValueBytes(in: jsonObject(at: url))
-
-        LiveCaptionTuning.setPanelSize(w: 1111, h: 222, at: url)
-        let afterPanelSize = try jsonObject(at: url)
-        XCTAssertEqual(try commentValueBytes(in: afterPanelSize), before)
-        XCTAssertEqual((afterPanelSize["panelDefaultWidth"] as? NSNumber)?.doubleValue, 1111)
-        XCTAssertEqual((afterPanelSize["panelDefaultHeight"] as? NSNumber)?.doubleValue, 222)
-
-        LiveCaptionTuning.setResetPanelOnNextStart(true, at: url)
-        let afterReset = try jsonObject(at: url)
-        XCTAssertEqual(try commentValueBytes(in: afterReset), before)
-        XCTAssertEqual(afterReset["resetPanelOnNextStart"] as? Bool, true)
+        let loaded = LiveCaptionTuning.load(at: url)
+        XCTAssertEqual(loaded.maxTokens, 777)
+        XCTAssertEqual(loaded.audioSource, "mic")
     }
 
     private func temporaryTuningURL() throws -> URL {
@@ -68,20 +71,74 @@ final class LiveCaptionTuningTests: XCTestCase {
         return directory.appendingPathComponent("live_caption.json")
     }
 
-    private func templateObject() throws -> [String: Any] {
-        let data = Data(LiveCaptionTuning.templateContent().utf8)
-        return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
-    }
-
     private func jsonObject(at url: URL) throws -> [String: Any] {
         let data = try Data(contentsOf: url)
         return try XCTUnwrap(JSONSerialization.jsonObject(with: data) as? [String: Any])
     }
 
-    private func commentValueBytes(in object: [String: Any]) throws -> [String: Data] {
-        try Dictionary(uniqueKeysWithValues: object.compactMap { key, value in
-            guard key.hasPrefix("_comment_") else { return nil }
-            return (key, Data(try XCTUnwrap(value as? String).utf8))
-        })
+}
+
+final class LiveCaptionPanelFrameStoreTests: XCTestCase {
+    func testSavedFrameRoundTripsAndResetClearsAllFrameKeys() throws {
+        let suiteName = "HushType-LiveCaptionFrameTests-\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        addTeardownBlock { defaults.removePersistentDomain(forName: suiteName) }
+        let expected = NSRect(x: 120, y: 90, width: 900, height: 220)
+
+        LiveCaptionPanelFrameStore.save(expected, defaults: defaults)
+        defaults.set("legacy", forKey: LiveCaptionPanelFrameStore.legacyFrameKeys[0])
+
+        XCTAssertEqual(LiveCaptionPanelFrameStore.load(defaults: defaults), expected)
+        XCTAssertNil(defaults.object(forKey: LiveCaptionPanelFrameStore.legacyFrameKeys[0]))
+
+        LiveCaptionPanelFrameStore.clear(defaults: defaults)
+        XCTAssertNil(LiveCaptionPanelFrameStore.load(defaults: defaults))
+    }
+
+    func testRestoredFrameIsClampedToSizeLimitsAndFullyOnScreen() throws {
+        let screen = NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let oversized = NSRect(x: -200, y: 850, width: 2400, height: 900)
+
+        let normalized = try XCTUnwrap(LiveCaptionPanelFrameStore.normalizedFrame(
+            oversized,
+            visibleScreens: [screen],
+            preferredScreen: screen
+        ))
+
+        XCTAssertEqual(normalized.width, 1400)
+        XCTAssertEqual(normalized.height, 500)
+        XCTAssertGreaterThanOrEqual(normalized.minX, screen.minX + 20)
+        XCTAssertLessThanOrEqual(normalized.maxX, screen.maxX - 20)
+        XCTAssertGreaterThanOrEqual(normalized.minY, screen.minY + 20)
+        XCTAssertLessThanOrEqual(normalized.maxY, screen.maxY - 20)
+    }
+
+    func testFrameFromDisconnectedScreenUsesDefaultBottomCenterPlacement() throws {
+        let screen = NSRect(x: 0, y: 0, width: 1440, height: 900)
+        let disconnected = NSRect(x: 5000, y: 100, width: 1000, height: 200)
+
+        let normalized = try XCTUnwrap(LiveCaptionPanelFrameStore.normalizedFrame(
+            disconnected,
+            visibleScreens: [screen],
+            preferredScreen: screen
+        ))
+
+        XCTAssertEqual(normalized.size, disconnected.size)
+        XCTAssertEqual(normalized.midX, screen.midX)
+        XCTAssertEqual(normalized.minY, screen.minY + 80)
+    }
+
+    func testDefaultFrameShrinksForSmallScreen() throws {
+        let smallScreen = NSRect(x: 100, y: 50, width: 800, height: 600)
+        let normalized = try XCTUnwrap(LiveCaptionPanelFrameStore.normalizedFrame(
+            nil,
+            visibleScreens: [smallScreen],
+            preferredScreen: smallScreen
+        ))
+
+        XCTAssertEqual(normalized.width, 760)
+        XCTAssertEqual(normalized.height, 160)
+        XCTAssertEqual(normalized.midX, smallScreen.midX)
+        XCTAssertEqual(normalized.minY, smallScreen.minY + 80)
     }
 }

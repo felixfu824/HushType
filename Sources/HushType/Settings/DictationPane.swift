@@ -191,7 +191,7 @@ struct DictationPane: View {
             SettingsRow {
                 Text(L10n.string(
                     "settings.engine.cloud_unloads_local",
-                    fallback: "Cloud dictation sends audio directly to the selected provider using your key. The local speech model stays unloaded; the iOS companion still uses it."
+                    fallback: "Cloud dictation sends audio directly to the selected provider using your key. The local speech model stays unloaded."
                 ))
                 .font(.caption)
                 .foregroundStyle(.secondary)

@@ -21,11 +21,11 @@ final class SettingsMenuStructureTests: XCTestCase {
         let items = controller.statusMenuForTesting.items
         let ordinary = items.filter { !$0.isSeparatorItem }
 
-        XCTAssertEqual(ordinary.count, 10)
+        XCTAssertEqual(ordinary.count, 9)
         XCTAssertEqual(items.filter(\.isSeparatorItem).count, 4)
         XCTAssertEqual(
             items.enumerated().compactMap { $0.element.isSeparatorItem ? $0.offset : nil },
-            [1, 6, 8, 11]
+            [1, 6, 8, 10]
         )
 
         let settingsTitle = L10n.string("menu.settings", fallback: "Settings…")
@@ -81,6 +81,9 @@ final class SettingsMenuStructureTests: XCTestCase {
         XCTAssertFalse(ordinary.contains { $0.title == "Dictation Settings" })
         XCTAssertFalse(ordinary.contains { $0.title == "Interface Language" })
         XCTAssertFalse(ordinary.contains { $0.title == "Edit Polish Instructions" })
+        XCTAssertFalse(ordinary.contains {
+            $0.title.contains("iOS Server") || $0.title.contains("iOS 伺服器")
+        })
     }
 
     private func makeTextModel() -> TextSettingsModel {

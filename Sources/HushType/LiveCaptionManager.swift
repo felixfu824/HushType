@@ -127,14 +127,6 @@ final class LiveCaptionManager {
         tuning = LiveCaptionTuning.load()
         log.info("Tuning: maxTokens=\(self.tuning.maxTokens, privacy: .public) cacheLimitMB=\(self.tuning.mlxCacheLimitMB, privacy: .public) vadOnset=\(self.tuning.vadOnset, privacy: .public) backpressure=\(self.tuning.backpressureMaxPending, privacy: .public)")
 
-        if tuning.resetPanelOnNextStart {
-            UserDefaults.standard.removeObject(forKey: "hushtype.liveCaption.panelFrame.v3")
-            panel?.close()
-            panel = nil
-            LiveCaptionTuning.clearResetFlag()
-            log.info("Panel frame reset on user request")
-        }
-
         // Bound MLX's buffer pool so a continuous-speech meeting can't push
         // unified memory off a cliff. Cloud engine doesn't transcribe locally
         // but we still hold the loaded ASR model in memory for an instant
@@ -210,7 +202,6 @@ final class LiveCaptionManager {
         if panel == nil {
             panel = LiveCaptionWindow(
                 viewModel: vm,
-                tuning: tuning,
                 onStop: { [weak self] in
                     Task { @MainActor in self?.stop() }
                 }
@@ -501,6 +492,17 @@ final class LiveCaptionManager {
             log.info("LiveCaption stopped, source released")
         }
         stopTeardownTask = task
+    }
+
+    /// Called by Caption Settings. The visible panel moves immediately; if
+    /// no panel has been created yet, clearing the store makes the next show
+    /// use the built-in 1350 × 160 bottom-centred frame.
+    func resetPanelSizeAndPosition() {
+        if let panel {
+            panel.resetSizeAndPosition()
+        } else {
+            LiveCaptionPanelFrameStore.clear()
+        }
     }
 
     /// Release the manager's derived local-model handle. If a local caption

@@ -206,6 +206,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         HushTypeSettingsWindowController.shared.onCheckForUpdates = {
             UpdateCheckCoordinator.shared.checkForUpdates()
         }
+        HushTypeSettingsWindowController.shared.onResetCaptionPanelFrame = { [weak self] in
+            self?.liveCaptionManager?.resetPanelSizeAndPosition()
+        }
 
         // Wire Live Caption (local) submenu. The manager exists from launch;
         // if Qwen is absent, its local path loads the shared engine lazily.

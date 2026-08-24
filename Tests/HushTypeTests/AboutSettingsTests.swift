@@ -33,9 +33,9 @@ final class AboutSettingsTests: XCTestCase {
                 L10n.format(
                     "settings.about.version_build",
                     "Version %1$@ (Build %2$@)",
-                    arguments: ["0.5.10", "28"]
+                    arguments: ["0.5.11", "29"]
                 ),
-                "Version 0.5.10 (Build 28)"
+                "Version 0.5.11 (Build 29)"
             )
         }
     }
@@ -51,9 +51,9 @@ final class AboutSettingsTests: XCTestCase {
                 L10n.format(
                     "settings.about.version_build",
                     "Version %1$@ (Build %2$@)",
-                    arguments: ["0.5.10", "28"]
+                    arguments: ["0.5.11", "29"]
                 ),
-                "版本 0.5.10（組建 28）"
+                "版本 0.5.11（組建 29）"
             )
         }
     }
@@ -73,6 +73,7 @@ final class AboutSettingsTests: XCTestCase {
             "CaptionPane.makeSettingsPane",
             "TextPane.makeSettingsPane",
             "CloudPane.makeSettingsPane",
+            "IOSServerPane.makeSettingsPane",
             "AboutPane.makeSettingsPane",
         ]
         let positions = try paneMarkers.map { marker -> String.Index in

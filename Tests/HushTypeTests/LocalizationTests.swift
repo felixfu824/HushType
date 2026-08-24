@@ -330,9 +330,9 @@ final class LocalizationTests: XCTestCase {
 
             XCTAssertEqual(object["audioSource"] as? String, "mic")
             XCTAssertEqual(object["systemAudioBundleID"] as? String, "")
-            XCTAssertEqual(object["resetPanelOnNextStart"] as? Bool, false)
-            XCTAssertEqual(object["panelDefaultWidth"] as? Int, 1350)
-            XCTAssertEqual(object["panelDefaultHeight"] as? Int, 160)
+            XCTAssertNil(object["resetPanelOnNextStart"])
+            XCTAssertNil(object["panelDefaultWidth"])
+            XCTAssertNil(object["panelDefaultHeight"])
             XCTAssertEqual(object["forceSplitSeconds"] as? Double, 10.0)
             XCTAssertNotNil(object["_comment_audioSource"] as? String)
         }

@@ -4,6 +4,107 @@ import os
 
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaptionUI")
 
+/// Single source of truth for the user-positioned caption panel frame.
+///
+/// The tuning JSON deliberately does not participate in live panel geometry:
+/// dragging/resizing the actual window is authoritative. Keeping the key and
+/// normalization policy here also prevents Settings and the manager from
+/// growing their own, subtly different notions of the panel size.
+enum LiveCaptionPanelFrameStore {
+    static let frameKey = "hushtype.liveCaption.panelFrame.v3"
+    static let legacyFrameKeys = [
+        "hushtype.liveCaption.panelFrame",
+        "hushtype.liveCaption.panelFrame.v2",
+    ]
+
+    static let defaultSize = NSSize(width: 1350, height: 160)
+    static let minimumSize = NSSize(width: 500, height: 90)
+    static let maximumSize = NSSize(width: 1600, height: 500)
+    private static let screenInset: CGFloat = 20
+    private static let bottomOffset: CGFloat = 80
+
+    static func load(defaults: UserDefaults = .standard) -> NSRect? {
+        purgeLegacyKeys(defaults: defaults)
+        guard let value = defaults.string(forKey: frameKey), !value.isEmpty else {
+            return nil
+        }
+        let rect = NSRectFromString(value)
+        guard rect.width.isFinite, rect.height.isFinite,
+              rect.origin.x.isFinite, rect.origin.y.isFinite,
+              rect.width > 0, rect.height > 0 else { return nil }
+        return rect
+    }
+
+    static func save(_ frame: NSRect, defaults: UserDefaults = .standard) {
+        defaults.set(NSStringFromRect(frame), forKey: frameKey)
+    }
+
+    static func clear(defaults: UserDefaults = .standard) {
+        defaults.removeObject(forKey: frameKey)
+        purgeLegacyKeys(defaults: defaults)
+    }
+
+    static func purgeLegacyKeys(defaults: UserDefaults = .standard) {
+        for key in legacyFrameKeys where defaults.object(forKey: key) != nil {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
+    /// Clamp a restored frame to the connected displays. A frame that still
+    /// intersects a display keeps its relative location (clamped fully into
+    /// that display). A frame from a disconnected display snaps bottom-centre
+    /// on the preferred display instead of becoming unreachable.
+    static func normalizedFrame(
+        _ candidate: NSRect?,
+        visibleScreens: [NSRect],
+        preferredScreen: NSRect?
+    ) -> NSRect? {
+        guard !visibleScreens.isEmpty else { return nil }
+        let preferred = preferredScreen ?? visibleScreens[0]
+        let intersecting: NSRect?
+        if let candidate,
+           let best = visibleScreens.max(by: {
+               intersectionArea($0, candidate) < intersectionArea($1, candidate)
+           }),
+           intersectionArea(best, candidate) > 0 {
+            intersecting = best
+        } else {
+            intersecting = nil
+        }
+        let screen = intersecting ?? preferred
+
+        let requestedSize = candidate?.size ?? defaultSize
+        let usableWidth = max(1, screen.width - screenInset * 2)
+        let usableHeight = max(1, screen.height - screenInset * 2)
+        let lowerWidth = min(minimumSize.width, usableWidth)
+        let lowerHeight = min(minimumSize.height, usableHeight)
+        let size = NSSize(
+            width: min(max(requestedSize.width, lowerWidth), min(maximumSize.width, usableWidth)),
+            height: min(max(requestedSize.height, lowerHeight), min(maximumSize.height, usableHeight))
+        )
+
+        let origin: NSPoint
+        if let candidate, intersecting != nil {
+            origin = NSPoint(
+                x: min(max(candidate.minX, screen.minX + screenInset), screen.maxX - screenInset - size.width),
+                y: min(max(candidate.minY, screen.minY + screenInset), screen.maxY - screenInset - size.height)
+            )
+        } else {
+            origin = NSPoint(
+                x: screen.midX - size.width / 2,
+                y: min(screen.minY + bottomOffset, screen.maxY - screenInset - size.height)
+            )
+        }
+        return NSRect(origin: origin, size: size)
+    }
+
+    private static func intersectionArea(_ lhs: NSRect, _ rhs: NSRect) -> CGFloat {
+        let intersection = lhs.intersection(rhs)
+        guard !intersection.isNull else { return 0 }
+        return intersection.width * intersection.height
+    }
+}
+
 /// Bottom-pinned translucent panel that hosts the live caption stream.
 ///
 /// Window properties match the §9.b spec — `.screenSaver` level + the
@@ -14,34 +115,14 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     private let viewModel: LiveCaptionViewModel
     private let onStop: () -> Void
 
-    /// Loaded from `LiveCaptionTuning.panelDefault*` once per panel creation
-    /// so the JSON file can override the bundled default.
-    private let defaultSize: NSSize
-    /// Bumped to `.v3` (was `.v2` for the panelDefaultWidth=1500 bump that
-    /// over-shot). Forcing another reset lets the new 1350 default land
-    /// without users having to manually resize. Orphaned legacy keys are
-    /// purged once for hygiene below.
-    private static let panelFrameKey = "hushtype.liveCaption.panelFrame.v3"
-    private static let legacyPanelFrameKeys = [
-        "hushtype.liveCaption.panelFrame",
-        "hushtype.liveCaption.panelFrame.v2",
-    ]
-
     private var saveFrameWork: DispatchWorkItem?
 
-    init(viewModel: LiveCaptionViewModel, tuning: LiveCaptionTuning, onStop: @escaping () -> Void) {
+    init(viewModel: LiveCaptionViewModel, onStop: @escaping () -> Void) {
         self.viewModel = viewModel
         self.onStop = onStop
-        self.defaultSize = NSSize(
-            width: tuning.panelDefaultWidth,
-            height: tuning.panelDefaultHeight
-        )
 
         super.init(
-            contentRect: NSRect(origin: .zero, size: NSSize(
-                width: tuning.panelDefaultWidth,
-                height: tuning.panelDefaultHeight
-            )),
+            contentRect: NSRect(origin: .zero, size: LiveCaptionPanelFrameStore.defaultSize),
             styleMask: [.borderless, .nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
@@ -62,8 +143,8 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
         isMovableByWindowBackground = true
         ignoresMouseEvents = false
 
-        minSize = NSSize(width: 500, height: 90)
-        maxSize = NSSize(width: 1600, height: 500)
+        minSize = LiveCaptionPanelFrameStore.minimumSize
+        maxSize = LiveCaptionPanelFrameStore.maximumSize
 
         let hostingView = NSHostingView(
             rootView: LiveCaptionView(model: viewModel, onStop: onStop)
@@ -82,53 +163,14 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
     /// otherwise position bottom-center of the main screen using the same
     /// formula as `FloatingOverlayWindow.show()`.
     private func positionForShow() {
-        let defaults = UserDefaults.standard
-        // One-shot cleanup of legacy `panelFrame` keys. We don't migrate
-        // their values forward — the whole reason the key was renamed is
-        // that users had been carrying a stale saved frame from prior
-        // builds, and forcing a fresh default-position pass is the intended
-        // UX. Each entry in the legacy list is purged once.
-        for legacy in Self.legacyPanelFrameKeys {
-            if defaults.object(forKey: legacy) != nil {
-                defaults.removeObject(forKey: legacy)
-            }
-        }
-
-        if let saved = defaults.string(forKey: Self.panelFrameKey), !saved.isEmpty {
-            let restored = NSRectFromString(saved)
-            // Reject saved frames smaller than the current minSize so a width
-            // change in this build doesn't strand the user on a too-narrow
-            // pre-existing frame.
-            let fitsBounds = restored.size.width >= minSize.width
-                && restored.size.height >= minSize.height
-            if restored.size.width > 0 && restored.size.height > 0
-                && fitsBounds && isOnAnyScreen(restored) {
-                setFrame(restored, display: false)
-                return
-            } else {
-                log.warning("LiveCaption: stored panel frame off-screen or below minSize, snapping back to default")
-            }
-        }
-
-        guard let screen = NSScreen.main else { return }
-        let visible = screen.visibleFrame
-        // Clamp horizontally so the tuning default (1500) doesn't push the
-        // panel off the right edge on a 13" MBA (~1440 effective wide). 40px
-        // of breathing room on each side keeps it from kissing the bezel.
-        let clampedWidth = min(defaultSize.width, visible.width - 40)
-        let size = NSSize(width: max(minSize.width, clampedWidth), height: defaultSize.height)
-        let x = visible.midX - size.width / 2
-        let y = visible.minY + 80
-        setFrame(NSRect(origin: CGPoint(x: x, y: y), size: size), display: false)
-    }
-
-    private func isOnAnyScreen(_ rect: NSRect) -> Bool {
-        for screen in NSScreen.screens {
-            if screen.visibleFrame.intersects(rect) {
-                return true
-            }
-        }
-        return false
+        let screens = NSScreen.screens.map(\.visibleFrame)
+        guard let frame = LiveCaptionPanelFrameStore.normalizedFrame(
+            LiveCaptionPanelFrameStore.load(),
+            visibleScreens: screens,
+            preferredScreen: NSScreen.main?.visibleFrame
+        ) else { return }
+        setFrame(frame, display: false)
+        LiveCaptionPanelFrameStore.save(frame)
     }
 
     /// Fade-in show.
@@ -145,6 +187,7 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
 
     /// Fade-out hide.
     func hide() {
+        saveFrameNow()
         NSAnimationContext.runAnimationGroup({ ctx in
             ctx.duration = 0.18
             ctx.timingFunction = CAMediaTimingFunction(name: .easeIn)
@@ -160,18 +203,45 @@ final class LiveCaptionWindow: NSPanel, NSWindowDelegate {
         scheduleFrameSave()
     }
 
-    func windowDidEndLiveResize(_ notification: Notification) {
+    func windowDidResize(_ notification: Notification) {
         scheduleFrameSave()
+    }
+
+    func windowDidEndLiveResize(_ notification: Notification) {
+        saveFrameNow()
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        saveFrameNow()
+    }
+
+    /// Restore the built-in geometry immediately. This is safe while hidden;
+    /// the next show reads the same persisted default frame.
+    func resetSizeAndPosition() {
+        LiveCaptionPanelFrameStore.clear()
+        let screens = NSScreen.screens.map(\.visibleFrame)
+        guard let frame = LiveCaptionPanelFrameStore.normalizedFrame(
+            nil,
+            visibleScreens: screens,
+            preferredScreen: NSScreen.main?.visibleFrame
+        ) else { return }
+        setFrame(frame, display: isVisible, animate: isVisible)
+        LiveCaptionPanelFrameStore.save(frame)
     }
 
     private func scheduleFrameSave() {
         saveFrameWork?.cancel()
         let work = DispatchWorkItem { [weak self] in
             guard let self else { return }
-            let frameString = NSStringFromRect(self.frame)
-            UserDefaults.standard.set(frameString, forKey: Self.panelFrameKey)
+            LiveCaptionPanelFrameStore.save(self.frame)
         }
         saveFrameWork = work
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0, execute: work)
+    }
+
+    private func saveFrameNow() {
+        saveFrameWork?.cancel()
+        saveFrameWork = nil
+        LiveCaptionPanelFrameStore.save(frame)
     }
 }

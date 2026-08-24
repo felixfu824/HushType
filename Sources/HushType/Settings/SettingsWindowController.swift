@@ -1,3 +1,4 @@
+import AppKit
 import Settings
 
 extension AppSettings.PaneIdentifier {
@@ -6,10 +7,11 @@ extension AppSettings.PaneIdentifier {
     static let caption = Self("caption")
     static let text = Self("text")
     static let cloud = Self("cloud")
+    static let ios = Self("ios")
     static let about = Self("about")
 }
 
-/// Owns the single six-pane Settings window for HushType.
+/// Owns the single seven-pane Settings window for HushType.
 @MainActor
 final class HushTypeSettingsWindowController {
     enum Pane {
@@ -18,6 +20,7 @@ final class HushTypeSettingsWindowController {
         case caption
         case text
         case cloud
+        case ios
         case about
 
         fileprivate var identifier: AppSettings.PaneIdentifier {
@@ -27,6 +30,7 @@ final class HushTypeSettingsWindowController {
             case .caption: .caption
             case .text: .text
             case .cloud: .cloud
+            case .ios: .ios
             case .about: .about
             }
         }
@@ -50,8 +54,31 @@ final class HushTypeSettingsWindowController {
         }
     }
 
+    private final class CaptionPanelResetRelay {
+        var handler: (() -> Void)?
+
+        func reset() {
+            handler?()
+        }
+    }
+
+    private final class IOSServerRelay {
+        var toggleHandler: (() -> Void)?
+        var runningProvider: (() -> Bool)?
+
+        func toggle() {
+            toggleHandler?()
+        }
+
+        func isRunning() -> Bool {
+            runningProvider?() ?? false
+        }
+    }
+
     private let engineSwitchRelay = EngineSwitchRelay()
     private let updateCheckRelay = UpdateCheckRelay()
+    private let captionPanelResetRelay = CaptionPanelResetRelay()
+    private let iosServerRelay = IOSServerRelay()
 
     var onSwitchEngine: ((AppConfig.DictationEngine) -> Void)? {
         get { engineSwitchRelay.handler }
@@ -63,6 +90,21 @@ final class HushTypeSettingsWindowController {
         set { updateCheckRelay.handler = newValue }
     }
 
+    var onResetCaptionPanelFrame: (() -> Void)? {
+        get { captionPanelResetRelay.handler }
+        set { captionPanelResetRelay.handler = newValue }
+    }
+
+    var onToggleIOSServer: (() -> Void)? {
+        get { iosServerRelay.toggleHandler }
+        set { iosServerRelay.toggleHandler = newValue }
+    }
+
+    var isIOSServerRunning: (() -> Bool)? {
+        get { iosServerRelay.runningProvider }
+        set { iosServerRelay.runningProvider = newValue }
+    }
+
     private lazy var packageController = SettingsWindowController(
             panes: [
                 GeneralPane.makeSettingsPane().asSettingsPane(),
@@ -71,9 +113,21 @@ final class HushTypeSettingsWindowController {
                         engineSwitchRelay?.switchEngine(to: engine)
                     }
                 ).asSettingsPane(),
-                CaptionPane.makeSettingsPane().asSettingsPane(),
+                CaptionPane.makeSettingsPane(
+                    onResetPanelFrame: { [weak captionPanelResetRelay] in
+                        captionPanelResetRelay?.reset()
+                    }
+                ).asSettingsPane(),
                 TextPane.makeSettingsPane().asSettingsPane(),
                 CloudPane.makeSettingsPane().asSettingsPane(),
+                IOSServerPane.makeSettingsPane(
+                    onToggle: { [weak iosServerRelay] in
+                        iosServerRelay?.toggle()
+                    },
+                    isRunning: { [weak iosServerRelay] in
+                        iosServerRelay?.isRunning() ?? false
+                    }
+                ).asSettingsPane(),
                 AboutPane.makeSettingsPane(
                     onCheckForUpdates: { [weak updateCheckRelay] in
                         updateCheckRelay?.checkForUpdates()
@@ -88,7 +142,9 @@ final class HushTypeSettingsWindowController {
     func presentAndFocus(
         pane: Pane? = nil,
         onSwitchEngine: ((AppConfig.DictationEngine) -> Void)? = nil,
-        onCheckForUpdates: (() -> Void)? = nil
+        onCheckForUpdates: (() -> Void)? = nil,
+        onToggleIOSServer: (() -> Void)? = nil,
+        isIOSServerRunning: (() -> Bool)? = nil
     ) {
         if let onSwitchEngine {
             self.onSwitchEngine = onSwitchEngine
@@ -96,10 +152,29 @@ final class HushTypeSettingsWindowController {
         if let onCheckForUpdates {
             self.onCheckForUpdates = onCheckForUpdates
         }
+        if let onToggleIOSServer {
+            self.onToggleIOSServer = onToggleIOSServer
+        }
+        if let isIOSServerRunning {
+            self.isIOSServerRunning = isIOSServerRunning
+        }
         packageController.show(pane: pane?.identifier)
-        packageController.window?.title = L10n.string(
-            "settings.window.title",
-            fallback: "Settings"
-        )
+        if let window = packageController.window {
+            window.title = L10n.string("settings.window.title", fallback: "Settings")
+            window.level = .normal
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+
+            // Menu tracking can restore focus to the previously active app as
+            // soon as its action returns. Reassert once on the next run-loop so
+            // Settings reliably lands in front without becoming always-on-top.
+            DispatchQueue.main.async { [weak window] in
+                guard let window else { return }
+                NSApp.activate(ignoringOtherApps: true)
+                window.makeKeyAndOrderFront(nil)
+                window.orderFrontRegardless()
+            }
+        }
     }
 }

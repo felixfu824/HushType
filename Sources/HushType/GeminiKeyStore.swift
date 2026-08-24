@@ -131,7 +131,7 @@ enum GeminiKeyStore {
         let overview = L10n.jsonStringLiteral(L10n.string(
             "template.gemini.overview",
             table: "Templates",
-            fallback: "HushType cloud features — Gemini API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://aistudio.google.com/apikey. Cloud features stay disabled until 'api_key' is filled in. The engine is chosen in HushType's Dictation Engine settings."
+            fallback: "HushType cloud features: Gemini API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://aistudio.google.com/apikey. Cloud features stay disabled until 'api_key' is filled in. The engine is chosen in HushType's Dictation Engine settings."
         ))
         let apiKeyComment = L10n.jsonStringLiteral(L10n.string(
             "template.gemini.api_key",

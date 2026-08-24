@@ -67,7 +67,7 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "Language applies the next time you open HushType";
 
-/* Opens the unified six-pane HushType Settings window. */
+/* Opens the unified seven-pane HushType Settings window. */
 
 "menu.settings" = "Settings…";
 
@@ -82,6 +82,8 @@
 "settings.tab.text" = "Text";
 
 "settings.tab.cloud" = "Cloud";
+
+"settings.tab.ios" = "iOS";
 
 "settings.tab.about" = "About";
 
@@ -98,6 +100,28 @@
 "settings.cloud.effect.dictation" = "Stops uploading at the cap. No further cloud requests that day.";
 
 "settings.cloud.effect.caption" = "Notifies at the cap. The running session is not interrupted.";
+
+/* Experimental iOS companion-server pane. */
+
+"settings.ios.title" = "iOS Server · Untested";
+
+"settings.ios.subtitle" = "An experimental companion feature that has not been maintained or tested recently.";
+
+"settings.ios.status" = "Status:";
+
+"settings.ios.status.running" = "Running on port 8000";
+
+"settings.ios.status.stopped" = "Stopped";
+
+"settings.ios.start" = "Start iOS server (untested)";
+
+"settings.ios.stop" = "Stop iOS Server";
+
+"settings.ios.local_model_note" = "The iOS companion sends audio to this Mac for local transcription, so it still uses the local speech-to-text model even when Mac dictation is set to Cloud.";
+
+"settings.ios.port_note" = "The server listens on port 8000 and requires the companion setup and Python dependencies documented in the README.";
+
+"settings.ios.caption_conflict_note" = "Live Caption and the iOS Server cannot run at the same time because they share GPU memory.";
 
 "settings.cloud.key.openai" = "OpenAI key:";
 
@@ -194,14 +218,6 @@
 
 
 
-
-/* Starts the local iOS companion server. */
-
-"menu.ios_server.start" = "Start iOS Server";
-
-/* Stops the local iOS companion server; numeric port is exact. */
-
-"menu.ios_server.stop" = "Stop iOS Server (port 8000)";
 
 /* Frees the local speech-to-text model from memory. */
 
@@ -643,7 +659,7 @@
 
 /* Memory/engine behavior explanation. */
 
-"settings.engine.cloud_unloads_local" = "Cloud dictation sends audio directly to the selected provider using your key. The local speech model stays unloaded; the iOS companion still uses it.";
+"settings.engine.cloud_unloads_local" = "Cloud dictation sends audio directly to the selected provider using your key. The local speech model stays unloaded.";
 
 
 
@@ -916,6 +932,12 @@
 /* Picker empty state. */
 
 "picker.system_audio.empty" = "No running apps found.";
+
+/* Group labels only appear when their corresponding running-app section is non-empty. */
+
+"picker.system_audio.common_running" = "Common running apps";
+
+"picker.system_audio.other_running" = "All other running apps";
 
 /* Confirms selected running app. */
 
@@ -1480,10 +1502,10 @@
 "settings.caption.local_sub" = "Shared by both caption modes. Local caption runs on Qwen3: free, nothing leaves the Mac.";
 
 /* Caption panel default size row label. */
-"settings.caption.panel_size" = "Default caption panel size:";
+"settings.caption.panel_size" = "Drag or resize the caption panel; HushType remembers its size and position automatically.";
 
 /* Caption panel next-start position reset checkbox. */
-"settings.caption.reset_position" = "Reset panel position on next Live Caption start";
+"settings.caption.reset_position" = "Reset Size & Position";
 
 /* Caption panel advanced tuning row label. */
 "settings.caption.advanced" = "Advanced tuning:";
@@ -1495,7 +1517,7 @@
 "settings.text.polish_title" = "Text Polish";
 
 /* Text Polish on-device subtitle. */
-"settings.text.polish_sub" = "Apple Foundation Models · on-device";
+"settings.text.polish_sub" = "Apple Foundation Models · on-device · limited capability";
 
 /* Text Polish enable checkbox. */
 "settings.text.polish.cb" = "Proofread selection on double-tap Right ⌥";
@@ -1507,7 +1529,7 @@
 "settings.text.instructions.note" = "Plain-text instructions sent with every proofread request.";
 
 /* Text Translation on-device subtitle. */
-"settings.text.translation_sub" = "Apple Translation Framework · on-device";
+"settings.text.translation_sub" = "Apple Translation Framework · on-device · limited language support";
 
 /* Text Translation enable checkbox. */
 "settings.text.translation.cb" = "Translate selection on tap Right ⌥";

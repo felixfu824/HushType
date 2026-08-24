@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit the unified Settings localization disposition contract.
 
-The source of truth is the single 175-row inventory in section 6 of
+The source of truth is the single 188-row inventory in section 6 of
 GTM/UI_REVAMP_SPEC.md.  This gate deliberately validates the inventory as a
 union, rather than maintaining a second hand-written list in the script.
 """

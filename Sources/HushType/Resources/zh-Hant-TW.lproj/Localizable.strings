@@ -67,7 +67,7 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "介面語言會在你下次開啟 HushType 時套用";
 
-/* Opens the unified six-pane HushType Settings window. */
+/* Opens the unified seven-pane HushType Settings window. */
 
 "menu.settings" = "設定…";
 
@@ -82,6 +82,8 @@
 "settings.tab.text" = "文字";
 
 "settings.tab.cloud" = "雲端";
+
+"settings.tab.ios" = "iOS";
 
 "settings.tab.about" = "關於";
 
@@ -98,6 +100,28 @@
 "settings.cloud.effect.dictation" = "達到上限即停止上傳，當天不再送出雲端請求。";
 
 "settings.cloud.effect.caption" = "達到上限時發出通知，不中斷進行中的工作階段。";
+
+/* 實驗性 iOS 輔助伺服器分頁。 */
+
+"settings.ios.title" = "iOS 伺服器 · 尚未測試";
+
+"settings.ios.subtitle" = "這是實驗性的輔助功能，近期未持續維護或測試。";
+
+"settings.ios.status" = "狀態：";
+
+"settings.ios.status.running" = "正在連接埠 8000 上執行";
+
+"settings.ios.status.stopped" = "已停止";
+
+"settings.ios.start" = "啟動 iOS 伺服器（尚未測試）";
+
+"settings.ios.stop" = "停止 iOS 伺服器";
+
+"settings.ios.local_model_note" = "iOS 輔助 App 會將音訊傳送到這台 Mac 進行本機轉錄，因此即使 Mac 語音輸入設為「雲端」，仍會使用本機語音轉文字模型。";
+
+"settings.ios.port_note" = "伺服器會監聽連接埠 8000，且需要依 README 設定輔助 App 與 Python 相依套件。";
+
+"settings.ios.caption_conflict_note" = "即時字幕與 iOS 伺服器無法同時執行，因為兩者共用 GPU 記憶體。";
 
 "settings.cloud.key.openai" = "OpenAI 金鑰：";
 
@@ -194,14 +218,6 @@
 
 
 
-
-/* Starts the local iOS companion server. */
-
-"menu.ios_server.start" = "啟動 iOS 伺服器";
-
-/* Stops the local iOS companion server; numeric port is exact. */
-
-"menu.ios_server.stop" = "停止 iOS 伺服器（連接埠 8000）";
 
 /* Frees the local speech-to-text model from memory. */
 
@@ -643,7 +659,7 @@
 
 /* Memory/engine behavior explanation. */
 
-"settings.engine.cloud_unloads_local" = "雲端語音輸入會使用你的金鑰，將音訊直接傳送至所選服務商。本機語音模型會維持卸載；iOS 端仍使用本機模型。";
+"settings.engine.cloud_unloads_local" = "雲端語音輸入會使用你的金鑰，將音訊直接傳送至所選服務商。本機語音模型會維持卸載。";
 
 
 
@@ -916,6 +932,12 @@
 /* Picker empty state. */
 
 "picker.system_audio.empty" = "找不到執行中的 App。";
+
+/* 僅在對應的執行中 App 區段非空白時顯示。 */
+
+"picker.system_audio.common_running" = "常用且正在執行的 App";
+
+"picker.system_audio.other_running" = "其他正在執行的 App";
 
 /* Confirms selected running app. */
 
@@ -1480,10 +1502,10 @@
 "settings.caption.local_sub" = "兩種字幕模式共用。本機字幕跑 Qwen3：免費，不離開這台 Mac。";
 
 /* 字幕面板預設尺寸列標籤。 */
-"settings.caption.panel_size" = "字幕面板預設尺寸：";
+"settings.caption.panel_size" = "拖移或調整字幕面板大小後，HushType 會自動記住其尺寸與位置。";
 
 /* 字幕面板下次開始位置重設 checkbox。 */
-"settings.caption.reset_position" = "下次開始即時字幕時重設面板位置";
+"settings.caption.reset_position" = "重設尺寸與位置";
 
 /* 字幕面板進階調校列標籤。 */
 "settings.caption.advanced" = "進階調校：";
@@ -1495,7 +1517,7 @@
 "settings.text.polish_title" = "文字校對";
 
 /* 文字校對裝置上副標。 */
-"settings.text.polish_sub" = "Apple Foundation Models · 在裝置上執行";
+"settings.text.polish_sub" = "Apple Foundation Models · 在裝置上執行 · 能力有限";
 
 /* 文字校對啟用 checkbox。 */
 "settings.text.polish.cb" = "連按兩下右 ⌥ 校對選取的文字";
@@ -1507,7 +1529,7 @@
 "settings.text.instructions.note" = "純文字指示，每次校對請求都會一併送出。";
 
 /* 文字翻譯裝置上副標。 */
-"settings.text.translation_sub" = "Apple Translation Framework · 在裝置上執行";
+"settings.text.translation_sub" = "Apple Translation Framework · 在裝置上執行 · 支援語言有限";
 
 /* 文字翻譯啟用 checkbox。 */
 "settings.text.translation.cb" = "輕點右 ⌥ 翻譯選取的文字";

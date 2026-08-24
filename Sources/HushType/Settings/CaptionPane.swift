@@ -4,21 +4,6 @@ import SwiftUI
 
 @MainActor
 final class CaptionSettingsModel: ObservableObject {
-    @Published var panelWidth: Double {
-        didSet { persistPanelSizeIfNeeded() }
-    }
-
-    @Published var panelHeight: Double {
-        didSet { persistPanelSizeIfNeeded() }
-    }
-
-    @Published var resetPanelOnNextStart: Bool {
-        didSet {
-            guard !isRefreshing else { return }
-            LiveCaptionTuning.setResetPanelOnNextStart(resetPanelOnNextStart)
-        }
-    }
-
     @Published var targetLanguage: String {
         didSet { AppConfig.shared.cloudTargetLanguage = targetLanguage }
     }
@@ -32,12 +17,10 @@ final class CaptionSettingsModel: ObservableObject {
     }
 
     private var isRefreshing = false
+    private let onResetPanelFrame: () -> Void
 
-    init() {
-        let tuning = LiveCaptionTuning.load()
-        panelWidth = tuning.panelDefaultWidth
-        panelHeight = tuning.panelDefaultHeight
-        resetPanelOnNextStart = tuning.resetPanelOnNextStart
+    init(onResetPanelFrame: @escaping () -> Void) {
+        self.onResetPanelFrame = onResetPanelFrame
         targetLanguage = AppConfig.shared.cloudTargetLanguage
         showSourceLine = AppConfig.shared.cloudShowSourceLine
         autoStopMinutes = AppConfig.shared.cloudAutoStopMinutes
@@ -45,10 +28,6 @@ final class CaptionSettingsModel: ObservableObject {
 
     func refresh() {
         isRefreshing = true
-        let tuning = LiveCaptionTuning.load()
-        panelWidth = tuning.panelDefaultWidth
-        panelHeight = tuning.panelDefaultHeight
-        resetPanelOnNextStart = tuning.resetPanelOnNextStart
         targetLanguage = AppConfig.shared.cloudTargetLanguage
         showSourceLine = AppConfig.shared.cloudShowSourceLine
         autoStopMinutes = AppConfig.shared.cloudAutoStopMinutes
@@ -77,14 +56,19 @@ final class CaptionSettingsModel: ObservableObject {
         NSWorkspace.shared.open(url)
     }
 
-    private func persistPanelSizeIfNeeded() {
-        guard !isRefreshing else { return }
-        LiveCaptionTuning.setPanelSize(w: panelWidth, h: panelHeight)
+    func resetPanelFrame() {
+        onResetPanelFrame()
     }
 }
 
 struct CaptionPane: View {
-    @StateObject private var model = CaptionSettingsModel()
+    @StateObject private var model: CaptionSettingsModel
+
+    init(onResetPanelFrame: @escaping () -> Void) {
+        _model = StateObject(wrappedValue: CaptionSettingsModel(
+            onResetPanelFrame: onResetPanelFrame
+        ))
+    }
 
     private static var targetLanguages: [(value: String, label: String)] {[
         ("en", L10n.string("picker.autonym.en", fallback: "English")),
@@ -116,40 +100,24 @@ struct CaptionPane: View {
                 )
             )
 
-            SettingsRow(L10n.string(
-                "settings.caption.panel_size",
-                fallback: "Default caption panel size:"
-            )) {
-                HStack(spacing: 6) {
-                    Stepper(value: Binding(
-                        get: { model.panelWidth },
-                        set: { model.panelWidth = max(400, min(2400, $0)) }
-                    ), in: 400...2400, step: 10) {
-                        Text("\(Int(model.panelWidth))")
-                            .monospacedDigit()
-                            .frame(minWidth: 38, alignment: .trailing)
-                    }
-                    Text("×")
-                        .foregroundStyle(.secondary)
-                    Stepper(value: Binding(
-                        get: { model.panelHeight },
-                        set: { model.panelHeight = max(80, min(800, $0)) }
-                    ), in: 80...800, step: 10) {
-                        Text("\(Int(model.panelHeight))")
-                            .monospacedDigit()
-                            .frame(minWidth: 32, alignment: .trailing)
-                    }
-                    Text("pt")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-            }
-
             SettingsRow {
-                Toggle(L10n.string(
-                    "settings.caption.reset_position",
-                    fallback: "Reset panel position on next Live Caption start"
-                ), isOn: $model.resetPanelOnNextStart)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(L10n.string(
+                        "settings.caption.panel_size",
+                        fallback: "Drag or resize the caption panel; HushType remembers its size and position automatically."
+                    ))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                    Button(L10n.string(
+                        "settings.caption.reset_position",
+                        fallback: "Reset Size & Position"
+                    )) {
+                        model.resetPanelFrame()
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
 
             SettingsRow(L10n.string(
@@ -246,7 +214,9 @@ struct CaptionPane: View {
         }
     }
 
-    static func makeSettingsPane() -> AppSettings.Pane<CaptionPane> {
+    static func makeSettingsPane(
+        onResetPanelFrame: @escaping () -> Void
+    ) -> AppSettings.Pane<CaptionPane> {
         let title = L10n.string("settings.tab.caption", fallback: "Caption")
         return AppSettings.Pane(
             identifier: .caption,
@@ -256,7 +226,7 @@ struct CaptionPane: View {
                 accessibilityDescription: title
             )!
         ) {
-            CaptionPane()
+            CaptionPane(onResetPanelFrame: onResetPanelFrame)
         }
     }
 
