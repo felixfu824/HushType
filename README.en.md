@@ -65,7 +65,7 @@
 | Interface Language (Follow System / English / 繁體中文) | Follow System | - |
 | Floating "Listening / Transcribing" pill | ON | - |
 | Unload speech-to-text model | One-click | - |
-| iOS app + custom keyboard (Mac as server) | Optional | iOS 17+, Python on Mac |
+| iOS app + custom keyboard (experimental, untested; Mac as server) | Optional | iOS 17+, Python on Mac |
 
 ---
 
@@ -149,7 +149,7 @@ Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and 
 
 **Permission re-grant:** because HushType is ad-hoc signed, macOS may require Accessibility to be enabled again after an update. The setup window will show the current permission state. Click **Open System Settings**, enable HushType in Accessibility, then click **Restart HushType** so macOS applies the grant. If you see duplicate HushType entries, cannot find HushType, or the switch does not work, use **Reset Old HushType Entry** in the setup window and add/enable HushType again.
 
-**Full uninstall:** Trash `/Applications/HushType.app`, then optionally `defaults delete com.felix.hushtype` and `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` to remove preferences and the model cache.
+**Full uninstall:** Trash `/Applications/HushType.app`, then optionally run `defaults delete com.felix.hushtype` and remove `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` to clear the macOS app's model cache. The iOS server uses a separate Python / Hugging Face cache.
 
 ---
 
@@ -288,13 +288,13 @@ On-device proofreading via Apple's Foundation Models framework: the Apple Intell
 
 **Speed:** typically ~1-3 s. HushType keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
 
-**Custom rules:** menu bar → **Edit Polish Instructions** opens `~/Library/Application Support/HushType/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt, e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
+**Custom rules:** menu bar → **Settings… → Text → Polish instructions → Open file in TextEdit** opens `~/Library/Application Support/HushType/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt, e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
 
 **Requirements:** macOS 26 (Tahoe) + Apple Intelligence enabled + Apple Silicon. On by default; on Macs without Foundation Models the double-tap stays inactive, and the **Services → Polish with HushType** entry reports why. Toggle from the menu bar (**Text Polish**) or via `defaults`.
 
 ## Setup Guide: iOS (iPhone + Mac Server)
 
-The iOS app uses your Mac as the transcription server. Your iPhone sends audio to your Mac over WiFi or Tailscale, and receives the transcribed text back.
+The iOS app and server are experimental and untested. They use your Mac as the transcription server: your iPhone sends audio to your Mac over WiFi or Tailscale and receives the transcribed text back. The server uses port `8000` and cannot run alongside Live Caption.
 
 ### Step 1: Install server dependencies on Mac
 
@@ -479,7 +479,7 @@ Two modes, one principle: **there is never a third party in the middle, and the 
 - **No audio is stored.** Voice data exists only in RAM during the recording → transcription pipeline, then discarded. Nothing is written to disk: not on macOS, not on the iOS server.
 - **No network after setup.** The only internet access is the one-time model download (~675 MB) on first launch. After that, the app and the model run fully offline with zero outbound connections.
 - **No telemetry.** No analytics, no usage tracking, no phone-home. The macOS app contains zero local-mode network code beyond the initial model fetch (handled by the HuggingFace Hub SDK inside speech-swift) and an optional GitHub releases check for update notifications.
-- **Fully air-gappable.** Pre-download the model folder on another machine (`~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/` for the macOS app, `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/` for the iOS server) and copy it over; the app will never need internet.
+- **Fully air-gappable.** Prepare the model folder on another machine (`~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` for the macOS app; the Python / iOS server has a separate Hugging Face cache at `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`) and copy it over; the app will never need internet.
 
 ### Cloud mode (opt-in: cloud dictation / Live Translated Caption)
 
@@ -517,8 +517,15 @@ HushType/
 │   ├── GeminiTranscribeEngine.swift   Cloud dictation engine: Gemini (HTTPS direct)
 │   ├── CloudUsageTracker.swift        Daily spend metering + pre-upload cap enforcement
 │   ├── CloudDictationOnboardingAlert.swift  Per-session cloud dictation consent
-│   ├── DictationEngineSettingsView.swift    Engine settings window (SwiftUI)
-│   ├── DictationEngineSettingsWindow.swift  Engine settings window controller
+│   ├── Settings/                         Unified seven-tab Settings UI
+│   │   ├── SettingsWindowController.swift  Window controller + tab routing
+│   │   ├── GeneralPane.swift             General preferences + permissions
+│   │   ├── DictationPane.swift           Dictation engine + recognition settings
+│   │   ├── CaptionPane.swift             Caption panel + translated-caption settings
+│   │   ├── TextPane.swift                Text Polish + Translation settings
+│   │   ├── CloudPane.swift               Spend guardrails + provider keys
+│   │   ├── IOSServerPane.swift           Experimental iOS server controls
+│   │   └── AboutPane.swift               Version, project links, update check
 │   ├── GeminiKeyStore.swift           User Gemini API key file handling (0600)
 │   ├── ChineseConverter.swift         OpenCC s2twp (Simplified → Traditional)
 │   ├── NumberNormalizer.swift         Deterministic Chinese-numeral → Arabic-digit ITN

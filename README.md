@@ -65,7 +65,7 @@
 | 介面語言（跟隨系統 / English / 繁體中文）| 跟隨系統 | - |
 | 浮動「Listening / Transcribing」指示條 | ON | - |
 | 卸載語音轉文字模型 | 一鍵 | - |
-| iOS App + 自訂鍵盤（以 Mac 為伺服器）| 選用 | iOS 17+、Mac 上需有 Python |
+| iOS App + 自訂鍵盤（實驗性、尚未測試，以 Mac 為伺服器）| 選用 | iOS 17+、Mac 上需有 Python |
 
 ---
 
@@ -150,7 +150,7 @@ DMG 為完全獨立版本，OpenCC 及所有相依套件皆已內含。不需要
 
 **為什麼每次更新都可能要重新授權？** HushType 是 ad-hoc 簽章，macOS 可能會在更新後要求你重新啟用輔助使用權限。設定視窗會顯示目前權限狀態。點 **Open System Settings**，在輔助使用清單裡開啟 HushType，接著點 **Restart HushType** 讓 macOS 套用權限。如果你看到重複的 HushType、找不到 HushType，或開關無法正常運作，請在設定視窗中使用 **Reset Old HushType Entry**，再重新加入或啟用 HushType。
 
-**完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時 `defaults delete com.felix.hushtype` 並 `rm -rf ~/.cache/huggingface/hub/models--*Qwen3-ASR*` 清掉偏好設定與模型快取。
+**完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時執行 `defaults delete com.felix.hushtype`，並刪除 `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` 以清除 macOS App 的模型快取。iOS 伺服器使用另一個 Python / Hugging Face 快取，兩者互不相同。
 
 ---
 
@@ -289,13 +289,13 @@ make install
 
 **速度：** 通常約 1-3 秒。HushType 會維持一個預熱好的待命模型 session，把 prompt 處理成本在你雙擊之前先付掉。
 
-**自訂規則：** 選單列 → **Edit Polish Instructions** 開啟 `~/Library/Application Support/HushType/polish_rules.txt`。一行一條短規則（`#` 開頭為註解），會合併進內建 prompt，例如 `一律用台灣用語` 或 `Use the Oxford comma.`。存檔即生效，不用重啟。
+**自訂規則：** 選單列 → **設定… → 文字 → Polish instructions → Open file in TextEdit**，開啟 `~/Library/Application Support/HushType/polish_rules.txt`。一行一條短規則（`#` 開頭為註解），會合併進內建 prompt，例如 `一律用台灣用語` 或 `Use the Oxford comma.`。存檔即生效，不用重啟。
 
 **需求：** macOS 26（Tahoe）+ 已啟用 Apple Intelligence + Apple Silicon。預設開啟；沒有 Foundation Models 的 Mac 上雙擊不會有反應，改用 **服務 → Polish with HushType** 會顯示清楚的原因。可從選單列（**Text Polish**）或 `defaults` 開關。
 
 ## 安裝指南：iOS（iPhone + Mac 伺服器）
 
-iOS App 使用你的 Mac 作為轉錄伺服器。iPhone 透過 WiFi 或 Tailscale 將音訊傳送到 Mac，再接收轉錄好的文字。
+iOS App 與伺服器是實驗性、尚未測試的功能。它使用你的 Mac 作為轉錄伺服器，iPhone 透過 WiFi 或 Tailscale 將音訊傳送到 Mac，再接收轉錄好的文字。伺服器使用 `8000` port，且不能與 Live Caption 同時執行。
 
 ### 步驟 1：在 Mac 上安裝伺服器相依套件
 
@@ -480,7 +480,7 @@ private static let rightOptionKeyCode: Int64 = 61
 - **不儲存任何錄音。** 語音資料僅存在於記憶體中（錄音 → 轉錄流程），完成後即丟棄。無論 macOS 或 iOS 伺服器，皆不會將任何音訊寫入磁碟。
 - **設定完成後不需要網路。** 唯一需要連網的是首次啟動時下載模型（約 675 MB）。之後，App 與模型完全離線運行，零對外連線。
 - **無遙測。** 無分析追蹤、無使用統計、無回傳機制。macOS App 除了初始模型下載（由 speech-swift 內的 HuggingFace Hub SDK 處理）以及選用的 GitHub releases 更新檢查外，不包含任何本機模式網路程式碼。
-- **可完全離網運作。** 事先在另一台機器下載模型資料夾（macOS App 為 `~/.cache/huggingface/hub/models--aufklarer--Qwen3-ASR-0.6B-MLX-4bit/`,iOS 伺服器為 `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`）再複製過來，App 將永遠不需要網路。
+- **可完全離網運作。** 事先在另一台機器準備模型資料夾（macOS App 為 `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/`，Python / iOS 伺服器則使用獨立的 Hugging Face 快取 `~/.cache/huggingface/hub/models--mlx-community--Qwen3-ASR-0.6B-4bit/`）再複製過來，App 將永遠不需要網路。
 
 ### 雲端模式（選擇加入：雲端語音輸入 / Live Translated Caption）
 

@@ -1,4 +1,4 @@
-# HushType — AI Agent Setup Instructions
+# HushType: AI Agent Setup Instructions
 
 > **For non-technical users:** Copy everything below this line and paste it into your AI coding agent (Claude Code, Cursor, Codex, Windsurf, etc.). The agent will handle the entire setup process for you.
 
@@ -10,11 +10,11 @@ You are helping a user set up HushType, a local voice-to-text app for macOS and 
 
 ### Context
 
-HushType is a voice-to-text tool that runs entirely on the user's Mac (Apple Silicon required). It uses the Qwen3-ASR speech model via MLX for on-device transcription. It supports mixed English/Chinese input and outputs Traditional Chinese.
+HushType is a local-first voice-to-text tool for Apple Silicon Macs. Local dictation is the default: Qwen3-ASR runs via MLX on the user's Mac, supports mixed English/Chinese input, and outputs Traditional Chinese. Optional cloud dictation and Live Translated Caption are explicit opt-in lanes that send audio directly to the selected provider using the user's own API key; there is no HushType relay server.
 
 There are two modes:
 1. **macOS mode**: Menu bar app. User holds Right Option key, speaks, releases, text appears at cursor.
-2. **iOS mode** (optional): iPhone keyboard extension that sends audio to the Mac for transcription. Requires the Mac to be running as a server.
+2. **iOS mode** (optional, experimental, and untested): iPhone keyboard extension that sends audio to the Mac for transcription. It requires the Mac to run the iOS server on port 8000. The iOS server cannot run alongside Live Caption.
 
 ### Task: Set up HushType on this machine
 
@@ -75,7 +75,7 @@ open /Applications/HushType.app
    - If HushType is missing from the list, tell the user to use the small helper panel to drag HushType into the Accessibility list.
    - If there are duplicate old entries, HushType is missing, or the switch does not work, tell the user to click **Reset Old HushType Entry**, confirm, then add or enable HushType again.
    - Tell the user: "Click **Allow Microphone** and approve the macOS microphone prompt."
-   - When Accessibility is enabled and Microphone has been handled, tell the user: "Click **Restart HushType** — this will automatically relaunch HushType with the new Accessibility permission."
+   - When Accessibility is enabled and Microphone has been handled, tell the user: "Click **Restart HushType**. This will automatically relaunch HushType with the new Accessibility permission."
    - After the restart, the menu bar icon will appear. Wait for the model to download. Tell the user: "Wait until the menu bar shows 'Ready' (first download is ~675 MB, one-time)."
 
 10. Test it:
@@ -85,7 +85,9 @@ open /Applications/HushType.app
 
 ---
 
-#### Phase 3: iOS setup (optional — only if user wants iPhone support)
+#### Phase 3: iOS setup (optional, experimental, and untested; only if user wants iPhone support)
+
+Before continuing, tell the user that this lane has not been recently validated, uses port 8000, and cannot run alongside Live Caption.
 
 11. Install additional dependencies:
 ```bash
@@ -161,7 +163,7 @@ tailscale ip -4 2>/dev/null || ipconfig getifaddr en0
 Tell the user the IP address and say: "Enter this in the HushType app on your iPhone as: http://[IP]:8000"
 
 17. Start the iOS server on Mac:
-Tell the user: "Click the HushType icon in your Mac's menu bar, then click 'Start iOS Server'. Wait about 20 seconds."
+Tell the user: "Stop Live Caption if it is running. Click the HushType icon in your Mac's menu bar, then click **Settings… > iOS > Start iOS server (untested)**. The server uses port 8000. Wait about 20 seconds."
 
 Verify the server is running:
 ```bash
@@ -171,8 +173,8 @@ curl -s http://localhost:8000/ | head -1
 
 18. Tell the user to test on iPhone:
 > "In the HushType app on your iPhone:
-> a) Tap 'Test Connection' — it should show green 'Connected'.
-> b) Tap 'Start Listening' — you'll see an orange dot at the top of your screen.
+> a) Tap 'Test Connection'; it should show green 'Connected'.
+> b) Tap 'Start Listening'; you'll see an orange dot at the top of your screen.
 > c) Switch to Notes or any text app.
 > d) Long-press the globe key on your keyboard and select 'HushType'.
 > e) Tap the microphone, say something, then tap stop.
