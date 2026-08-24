@@ -6,9 +6,10 @@ extension AppSettings.PaneIdentifier {
     static let caption = Self("caption")
     static let text = Self("text")
     static let cloud = Self("cloud")
+    static let about = Self("about")
 }
 
-/// Owns the single five-pane Settings window for HushType.
+/// Owns the single six-pane Settings window for HushType.
 @MainActor
 final class HushTypeSettingsWindowController {
     enum Pane {
@@ -17,6 +18,7 @@ final class HushTypeSettingsWindowController {
         case caption
         case text
         case cloud
+        case about
 
         fileprivate var identifier: AppSettings.PaneIdentifier {
             switch self {
@@ -25,6 +27,7 @@ final class HushTypeSettingsWindowController {
             case .caption: .caption
             case .text: .text
             case .cloud: .cloud
+            case .about: .about
             }
         }
     }
@@ -39,11 +42,25 @@ final class HushTypeSettingsWindowController {
         }
     }
 
+    private final class UpdateCheckRelay {
+        var handler: (() -> Void)?
+
+        func checkForUpdates() {
+            handler?()
+        }
+    }
+
     private let engineSwitchRelay = EngineSwitchRelay()
+    private let updateCheckRelay = UpdateCheckRelay()
 
     var onSwitchEngine: ((AppConfig.DictationEngine) -> Void)? {
         get { engineSwitchRelay.handler }
         set { engineSwitchRelay.handler = newValue }
+    }
+
+    var onCheckForUpdates: (() -> Void)? {
+        get { updateCheckRelay.handler }
+        set { updateCheckRelay.handler = newValue }
     }
 
     private lazy var packageController = SettingsWindowController(
@@ -57,6 +74,11 @@ final class HushTypeSettingsWindowController {
                 CaptionPane.makeSettingsPane().asSettingsPane(),
                 TextPane.makeSettingsPane().asSettingsPane(),
                 CloudPane.makeSettingsPane().asSettingsPane(),
+                AboutPane.makeSettingsPane(
+                    onCheckForUpdates: { [weak updateCheckRelay] in
+                        updateCheckRelay?.checkForUpdates()
+                    }
+                ).asSettingsPane(),
             ],
             animated: true
         )
@@ -65,10 +87,14 @@ final class HushTypeSettingsWindowController {
 
     func presentAndFocus(
         pane: Pane? = nil,
-        onSwitchEngine: ((AppConfig.DictationEngine) -> Void)? = nil
+        onSwitchEngine: ((AppConfig.DictationEngine) -> Void)? = nil,
+        onCheckForUpdates: (() -> Void)? = nil
     ) {
         if let onSwitchEngine {
             self.onSwitchEngine = onSwitchEngine
+        }
+        if let onCheckForUpdates {
+            self.onCheckForUpdates = onCheckForUpdates
         }
         packageController.show(pane: pane?.identifier)
         packageController.window?.title = L10n.string(

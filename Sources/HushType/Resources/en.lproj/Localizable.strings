@@ -62,7 +62,7 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "Language applies the next time you open HushType";
 
-/* Opens the unified five-pane HushType Settings window. */
+/* Opens the unified six-pane HushType Settings window. */
 
 "menu.settings" = "Settings…";
 
@@ -77,6 +77,8 @@
 "settings.tab.text" = "Text";
 
 "settings.tab.cloud" = "Cloud";
+
+"settings.tab.about" = "About";
 
 /* Phase 2 unified Settings pane copy. */
 
@@ -380,13 +382,9 @@
 
 "alert.text_polish.unavailable.message" = "Text Polish requires macOS 26 + Apple Intelligence.\n\n%1$@";
 
-/* About alert title; argument is the app version. */
+/* About product description; product names and language codes remain literal. */
 
-"about.title" = "HushType v%1$@";
-
-/* About body; product names, author, language codes, license identity, and URL remain literal. */
-
-"about.body" = "Local voice-to-text for macOS and iOS.\nMultilingual (EN/ZH/JP) with Traditional Chinese output.\n\nAuthor: Felix Fu\nCo-authored with: Claude (Anthropic)\nLicense: MIT\n\ngithub.com/felixfu824/HushType";
+"about.body" = "Local voice-to-text for macOS and iOS.\nMultilingual (EN/ZH/JP) with Traditional Chinese output.";
 
 /* Starts the explicit-consent GitHub update check. */
 
@@ -1441,8 +1439,14 @@
 /* General Settings floating indicator note. */
 "settings.general.indicator.note" = "The small \"Listening / Transcribing\" pill near the bottom of the screen.";
 
-/* General Settings About row label. */
-"settings.general.about" = "About:";
+/* About Settings version and build; arguments are the marketing version and build number. */
+"settings.about.version_build" = "Version %1$@ (Build %2$@)";
+
+/* About Settings metadata labels. */
+"settings.about.author" = "Author:";
+"settings.about.coauthors" = "Co-authors:";
+"settings.about.license" = "License:";
+"settings.about.repository" = "Repository:";
 
 /* Dictation customized dictionary row label. */
 "settings.dictation.dictionary" = "Customized Dictionary:";

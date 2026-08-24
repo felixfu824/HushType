@@ -203,6 +203,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         statusBar.onDictationEngineChanged = switchEngine
         HushTypeSettingsWindowController.shared.onSwitchEngine = switchEngine
+        HushTypeSettingsWindowController.shared.onCheckForUpdates = {
+            UpdateCheckCoordinator.shared.checkForUpdates()
+        }
 
         // Wire Live Caption (local) submenu. The manager exists from launch;
         // if Qwen is absent, its local path loads the shared engine lazily.

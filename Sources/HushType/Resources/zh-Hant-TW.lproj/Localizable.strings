@@ -62,7 +62,7 @@
 
 "menu.interface_language.applied_next_launch.accessibility" = "介面語言會在你下次開啟 HushType 時套用";
 
-/* Opens the unified five-pane HushType Settings window. */
+/* Opens the unified six-pane HushType Settings window. */
 
 "menu.settings" = "設定…";
 
@@ -77,6 +77,8 @@
 "settings.tab.text" = "文字";
 
 "settings.tab.cloud" = "雲端";
+
+"settings.tab.about" = "關於";
 
 /* Phase 2 unified Settings pane copy. */
 
@@ -380,13 +382,9 @@
 
 "alert.text_polish.unavailable.message" = "文字校對需要 macOS 26 + Apple Intelligence。\n\n%1$@";
 
-/* About alert title; argument is the app version. */
+/* 關於分頁的產品說明；產品名稱與語言代碼維持原文。 */
 
-"about.title" = "HushType v%1$@";
-
-/* About body; product names, author, language codes, license identity, and URL remain literal. */
-
-"about.body" = "適用於 macOS 與 iOS 的本機語音轉文字工具。\n支援多語言（EN/ZH/JP），並輸出繁體中文。\n\n作者：Felix Fu\n共同創作：Claude（Anthropic）\n授權：MIT\n\ngithub.com/felixfu824/HushType";
+"about.body" = "適用於 macOS 與 iOS 的本機語音轉文字工具。\n支援多語言（EN/ZH/JP），並輸出繁體中文。";
 
 /* Starts the explicit-consent GitHub update check. */
 
@@ -1441,8 +1439,14 @@
 /* 一般設定浮動指示器說明。 */
 "settings.general.indicator.note" = "螢幕下方那個「聆聽中 / 轉錄中」的小標籤。";
 
-/* 一般設定關於列標籤。 */
-"settings.general.about" = "關於：";
+/* 關於設定中的版本與版本編號；參數依序為行銷版本與版本編號。 */
+"settings.about.version_build" = "版本 %1$@（組建 %2$@）";
+
+/* 關於設定的中繼資料標籤。 */
+"settings.about.author" = "作者：";
+"settings.about.coauthors" = "共同創作者：";
+"settings.about.license" = "授權：";
+"settings.about.repository" = "程式碼儲存庫：";
 
 /* 語音輸入自訂字典列標籤。 */
 "settings.dictation.dictionary" = "自訂字典：";

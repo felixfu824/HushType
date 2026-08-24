@@ -5,7 +5,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "version-che
 
 /// User-initiated GitHub release check. Hits the public Releases API only when
 /// the user has just clicked through an explicit consent dialog (see
-/// `StatusBarController.checkForUpdates`). No automatic checks, no caching, no
+/// `UpdateCheckCoordinator.checkForUpdates`). No automatic checks, no caching, no
 /// background polling — every call is a fresh fetch driven by an explicit user
 /// action.
 ///

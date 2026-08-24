@@ -141,15 +141,6 @@ struct GeneralPane: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
             }
-
-            SettingsDivider()
-
-            SettingsRow(L10n.string(
-                "settings.general.about",
-                fallback: "About:"
-            )) {
-                Text("HushType \(appVersion)")
-            }
         }
         .settingsPaneLayout()
     }
@@ -187,9 +178,5 @@ struct GeneralPane: View {
             "Follow System (%1$@)",
             arguments: [effectiveName]
         )
-    }
-
-    private var appVersion: String {
-        Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? ""
     }
 }
