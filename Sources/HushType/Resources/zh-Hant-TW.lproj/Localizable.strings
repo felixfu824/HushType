@@ -129,7 +129,6 @@
 
 "settings.cloud.key.note" = "金鑰保留在本機檔案中，只用於直接連線至各服務商。金鑰留空即可停用該服務商。";
 
-"settings.cloud.reset_cost.note" = "將即時翻譯字幕的自動停止時間重設為 60 分鐘，並將每日費用上限重設為 US$5.00。其他設定不變。";
 
 /* Informational alert title after changing the next-launch interface language. */
 
@@ -714,14 +713,6 @@
 /* Auto-stop duration control label. */
 
 "settings.cost_guardrails.auto_stop" = "自動停止時間：";
-
-
-
-
-
-/* Resets translated-caption auto-stop and daily warning defaults. */
-
-"settings.reset_defaults" = "重設雲端費用設定";
 
 
 

@@ -129,7 +129,6 @@
 
 "settings.cloud.key.note" = "Keys stay in local files and are used only for direct requests to each provider. An empty key disables that provider.";
 
-"settings.cloud.reset_cost.note" = "Resets translated-caption auto-stop to 60 minutes and the daily spend cap to $5.00. Other settings are unchanged.";
 
 /* Informational alert title after changing the next-launch interface language. */
 
@@ -714,14 +713,6 @@
 /* Auto-stop duration control label. */
 
 "settings.cost_guardrails.auto_stop" = "Auto-stop session after:";
-
-
-
-
-
-/* Resets translated-caption auto-stop and daily warning defaults. */
-
-"settings.reset_defaults" = "Reset cloud cost settings";
 
 
 

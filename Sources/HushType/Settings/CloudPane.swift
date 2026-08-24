@@ -69,11 +69,6 @@ final class CloudSettingsModel: ObservableObject {
         return alert
     }
 
-    func resetCloudCostSettings() {
-        AppConfig.shared.cloudAutoStopMinutes = 60
-        dailyCap = 5.0
-    }
-
     func openKeyFile(provider: CloudUsageTracker.Provider) {
         switch provider {
         case .openai:
@@ -173,25 +168,6 @@ struct CloudPane: View {
                         model.confirmAndResetCounter()
                     }
                     .buttonStyle(.bordered)
-                }
-            }
-
-            SettingsRow {
-                VStack(alignment: .leading, spacing: 4) {
-                    Button(L10n.string(
-                        "settings.reset_defaults",
-                        fallback: "Reset cloud cost settings"
-                    )) {
-                        model.resetCloudCostSettings()
-                    }
-                    .buttonStyle(.bordered)
-                    Text(L10n.string(
-                        "settings.cloud.reset_cost.note",
-                        fallback: "Resets translated-caption auto-stop to 60 minutes and the daily spend cap to $5.00. Other settings are unchanged."
-                    ))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
