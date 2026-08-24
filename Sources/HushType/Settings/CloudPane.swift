@@ -41,6 +41,34 @@ final class CloudSettingsModel: ObservableObject {
         }
     }
 
+    func confirmAndResetCounter() {
+        let alert = Self.makeResetCounterAlert()
+        guard alert.runModal() == .alertSecondButtonReturn else { return }
+        resetCounter()
+    }
+
+    static func makeResetCounterAlert() -> NSAlert {
+        let alert = NSAlert()
+        alert.messageText = L10n.string(
+            "alert.cloud.reset_counter.title",
+            fallback: "Reset today's usage counter?"
+        )
+        alert.informativeText = L10n.string(
+            "alert.cloud.reset_counter.message",
+            fallback: "This resets only HushType's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today."
+        )
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: L10n.string("common.button.cancel", fallback: "Cancel"))
+        alert.addButton(withTitle: L10n.string(
+            "alert.cloud.reset_counter.confirm",
+            fallback: "Reset Counter"
+        ))
+        alert.buttons[0].keyEquivalent = "\r"
+        alert.buttons[1].keyEquivalent = ""
+        alert.buttons[1].hasDestructiveAction = true
+        return alert
+    }
+
     func resetCloudCostSettings() {
         AppConfig.shared.cloudAutoStopMinutes = 60
         dailyCap = 5.0
@@ -138,8 +166,11 @@ struct CloudPane: View {
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
-                    Button(L10n.string("common.button.reset_counter", fallback: "Reset counter")) {
-                        model.resetCounter()
+                    Button(L10n.string(
+                        "common.button.reset_counter",
+                        fallback: "Reset today's usage counter…"
+                    )) {
+                        model.confirmAndResetCounter()
                     }
                     .buttonStyle(.bordered)
                 }

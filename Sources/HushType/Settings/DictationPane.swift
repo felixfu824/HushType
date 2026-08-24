@@ -127,7 +127,7 @@ struct DictationPane: View {
                         title: L10n.string("menu.engine.local_qwen", fallback: "Local (Qwen3-ASR)"),
                         detail: L10n.string(
                             "settings.engine.local.detail",
-                            fallback: "Private · Free · ~2.1 GB RAM when loaded (1 GB cache cap)"
+                            fallback: "Private · Free · ~2.1 GB RAM (1 GB cache cap)"
                         )
                     )
                     .tag(AppConfig.DictationEngine.local)

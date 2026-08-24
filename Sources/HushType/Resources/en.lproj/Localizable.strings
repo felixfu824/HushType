@@ -24,9 +24,14 @@
 
 "common.button.open_in_textedit" = "Open file in TextEdit";
 
-/* Resets today's local cloud-usage counter, not provider billing. */
+/* Opens confirmation before resetting today's local cloud-usage counter. */
 
-"common.button.reset_counter" = "Reset counter";
+"common.button.reset_counter" = "Reset today's usage counter…";
+
+/* Cost-safety confirmation before clearing HushType's local usage estimate. */
+"alert.cloud.reset_counter.title" = "Reset today's usage counter?";
+"alert.cloud.reset_counter.message" = "This resets only HushType's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today.";
+"alert.cloud.reset_counter.confirm" = "Reset Counter";
 
 /* Runs this one transcription locally without changing the saved engine. */
 
@@ -606,7 +611,7 @@
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
-"settings.engine.local.detail" = "Private · Free · ~2.1 GB RAM when loaded (1 GB cache cap)";
+"settings.engine.local.detail" = "Private · Free · ~2.1 GB RAM (1 GB cache cap)";
 
 /* Argument 1 is a rate string with exact three-decimal USD precision. */
 

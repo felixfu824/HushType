@@ -24,9 +24,14 @@
 
 "common.button.open_in_textedit" = "在 TextEdit 中開啟檔案";
 
-/* Resets today's local cloud-usage counter, not provider billing. */
+/* 開啟確認視窗，再重設今日的本機雲端用量計數。 */
 
-"common.button.reset_counter" = "重設今日計數";
+"common.button.reset_counter" = "重設今日用量計數…";
+
+/* 清除 HushType 本機用量估算前的費用安全確認。 */
+"alert.cloud.reset_counter.title" = "要重設今日用量計數嗎？";
+"alert.cloud.reset_counter.message" = "這只會重設 HushType 對今日雲端用量的估算，不會變更 OpenAI 或 Gemini 顯示的實際用量或費用。重設後，今日將可再次使用雲端上傳。";
+"alert.cloud.reset_counter.confirm" = "重設計數";
 
 /* Runs this one transcription locally without changing the saved engine. */
 
@@ -606,7 +611,7 @@
 
 /* Local-engine privacy/cost/memory qualifier; preserve approximation and 2.1 GB. */
 
-"settings.engine.local.detail" = "隱私 · 免費 · 載入時約佔 2.1 GB RAM（快取上限 1 GB）";
+"settings.engine.local.detail" = "隱私 · 免費 · 約 2.1 GB RAM（1 GB 快取）";
 
 /* Argument 1 is a rate string with exact three-decimal USD precision. */
 
