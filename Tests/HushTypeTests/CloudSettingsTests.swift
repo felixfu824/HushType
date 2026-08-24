@@ -34,7 +34,7 @@ final class CloudSettingsTests: XCTestCase {
         withInterfaceLanguage(.traditionalChineseTaiwan) {
             XCTAssertEqual(
                 L10n.string("common.button.reset_counter", fallback: "Reset counter"),
-                "重設今日用量計數…"
+                "重設今日計數…"
             )
 
             let alert = CloudSettingsModel.makeResetCounterAlert()

@@ -47,6 +47,43 @@ final class LocalizationMenuTests: XCTestCase {
         XCTAssertEqual(alert.alertStyle, .informational)
     }
 
+    func testGeneralShortcutReferenceIsExactInEnglishAndTraditionalChinese() {
+        let keysAndEnglish = [
+            ("settings.general.shortcuts", "Shortcuts:"),
+            ("settings.general.shortcuts.hold_option", "Hold Right ⌥"),
+            ("settings.general.shortcuts.dictate", "Dictate"),
+            ("settings.general.shortcuts.tap_option", "Tap Right ⌥"),
+            ("settings.general.shortcuts.translate", "Translate selection"),
+            ("settings.general.shortcuts.double_tap_option", "Double-tap Right ⌥"),
+            ("settings.general.shortcuts.proofread", "Proofread selection"),
+            ("settings.general.shortcuts.caption_key", "Right ⌘ + /"),
+            ("settings.general.shortcuts.caption_action", "Toggle Live Caption"),
+        ]
+        let keysAndChinese = [
+            ("settings.general.shortcuts", "快速鍵："),
+            ("settings.general.shortcuts.hold_option", "按住右 ⌥"),
+            ("settings.general.shortcuts.dictate", "語音輸入"),
+            ("settings.general.shortcuts.tap_option", "輕點右 ⌥"),
+            ("settings.general.shortcuts.translate", "翻譯選取文字"),
+            ("settings.general.shortcuts.double_tap_option", "連按兩下右 ⌥"),
+            ("settings.general.shortcuts.proofread", "校對選取文字"),
+            ("settings.general.shortcuts.caption_key", "右 ⌘ + /"),
+            ("settings.general.shortcuts.caption_action", "切換即時字幕"),
+        ]
+
+        AppConfig.shared.interfaceLanguage = .english
+        L10n.resetLaunchStateForTests()
+        for (key, expected) in keysAndEnglish {
+            XCTAssertEqual(L10n.string(key, fallback: "missing"), expected)
+        }
+
+        AppConfig.shared.interfaceLanguage = .traditionalChineseTaiwan
+        L10n.resetLaunchStateForTests()
+        for (key, expected) in keysAndChinese {
+            XCTAssertEqual(L10n.string(key, fallback: "missing"), expected)
+        }
+    }
+
     func testCaptionRoleIsSemanticAndLocalized() {
         AppConfig.shared.interfaceLanguage = .english
         L10n.resetLaunchStateForTests()

@@ -26,7 +26,7 @@
 
 /* Opens confirmation before resetting today's local cloud-usage counter. */
 
-"common.button.reset_counter" = "Reset today's usage counter…";
+"common.button.reset_counter" = "Reset today's counter…";
 
 /* Cost-safety confirmation before clearing HushType's local usage estimate. */
 "alert.cloud.reset_counter.title" = "Reset today's usage counter?";
@@ -103,7 +103,7 @@
 
 "settings.cloud.key.gemini" = "Gemini key:";
 
-"settings.cloud.key.note" = "Before loading, status shows a placeholder. Loaded and unusual-format status are shared. Empty OpenAI disables OpenAI cloud features; empty Gemini disables Gemini cloud dictation.";
+"settings.cloud.key.note" = "Keys stay in local files and are used only for direct requests to each provider. An empty key disables that provider.";
 
 "settings.cloud.reset_cost.note" = "Resets translated-caption auto-stop to 60 minutes and the daily spend cap to $5.00. Other settings are unchanged.";
 
@@ -643,7 +643,7 @@
 
 /* Memory/engine behavior explanation. */
 
-"settings.engine.cloud_unloads_local" = "While a cloud engine is selected the speech model stays unloaded. The iOS companion server always uses the local model.";
+"settings.engine.cloud_unloads_local" = "Cloud dictation sends audio directly to the selected provider using your key. The local speech model stays unloaded; the iOS companion still uses it.";
 
 
 
@@ -1443,6 +1443,17 @@
 
 /* General Settings floating indicator note. */
 "settings.general.indicator.note" = "The small \"Listening / Transcribing\" pill near the bottom of the screen.";
+
+/* Compact fixed-shortcut reference in General Settings. */
+"settings.general.shortcuts" = "Shortcuts:";
+"settings.general.shortcuts.hold_option" = "Hold Right ⌥";
+"settings.general.shortcuts.dictate" = "Dictate";
+"settings.general.shortcuts.tap_option" = "Tap Right ⌥";
+"settings.general.shortcuts.translate" = "Translate selection";
+"settings.general.shortcuts.double_tap_option" = "Double-tap Right ⌥";
+"settings.general.shortcuts.proofread" = "Proofread selection";
+"settings.general.shortcuts.caption_key" = "Right ⌘ + /";
+"settings.general.shortcuts.caption_action" = "Toggle Live Caption";
 
 /* About Settings version and build; arguments are the marketing version and build number. */
 "settings.about.version_build" = "Version %1$@ (Build %2$@)";

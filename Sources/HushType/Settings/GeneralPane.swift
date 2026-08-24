@@ -141,6 +141,56 @@ struct GeneralPane: View {
                     .fixedSize(horizontal: false, vertical: true)
                 }
             }
+
+            SettingsDivider()
+
+            SettingsRow(L10n.string(
+                "settings.general.shortcuts",
+                fallback: "Shortcuts:"
+            )) {
+                VStack(alignment: .leading, spacing: 4) {
+                    shortcutRow(
+                        gesture: L10n.string(
+                            "settings.general.shortcuts.hold_option",
+                            fallback: "Hold Right ⌥"
+                        ),
+                        action: L10n.string(
+                            "settings.general.shortcuts.dictate",
+                            fallback: "Dictate"
+                        )
+                    )
+                    shortcutRow(
+                        gesture: L10n.string(
+                            "settings.general.shortcuts.tap_option",
+                            fallback: "Tap Right ⌥"
+                        ),
+                        action: L10n.string(
+                            "settings.general.shortcuts.translate",
+                            fallback: "Translate selection"
+                        )
+                    )
+                    shortcutRow(
+                        gesture: L10n.string(
+                            "settings.general.shortcuts.double_tap_option",
+                            fallback: "Double-tap Right ⌥"
+                        ),
+                        action: L10n.string(
+                            "settings.general.shortcuts.proofread",
+                            fallback: "Proofread selection"
+                        )
+                    )
+                    shortcutRow(
+                        gesture: L10n.string(
+                            "settings.general.shortcuts.caption_key",
+                            fallback: "Right ⌘ + /"
+                        ),
+                        action: L10n.string(
+                            "settings.general.shortcuts.caption_action",
+                            fallback: "Toggle Live Caption"
+                        )
+                    )
+                }
+            }
         }
         .settingsPaneLayout()
     }
@@ -178,5 +228,17 @@ struct GeneralPane: View {
             "Follow System (%1$@)",
             arguments: [effectiveName]
         )
+    }
+
+    private func shortcutRow(gesture: String, action: String) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Text(gesture)
+                .font(.system(.caption, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(width: 128, alignment: .trailing)
+            Text(action)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityElement(children: .combine)
     }
 }

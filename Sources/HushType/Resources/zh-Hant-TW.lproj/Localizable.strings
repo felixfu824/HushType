@@ -26,7 +26,7 @@
 
 /* 開啟確認視窗，再重設今日的本機雲端用量計數。 */
 
-"common.button.reset_counter" = "重設今日用量計數…";
+"common.button.reset_counter" = "重設今日計數…";
 
 /* 清除 HushType 本機用量估算前的費用安全確認。 */
 "alert.cloud.reset_counter.title" = "要重設今日用量計數嗎？";
@@ -103,7 +103,7 @@
 
 "settings.cloud.key.gemini" = "Gemini 金鑰：";
 
-"settings.cloud.key.note" = "載入前顯示占位狀態。已載入與格式不尋常為共用狀態。OpenAI 金鑰空白會停用 OpenAI 雲端功能；Gemini 金鑰空白會停用 Gemini 雲端語音輸入。";
+"settings.cloud.key.note" = "金鑰保留在本機檔案中，只用於直接連線至各服務商。金鑰留空即可停用該服務商。";
 
 "settings.cloud.reset_cost.note" = "將即時翻譯字幕的自動停止時間重設為 60 分鐘，並將每日費用上限重設為 US$5.00。其他設定不變。";
 
@@ -643,7 +643,7 @@
 
 /* Memory/engine behavior explanation. */
 
-"settings.engine.cloud_unloads_local" = "選取雲端引擎時，語音模型會維持卸載狀態。iOS 伺服器一律使用本機模型。";
+"settings.engine.cloud_unloads_local" = "雲端語音輸入會使用你的金鑰，將音訊直接傳送至所選服務商。本機語音模型會維持卸載；iOS 端仍使用本機模型。";
 
 
 
@@ -1443,6 +1443,17 @@
 
 /* 一般設定浮動指示器說明。 */
 "settings.general.indicator.note" = "螢幕下方那個「聆聽中 / 轉錄中」的小標籤。";
+
+/* 一般設定中的精簡固定快速鍵參考。 */
+"settings.general.shortcuts" = "快速鍵：";
+"settings.general.shortcuts.hold_option" = "按住右 ⌥";
+"settings.general.shortcuts.dictate" = "語音輸入";
+"settings.general.shortcuts.tap_option" = "輕點右 ⌥";
+"settings.general.shortcuts.translate" = "翻譯選取文字";
+"settings.general.shortcuts.double_tap_option" = "連按兩下右 ⌥";
+"settings.general.shortcuts.proofread" = "校對選取文字";
+"settings.general.shortcuts.caption_key" = "右 ⌘ + /";
+"settings.general.shortcuts.caption_action" = "切換即時字幕";
 
 /* 關於設定中的版本與版本編號；參數依序為行銷版本與版本編號。 */
 "settings.about.version_build" = "版本 %1$@（組建 %2$@）";

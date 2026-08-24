@@ -168,7 +168,7 @@ struct CloudPane: View {
                     }
                     Button(L10n.string(
                         "common.button.reset_counter",
-                        fallback: "Reset today's usage counter…"
+                        fallback: "Reset today's counter…"
                     )) {
                         model.confirmAndResetCounter()
                     }
@@ -216,7 +216,7 @@ struct CloudPane: View {
             SettingsRow {
                 Text(L10n.string(
                     "settings.cloud.key.note",
-                    fallback: "Before loading, status shows a placeholder. Loaded and unusual-format status are shared. Empty OpenAI disables OpenAI cloud features; empty Gemini disables Gemini cloud dictation."
+                    fallback: "Keys stay in local files and are used only for direct requests to each provider. An empty key disables that provider."
                 ))
                 .font(.caption)
                 .foregroundStyle(.secondary)
