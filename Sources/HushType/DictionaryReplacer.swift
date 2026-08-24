@@ -54,6 +54,15 @@ enum DictionaryReplacer {
     /// `lastModified` to detect file deletion.
     private static var fileExisted: Bool = false
 
+    /// Internal test seam. Production always resolves to AppConfig's standard
+    /// Application Support location; tests may point the same loading and
+    /// hot-reload code at an isolated temporary file.
+    private static var dictionaryFileURLOverride: URL?
+
+    private static var dictionaryFileURL: URL {
+        dictionaryFileURLOverride ?? AppConfig.dictionaryFileURL
+    }
+
     // MARK: - Public API
 
     /// Reload entries from disk if the file has changed since last load.
@@ -63,7 +72,7 @@ enum DictionaryReplacer {
         lock.lock()
         defer { lock.unlock() }
 
-        let url = AppConfig.dictionaryFileURL
+        let url = dictionaryFileURL
         let fm = FileManager.default
 
         guard fm.fileExists(atPath: url.path) else {
@@ -158,7 +167,7 @@ enum DictionaryReplacer {
     /// Whether the dictionary file currently exists on disk.
     /// Used by the menu to show "No dictionary file" vs "{N} entries loaded".
     static var fileExists: Bool {
-        FileManager.default.fileExists(atPath: AppConfig.dictionaryFileURL.path)
+        FileManager.default.fileExists(atPath: dictionaryFileURL.path)
     }
 
     /// Create the dictionary file with a friendly template at the standard
@@ -166,7 +175,7 @@ enum DictionaryReplacer {
     /// file already exists, returns false without overwriting.
     @discardableResult
     static func createTemplateIfMissing() -> Bool {
-        let url = AppConfig.dictionaryFileURL
+        let url = dictionaryFileURL
         let fm = FileManager.default
 
         if fm.fileExists(atPath: url.path) {
@@ -199,6 +208,17 @@ enum DictionaryReplacer {
     }
 
     // MARK: - Private
+
+    /// Redirects dictionary I/O for unit tests and resets all cached file
+    /// state. Passing nil restores the production URL.
+    static func setDictionaryFileURLForTesting(_ url: URL?) {
+        lock.lock()
+        dictionaryFileURLOverride = url
+        entries = []
+        lastModified = nil
+        fileExisted = false
+        lock.unlock()
+    }
 
     private static func load(from url: URL, mtime: Date?) {
         guard let contents = try? String(contentsOf: url, encoding: .utf8) else {
