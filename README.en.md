@@ -131,7 +131,7 @@ iOS (via your Mac as server):
 
 The DMG is self-contained: OpenCC and all dependencies are bundled. No Homebrew, no terminal commands.
 
-> **iOS server support:** The DMG also includes the iOS server toggle in the menu bar. It requires Python 3 and additional packages to be installed separately; see the [iOS setup guide](#setup-guide-ios-iphone--mac-server) below. If dependencies are missing, the app will show an error with the exact `pip3 install` command needed.
+> **iOS server support (untested):** The DMG also includes iOS server controls under **Settings… → iOS**. This feature is explicitly marked untested and requires Python 3 plus additional packages to be installed separately; see the [iOS setup guide](#setup-guide-ios-iphone--mac-server) below. If dependencies are missing, the app will show an error with the exact `pip3 install` command needed.
 
 ### Option B: Build from source
 
@@ -213,20 +213,16 @@ make install
 - **Tap Right Option (<0.3s)**: with text selected, translates via Apple Translation Framework into a floating card. See [Text Translation](#optional-text-translation).
 - **Double-tap Right Option**: with text selected, proofreads and replaces it in place. See [Text Polish](#optional-text-polish-macos-26).
 
-**Menu bar:**
+**Settings window (menu bar → Settings…):**
 
-- **Dictation Settings** (submenu; everything dictation-related lives here):
-  - **Dictation Engine**: Local (Qwen3-ASR) / OpenAI / Gemini, with an "Engine Settings…" window (see [Cloud dictation](#optional-cloud-dictation-openai--gemini) below)
-  - **Speech-to-Text Language**: Auto / English / Chinese / Japanese (recognition language, not interface language)
-  - **Number Conversion**: Chinese numeral → Arabic digit pass (default on)
-  - **Punctuation Cleanup**: soft / hard / off (default soft)
-  - **Show Floating Indicator**: toggle the listening pill (default on)
-  - **Edit Customized Dictionary**: `~/Library/Application Support/HushType/dictionary.txt`, plain text, `source -> target` per line, hot-reloads
-- **Interface Language**: Follow System / English / 繁體中文（台灣） (default Follow System; applies on next launch)
-- **Text Translation**: enable tap-to-translate
-- **Text Polish (double-tap ⌥)**: enable double-tap proofreading (macOS 26+, default on)
-- **Edit Polish Instructions**: `polish_rules.txt`, your own proofreading rules, hot-reloads
-- **Unload Speech-to-Text Model**: one click frees the local model's RAM; reload from the same menu (~3s cold start)
+- **General**: interface language, floating indicator, and shortcuts
+- **Dictation**: Local / OpenAI / Gemini engines and models, recognition language, Number Conversion, punctuation cleanup, and the customized dictionary
+- **Caption**: caption panel, Live Translated Caption target language, and auto-stop time
+- **Text**: Text Polish, `polish_rules.txt`, and Text Translation
+- **Cloud**: daily spend cap, today's usage, and OpenAI / Gemini key files
+- **iOS**: the untested iOS server controls
+
+The menu bar still provides quick toggles for Live Caption, Live Translated Caption, Text Translation, and Text Polish, plus **Unload Speech-to-Text Model** to free the local model's RAM and reload it from the same menu (~3s cold start).
 
 That's it. The default mode needs no server, no network, no configuration.
 
@@ -235,8 +231,8 @@ That's it. The default mode needs no server, no network, no configuration.
 Same Right ⌥, same Traditional Chinese post-processing, but transcription happens on OpenAI or Gemini instead: **model RAM drops to zero**, quality is the same or better, at the cost of a few seconds of network latency per utterance and duration-based billing (Gemini free tier: $0).
 
 1. **Get a key:** OpenAI at [platform.openai.com/api-keys](https://platform.openai.com/api-keys); Gemini at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) (has a free tier).
-2. **Enter the key:** menu bar → **Dictation Settings → Dictation Engine → Engine Settings…** → open the matching `openai.json` / `gemini.json` and paste the key into the `api_key` field. An empty key = cloud fully disabled.
-3. **Pick engine and model:** the same settings window switches Local / OpenAI / Gemini. Defaults: OpenAI `gpt-4o-mini-transcribe` (with `gpt-transcribe` as an option); Gemini `gemini-3.5-flash-lite` (economical, free-tier friendly), with `gemini-3.7-flash` as the quality option.
+2. **Enter the key:** menu bar → **Settings… → Cloud** → open the matching `openai.json` / `gemini.json` and paste the key into the `api_key` field. An empty key = cloud fully disabled.
+3. **Pick engine and model:** menu bar → **Settings… → Dictation** → switch Local / OpenAI / Gemini. Defaults: OpenAI `gpt-4o-mini-transcribe` (with `gpt-transcribe` as an option); Gemini `gemini-3.5-flash-lite` (economical, free-tier friendly), with `gemini-3.7-flash` as the quality option.
 4. **Consent and guardrails:** the first cloud transcription of each session shows a consent alert explaining that audio goes directly from your Mac to the provider (no relay server). The daily spend warning (default $5, adjustable 0.5-100) blocks a request **before** it would cross the threshold and locks cloud for the day; "Reset counter" unlocks it; over-long recordings are also blocked before upload. On a network timeout (180 s) you get three explicit choices: **Retry Cloud / Use Local Once / Cancel**. Your audio is preserved, and there is never a silent retry.
 5. **The engine choice persists across restarts** (deliberate): if you live on cloud, the local model is never loaded at the next launch; model RAM starts at 0. Switching back to local reloads the model automatically.
 
@@ -255,10 +251,10 @@ Two products sharing the same floating caption panel. Mutually exclusive at runt
 **Live Translated Caption** (~$2/hr against your own OpenAI account):
 
 1. Get an API key at https://platform.openai.com/api-keys.
-2. Status-bar menu → **Live Translated Caption → Translated Caption Settings…** → click **Open file in TextEdit** and paste your key into `openai.json` as the `api_key` field.
-3. Pick a target language in the same settings window (default: English; 13 others including 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch).
+2. Status-bar menu → **Settings… → Cloud** → click **Open file in TextEdit** beside the OpenAI key and paste your key into `openai.json` as the `api_key` field.
+3. Go to **Settings… → Caption** and pick a target language (default: English; 13 others including 繁體中文 / 简体中文 / 日本語 / 한국어 / Español / Français / Deutsch).
 4. Click **Live Translated Caption → From Microphone** (or **From System Audio…**) in the menu. First time you do this, a one-time disclosure modal explains the cost and privacy profile; accept once and it stays accepted.
-5. A cost chip in the caption panel header (e.g. `12:34 · $0.42`) shows session duration and spend. Auto-stop minutes and daily-cap warnings are configurable in the same settings window.
+5. A cost chip in the caption panel header (e.g. `12:34 · $0.42`) shows session duration and spend. Configure auto-stop minutes under **Settings… → Caption** and the daily spend cap under **Settings… → Cloud**.
 
 **Hotkey** (both products): Right ⌘ + / toggles **whichever product you last started**. First-use default is local (Live Caption). The menu items are the authoritative way to pick a specific product + source.
 
@@ -326,8 +322,8 @@ Write down this IP; you'll enter it on your iPhone later.
 
 ### Step 3: Start the iOS server on Mac
 
-**Option A: From HushType menu bar (recommended)**
-Click the HushType icon in menu bar → "Start iOS Server"
+**Option A: From HushType Settings (untested)**
+Click the HushType icon in the menu bar → **Settings… → iOS → Start iOS server (untested)**
 
 **Option B: From terminal**
 ```bash
@@ -404,7 +400,7 @@ When the 5-minute session expires, return to the HushType app and tap "Start Lis
 ### After setup: Daily usage
 
 You only need to repeat Steps 3 + 6-7 each day:
-1. Make sure the iOS server is running on Mac (menu bar → "Start iOS Server")
+1. Make sure the iOS server is running on Mac (menu bar → **Settings… → iOS**)
 2. Open HushType on iPhone → Start Listening
 3. Switch to your app → use the keyboard
 
@@ -506,7 +502,7 @@ HushType/
 ├── Sources/HushType/                  macOS menu bar app
 │   ├── main.swift                     NSApplication bootstrap
 │   ├── AppDelegate.swift              Orchestrator + state machine
-│   ├── StatusBarController.swift      Menu bar icon + menus + iOS server toggle
+│   ├── StatusBarController.swift      Menu bar icon + menus + Settings routing
 │   ├── IOSServerManager.swift         Manages ios_server.py subprocess
 │   ├── OnboardingManager.swift        First-launch / repair permission orchestration
 │   ├── OnboardingSetupWindowController.swift  Setup window for Accessibility + Microphone
