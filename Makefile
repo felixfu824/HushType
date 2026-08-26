@@ -99,6 +99,7 @@ print(f'  Scrubbed {count} dev-path occurrence(s) from binary')"
 	fi
 	@$(MAKE) bundle-opencc
 	@test -f "$(BUNDLE_DIR)/Contents/Resources/$(ICON_NAME).icns"
+	@chmod -R u+w "$(BUNDLE_DIR)"
 	@xattr -cr "$(BUNDLE_DIR)"
 	@# Sign nested code with unique stable identifiers, then the app LAST.
 	@for dylib in "$(BUNDLE_DIR)"/Contents/Frameworks/*.dylib; do \
