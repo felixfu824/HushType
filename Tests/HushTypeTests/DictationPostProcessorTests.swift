@@ -16,6 +16,10 @@ final class DictationPostProcessorTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        DictionaryReplacer.setDictionaryFileURLForTesting(
+            FileManager.default.temporaryDirectory
+                .appendingPathComponent("lamitype-dictation-tests-no-dictionary.txt")
+        )
         savedNumberConversionEnabled = AppConfig.shared.numberConversionEnabled
         savedPunctuationMode = AppConfig.shared.punctuationMode
         AppConfig.shared.numberConversionEnabled = true
@@ -23,6 +27,7 @@ final class DictationPostProcessorTests: XCTestCase {
     }
 
     override func tearDown() {
+        DictionaryReplacer.setDictionaryFileURLForTesting(nil)
         AppConfig.shared.numberConversionEnabled = savedNumberConversionEnabled
         AppConfig.shared.punctuationMode = savedPunctuationMode
         super.tearDown()

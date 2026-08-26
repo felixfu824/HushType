@@ -43,7 +43,7 @@ enum OpenAIKeyStore {
         case unusualFormat(apiKey: String, organization: String?)
     }
 
-    private static let fileURL: URL = AppConfig.openAIKeyFileURL
+    private static var fileURL: URL { AppConfig.openAIKeyFileURL }
 
     /// Maximum accepted file size for `openai.json`. Real keys fit in <200
     /// bytes; a 64 KB ceiling guards against errant editor / malware writing
@@ -57,7 +57,7 @@ enum OpenAIKeyStore {
 
         // Defense in depth: refuse to follow symlinks AND refuse oversized
         // files. The path itself is system-controlled (Application Support /
-        // HushType), so a malicious symlink there would already mean the user
+        // Lamitype), so a malicious symlink there would already mean the user
         // account is compromised — but reading whatever the symlink points at
         // as JSON and pulling an `api_key` field out of it is a footgun we
         // don't need.
@@ -128,7 +128,7 @@ enum OpenAIKeyStore {
         let overview = L10n.jsonStringLiteral(L10n.string(
             "template.openai.overview",
             table: "Templates",
-            fallback: "HushType cloud features: OpenAI API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://platform.openai.com/api-keys. Cloud features stay disabled until 'api_key' is filled in AND you choose an OpenAI engine in Dictation Engine or Live Caption Engine settings."
+            fallback: "Lamitype cloud features: OpenAI API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://platform.openai.com/api-keys. Cloud features stay disabled until 'api_key' is filled in AND you choose an OpenAI engine in Dictation Engine or Live Caption Engine settings."
         ))
         let apiKeyComment = L10n.jsonStringLiteral(L10n.string(
             "template.openai.api_key",

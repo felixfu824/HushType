@@ -351,34 +351,18 @@ final class AppConfig {
     /// file as a new Numbers document and saves to a different location —
     /// breaking the file-is-the-UI contract.
     static var dictionaryFileURL: URL {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        return appSupport
-            .appendingPathComponent("HushType", isDirectory: true)
-            .appendingPathComponent("dictionary.txt")
+        AppSupportPaths.dictionaryFileURL
     }
 
     static func promptOverrideURL(filename: String) -> URL {
-        FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        .appendingPathComponent("HushType", isDirectory: true)
-        .appendingPathComponent(filename)
+        AppSupportPaths.promptOverrideURL(filename: filename)
     }
 
     /// Path to the OpenAI API key file used by the cloud Live Caption engine.
     /// Plaintext JSON, same security profile as `.env`. Loader rules in
     /// `OpenAIKeyStore`.
     static var openAIKeyFileURL: URL {
-        FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        .appendingPathComponent("HushType", isDirectory: true)
-        .appendingPathComponent("openai.json")
+        AppSupportPaths.openAIKeyFileURL
     }
 
     private init() {}

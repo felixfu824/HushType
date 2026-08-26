@@ -19,9 +19,17 @@ final class CloudDictationIntegrationTests: XCTestCase {
 
     func testShortestViableCloudDictation() async throws {
         let environment = ProcessInfo.processInfo.environment
-        guard environment["HUSHTYPE_RUN_CLOUD_INTEGRATION"] == "1" else {
-            throw XCTSkip("Set HUSHTYPE_RUN_CLOUD_INTEGRATION=1 to allow one paid cloud request.")
+        guard environment["LAMITYPE_RUN_CLOUD_INTEGRATION"] == "1" else {
+            throw XCTSkip("Set LAMITYPE_RUN_CLOUD_INTEGRATION=1 to allow one paid cloud request.")
         }
+
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        AppSupportPaths.configure(
+            root: appSupport.appendingPathComponent("Lamitype", isDirectory: true)
+        )
 
         let provider = try selectedProvider(environment: environment)
         guard hasConfiguredKey(for: provider) else {
@@ -72,13 +80,13 @@ final class CloudDictationIntegrationTests: XCTestCase {
     }
 
     private func selectedProvider(environment: [String: String]) throws -> Provider {
-        if let explicit = environment["HUSHTYPE_CLOUD_INTEGRATION_PROVIDER"]?
+        if let explicit = environment["LAMITYPE_CLOUD_INTEGRATION_PROVIDER"]?
             .trimmingCharacters(in: .whitespacesAndNewlines)
             .lowercased(),
            !explicit.isEmpty {
             guard let provider = Provider(rawValue: explicit) else {
                 throw XCTSkip(
-                    "HUSHTYPE_CLOUD_INTEGRATION_PROVIDER must be ‘gemini’ or ‘openai’; no request was made."
+                    "LAMITYPE_CLOUD_INTEGRATION_PROVIDER must be ‘gemini’ or ‘openai’; no request was made."
                 )
             }
             return provider
@@ -91,7 +99,7 @@ final class CloudDictationIntegrationTests: XCTestCase {
             .string(forKey: "hushtype.dictationEngine")
         guard configured == Provider.gemini.rawValue else {
             throw XCTSkip(
-                "Installed HushType dictation is not set to Gemini. Set it there, or explicitly set HUSHTYPE_CLOUD_INTEGRATION_PROVIDER; no request was made."
+                "Installed Lamitype dictation is not set to Gemini. Set it there, or explicitly set LAMITYPE_CLOUD_INTEGRATION_PROVIDER; no request was made."
             )
         }
         return .gemini
@@ -118,7 +126,7 @@ final class CloudDictationIntegrationTests: XCTestCase {
         // macOS's local `say` executable provides the same on-device voices
         // but exits deterministically after writing an audio file.
         let outputURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("hushtype-cloud-smoke-\(UUID().uuidString).caf")
+            .appendingPathComponent("lamitype-cloud-smoke-\(UUID().uuidString).caf")
         defer { try? FileManager.default.removeItem(at: outputURL) }
 
         let process = Process()

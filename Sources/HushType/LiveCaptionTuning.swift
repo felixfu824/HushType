@@ -4,7 +4,7 @@ import os
 private let log = Logger(subsystem: "com.felix.hushtype", category: "liveCaptionTuning")
 
 /// User-editable knobs for Live Caption. Mirrors the dictionary-file pattern:
-/// the file lives in `~/Library/Application Support/HushType/live_caption.json`,
+/// the file lives in `~/Library/Application Support/Lamitype/live_caption.json`,
 /// edits take effect on the next `LiveCaptionManager.start()` (toggle off →
 /// on). The Caption pane has an advanced-tuning button that opens the file in
 /// the default editor.
@@ -75,13 +75,7 @@ struct LiveCaptionTuning: Codable, Sendable {
     // MARK: - File location
 
     static var fileURL: URL {
-        let appSupport = FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        return appSupport
-            .appendingPathComponent("HushType", isDirectory: true)
-            .appendingPathComponent("live_caption.json")
+        AppSupportPaths.liveCaptionTuningFileURL
     }
 
     // MARK: - Load / Template
@@ -213,7 +207,7 @@ struct LiveCaptionTuning: Codable, Sendable {
         {
           "_comment_about": \(localizedTemplateComment(
               "template.live_caption.about",
-              fallback: "HushType: Live Caption tunables. Edit values then toggle Live Caption off and on for changes to apply. Keys prefixed _comment_ are documentation only and are ignored by the parser."
+              fallback: "Lamitype: Live Caption tunables. Edit values then toggle Live Caption off and on for changes to apply. Keys prefixed _comment_ are documentation only and are ignored by the parser."
           )),
 
           "_comment_maxTokens": \(localizedTemplateComment(
