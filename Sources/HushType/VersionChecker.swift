@@ -54,7 +54,9 @@ enum VersionChecker {
         let releaseURL: URL?
     }
 
-    private static let releasesAPI = URL(string: "https://api.github.com/repos/felixfu824/HushType/releases/latest")!
+    // The former felixfu824/HushType endpoint remains a GitHub redirect after
+    // the repository rename; new builds always use the canonical URL directly.
+    private static let releasesAPI = URL(string: "https://api.github.com/repos/felixfu824/lamitype/releases/latest")!
 
     /// Fetch the latest GitHub release and compare to the current bundle version.
     /// Throws on network or parsing errors. Caller is responsible for showing
@@ -66,7 +68,7 @@ enum VersionChecker {
         var request = URLRequest(url: releasesAPI)
         request.timeoutInterval = 10
         // GitHub recommends a User-Agent — without it some endpoints return 403
-        request.setValue("HushType-VersionChecker", forHTTPHeaderField: "User-Agent")
+        request.setValue("Lamitype-VersionChecker", forHTTPHeaderField: "User-Agent")
         request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
 
         let data: Data

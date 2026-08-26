@@ -8,7 +8,7 @@ private let updateCheckLog = Logger(
 
 /// Owns the user-facing version-check flow shared by Settings and the menu.
 /// Consent is intentionally requested on every check, with Cancel as the
-/// default action, because HushType is local-first by default.
+/// default action, because Lamitype is local-first by default.
 @MainActor
 final class UpdateCheckCoordinator {
     static let shared = UpdateCheckCoordinator()
@@ -52,7 +52,7 @@ final class UpdateCheckCoordinator {
         )
         consent.informativeText = L10n.string(
             "alert.update_consent.message",
-            fallback: "HushType will connect to GitHub to check for new releases.\n\nNo personal data is sent; only a public API call is made to compare version numbers."
+            fallback: "Lamitype will connect to GitHub to check for new releases.\n\nNo personal data is sent; only a public API call is made to compare version numbers."
         )
         consent.alertStyle = .informational
         consent.icon = NSImage(systemSymbolName: "globe", accessibilityDescription: nil)
@@ -101,7 +101,7 @@ final class UpdateCheckCoordinator {
         alert.addButton(withTitle: L10n.string("common.button.later", fallback: "Later"))
 
         if alert.runModal() == .alertFirstButtonReturn {
-            let destination = url ?? URL(string: "https://github.com/felixfu824/HushType/releases")
+            let destination = url ?? URL(string: "https://github.com/felixfu824/lamitype/releases")
             if let destination {
                 NSWorkspace.shared.open(destination)
             }

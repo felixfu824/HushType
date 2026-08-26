@@ -11,7 +11,7 @@ struct AboutPane: View {
         "Pi (Qwen 3.8 27B)",
     ]
 
-    private static let repositoryURL = URL(string: "https://github.com/felixfu824/HushType")!
+    private static let repositoryURL = URL(string: "https://github.com/felixfu824/lamitype")!
 
     var body: some View {
         VStack(alignment: .leading, spacing: SettingsGrid.rowSpacing) {
@@ -23,7 +23,7 @@ struct AboutPane: View {
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text("HushType")
+                    Text("Lamitype")
                         .font(.title2.bold())
                     Text(versionAndBuild)
                         .font(.subheadline)
@@ -68,7 +68,7 @@ struct AboutPane: View {
                 "settings.about.repository",
                 fallback: "Repository:"
             )) {
-                Link("github.com/felixfu824/HushType", destination: Self.repositoryURL)
+                Link("github.com/felixfu824/lamitype", destination: Self.repositoryURL)
             }
 
             SettingsDivider()
