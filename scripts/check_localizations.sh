@@ -51,7 +51,7 @@ else
   MODE="source"
 fi
 
-python3 - "$MODE" "$TARGET" "$SRC_MANIFEST" "$ROOT/Product_WS/LOCALIZATION_MANIFEST_zh-Hant-TW.json" <<'PYEOF'
+python3 - "$MODE" "$TARGET" "$SRC_MANIFEST" "$ROOT/Resources/LOCALIZATION_MANIFEST_zh-Hant-TW.json" <<'PYEOF'
 import json
 import pathlib
 import plistlib

@@ -6,7 +6,7 @@ import XCTest
 ///
 /// Run with:
 ///
-///     HUSHTYPE_RUN_ASR_INTEGRATION=1 swift test --disable-sandbox \
+///     LAMITYPE_RUN_ASR_INTEGRATION=1 swift test --disable-sandbox \
 ///       --filter LocalASRIntegrationTests
 ///
 /// The test deliberately uses only macOS's local speech synthesizer and an
@@ -17,8 +17,8 @@ final class LocalASRIntegrationTests: XCTestCase {
     private let phrase = "Hello world. This is a local test."
 
     func testSynthesizedSpeechThroughLocalQwenAndPostProcessor() async throws {
-        guard ProcessInfo.processInfo.environment["HUSHTYPE_RUN_ASR_INTEGRATION"] == "1" else {
-            throw XCTSkip("Set HUSHTYPE_RUN_ASR_INTEGRATION=1 to run the local ASR integration test")
+        guard ProcessInfo.processInfo.environment["LAMITYPE_RUN_ASR_INTEGRATION"] == "1" else {
+            throw XCTSkip("Set LAMITYPE_RUN_ASR_INTEGRATION=1 to run the local ASR integration test")
         }
 
         guard cachedModelDirectory() != nil else {
@@ -162,7 +162,7 @@ final class LocalASRIntegrationTests: XCTestCase {
         let candidates = [
             repositoryRoot.appendingPathComponent(".build/debug/mlx.metallib"),
             repositoryRoot.appendingPathComponent(".build/release/mlx.metallib"),
-            URL(fileURLWithPath: "/Applications/HushType.app/Contents/MacOS/mlx.metallib"),
+            URL(fileURLWithPath: "/Applications/Lamitype.app/Contents/MacOS/mlx.metallib"),
         ]
 
         guard let source = candidates.first(where: { fileManager.fileExists(atPath: $0.path) }) else {
@@ -182,7 +182,7 @@ final class LocalASRIntegrationTests: XCTestCase {
 
     private func synthesize16kMono(_ text: String) throws -> [Float] {
         let temporaryDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("hushtype-asr-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("lamitype-asr-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: temporaryDirectory, withIntermediateDirectories: true)
         defer { try? FileManager.default.removeItem(at: temporaryDirectory) }
 

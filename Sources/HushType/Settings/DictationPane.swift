@@ -3,7 +3,7 @@ import Settings
 import SwiftUI
 
 extension Notification.Name {
-    static let hushTypeDictationEngineDidChange = Notification.Name(
+    static let lamitypeDictationEngineDidChange = Notification.Name(
         "com.felix.hushtype.dictationEngineDidChange"
     )
 }
@@ -293,7 +293,7 @@ struct DictationPane: View {
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
             model.refresh()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .hushTypeDictationEngineDidChange)) { _ in
+        .onReceive(NotificationCenter.default.publisher(for: .lamitypeDictationEngineDidChange)) { _ in
             model.refresh()
         }
     }

@@ -147,7 +147,7 @@ final class HotkeyManager {
         // Last-resort fallback. In the normal flow, OnboardingManager.runIfNeeded()
         // catches missing-permission cases at launch BEFORE we ever call
         // CGEvent.tapCreate, so this code path should rarely fire. Reaching it
-        // means the user revoked Accessibility while HushType was running, or
+        // means the user revoked Accessibility while Lamitype was running, or
         // the kernel returned the cached "denied" state from a pre-grant call.
         DispatchQueue.main.async {
             let alert = NSAlert()
@@ -157,7 +157,7 @@ final class HotkeyManager {
             )
             alert.informativeText = L10n.string(
                 "alert.accessibility_lost.message",
-                fallback: "HushType lost Accessibility permission and the global hotkey is no longer working.\n\nRe-enable HushType in System Settings → Privacy & Security → Accessibility, then quit and relaunch HushType."
+                fallback: "Lamitype lost Accessibility permission and the global hotkey is no longer working.\n\nRe-enable Lamitype in System Settings → Privacy & Security → Accessibility, then quit and relaunch Lamitype."
             )
             alert.alertStyle = .warning
             alert.addButton(withTitle: L10n.string(

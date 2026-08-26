@@ -266,7 +266,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // About
         let aboutItem = NSMenuItem(
-            title: L10n.string("menu.about", fallback: "About HushType"),
+            title: L10n.string("menu.about", fallback: "About Lamitype"),
             action: #selector(aboutClicked),
             keyEquivalent: ""
         )
@@ -275,7 +275,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // Quit
         let quitItem = NSMenuItem(
-            title: L10n.string("menu.quit", fallback: "Quit HushType"),
+            title: L10n.string("menu.quit", fallback: "Quit Lamitype"),
             action: #selector(quitClicked),
             keyEquivalent: "q"
         )
@@ -501,7 +501,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func openSettings() {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            HushTypeSettingsWindowController.shared.presentAndFocus(
+            LamitypeSettingsWindowController.shared.presentAndFocus(
                 onSwitchEngine: { [weak self] engine in
                     guard let self else { return }
                     self.onDictationEngineChanged?(engine)
@@ -548,10 +548,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// cannot be bypassed and the manager retains its single status callback.
     private func wireIOSServerSettings() {
         Task { @MainActor [weak self] in
-            HushTypeSettingsWindowController.shared.onToggleIOSServer = { [weak self] in
+            LamitypeSettingsWindowController.shared.onToggleIOSServer = { [weak self] in
                 self?.toggleIOSServer()
             }
-            HushTypeSettingsWindowController.shared.isIOSServerRunning = { [weak self] in
+            LamitypeSettingsWindowController.shared.isIOSServerRunning = { [weak self] in
                 self?.iosServerManager.isRunning ?? false
             }
         }
@@ -936,7 +936,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func aboutClicked() {
         Task { @MainActor in
-            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .about)
+            LamitypeSettingsWindowController.shared.presentAndFocus(pane: .about)
         }
     }
 
@@ -967,7 +967,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
             symbolName = "mic.slash"
         }
 
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "HushType")
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Lamitype")
     }
 
     private func updateStatusText(for state: State) {

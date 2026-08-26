@@ -11,9 +11,9 @@ extension AppSettings.PaneIdentifier {
     static let about = Self("about")
 }
 
-/// Owns the single seven-pane Settings window for HushType.
+/// Owns the single seven-pane Settings window for Lamitype.
 @MainActor
-final class HushTypeSettingsWindowController {
+final class LamitypeSettingsWindowController {
     enum Pane {
         case general
         case dictation
@@ -36,7 +36,7 @@ final class HushTypeSettingsWindowController {
         }
     }
 
-    static let shared = HushTypeSettingsWindowController()
+    static let shared = LamitypeSettingsWindowController()
 
     private final class EngineSwitchRelay {
         var handler: ((AppConfig.DictationEngine) -> Void)?

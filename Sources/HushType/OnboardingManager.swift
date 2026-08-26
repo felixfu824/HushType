@@ -11,7 +11,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "onboarding"
 /// moment of first `CGEvent.tapCreate` call. If the user grants permission
 /// after that point, the running process *cannot* see the new permission —
 /// it must be restarted. The default flow leaves users granting permission
-/// in System Settings and then wondering why HushType still doesn't work.
+/// in System Settings and then wondering why Lamitype still doesn't work.
 ///
 /// This manager:
 ///   1. Checks `AXIsProcessTrusted()` BEFORE we ever call CGEvent.tapCreate.
@@ -21,7 +21,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "onboarding"
 ///      app helper when Accessibility needs a manual list entry.
 ///   4. Offers an explicit reset action for old Accessibility entries left by
 ///      previous builds, instead of clearing TCC automatically.
-///   5. After the user grants Accessibility, offers a "Restart HushType" button
+///   5. After the user grants Accessibility, offers a "Restart Lamitype" button
 ///      that spawns a new instance and quits the current one.
 ///   6. Requests microphone permission in the same setup surface; microphone
 ///      grants do not require restart.
@@ -49,7 +49,7 @@ enum OnboardingManager {
         log.info("Accessibility not granted — running onboarding flow")
 
         // Foreground the app so the setup panel appears in front of other windows
-        // (HushType is LSUIElement so it doesn't activate by default).
+        // (Lamitype is LSUIElement so it doesn't activate by default).
         NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
 
@@ -111,7 +111,7 @@ enum OnboardingManager {
         )
         alert.informativeText = L10n.string(
             "alert.accessibility_reset.message",
-            fallback: "This clears HushType from the Accessibility permission list.\n\nUse this if you installed an older HushType, see duplicate HushType entries, cannot find HushType, or the switch does not work. You'll need to add or enable HushType again."
+            fallback: "This clears HushType from the Accessibility permission list.\n\nUse this if you installed HushType, see duplicate HushType entries, cannot find HushType, or its switch does not work. You'll need to add or enable Lamitype again."
         )
         alert.icon = NSImage(named: "AppIcon")
             ?? NSImage(systemSymbolName: "lock.shield", accessibilityDescription: nil)
@@ -171,7 +171,7 @@ enum OnboardingManager {
 
     // MARK: - Relaunch helper
 
-    /// Spawn a fresh instance of HushType.app via `open -n` and terminate the
+    /// Spawn a fresh instance of Lamitype.app via `open -n` and terminate the
     /// current process. The new process gets a fresh accessibility / screen-
     /// recording permission check from the kernel and should now see the user's
     /// grant.
@@ -181,7 +181,7 @@ enum OnboardingManager {
     /// process cache barrier as Accessibility.
     static func relaunchAndQuit() {
         let bundleURL = Bundle.main.bundleURL
-        log.info("Relaunching HushType from \(bundleURL.path, privacy: .public)")
+        log.info("Relaunching Lamitype from \(bundleURL.path, privacy: .public)")
 
         // Spawn `/bin/sh -c "sleep 1 && open -n <path>"` and let it reparent
         // to launchd when we terminate. Doing `open -n` ourselves and dying

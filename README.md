@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="Resources/HushType.png" width="128" height="128" alt="HushType icon">
+  <img src="Resources/Lamitype.png" width="128" height="128" alt="Lamitype icon">
 </p>
 
-<h1 align="center">HushType</h1>
+<h1 align="center">Lamitype</h1>
 
 <p align="center">
   專為 Apple Silicon macOS 打造的語音轉文字 App<br>
@@ -15,30 +15,32 @@
 </p>
 
 <p align="center">
-  官方 repository：<a href="https://github.com/felixfu824/HushType">github.com/felixfu824/HushType</a>
+  官方 repository：<a href="https://github.com/felixfu824/lamitype">github.com/felixfu824/lamitype</a>
 </p>
 
-> **HushType** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App。預設使用 Qwen3-ASR 0.6B 的 **4-bit MLX 量化版**在 Apple Silicon 上完全本地執行，支援英文、中文、日文的語音輸入，支援混用多語的句子，並透過 OpenCC 提供穩定的繁體中文輸出；也可**選擇雲端聽寫（OpenAI / Gemini）**：用你提供的金鑰經 HTTPS 直連供應商，中間沒有任何轉送伺服器。相對強迫你把音訊交給第三方的聽寫工具，HushType 把選擇權和隱私主導權留在你手上，並專注保持輕量，與你需要同時跑的所有 App 共存。
+> **Lamitype** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App。預設使用 Qwen3-ASR 0.6B 的 **4-bit MLX 量化版**在 Apple Silicon 上完全本地執行，支援英文、中文、日文的語音輸入，支援混用多語的句子，並透過 OpenCC 提供穩定的繁體中文輸出；也可**選擇雲端聽寫（OpenAI / Gemini）**：用你提供的金鑰經 HTTPS 直連供應商，中間沒有任何轉送伺服器。相對強迫你把音訊交給第三方的聽寫工具，Lamitype 把選擇權和隱私主導權留在你手上，並專注保持輕量，與你需要同時跑的所有 App 共存。
 
-> 🌐 **HushType** is a free, local-first dictation app for Apple Silicon Macs (and iOS). It runs Qwen3-ASR (4-bit) locally via MLX for English, Chinese, Japanese, and others, supports mixed-language sentences with genuinely native Traditional Chinese output (via OpenCC). Cloud dictation (OpenAI / Gemini) is an opt-in choice: your own key, a direct connection, and no middleman, either way, privacy choices stay in your hands.<br>→ Read the full English README: [README.en.md](README.en.md)
+> 🌐 **Lamitype** is a free, local-first dictation app for Apple Silicon Macs (and iOS). It runs Qwen3-ASR (4-bit) locally via MLX for English, Chinese, Japanese, and others, supports mixed-language sentences with genuinely native Traditional Chinese output (via OpenCC). Cloud dictation (OpenAI / Gemini) is an opt-in choice: your own key, a direct connection, and no middleman, either way, privacy choices stay in your hands.<br>→ Read the full English README: [README.en.md](README.en.md)
+
+> **名稱延續：** Lamitype formerly HushType。v0.5.12 只更名 Mac App；現有設定與 Application Support 資料會自動搬移，iOS App 與鍵盤本版仍沿用 HushType 名稱。
 
 <p align="center">
-  <img src="Resources/hushtype-memory-zh.svg" alt="常駐記憶體的模型權重：HushType 本機 675 MB（道地繁中）、HushType 雲端引擎 ~0 MB vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB（不支援中文）" width="100%">
+  <img src="Resources/lamitype-memory-zh.svg" alt="常駐記憶體的模型權重：Lamitype 本機 675 MB（道地繁中）、Lamitype 雲端引擎 ~0 MB vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB（不支援中文）" width="100%">
 </p>
 
-<sub>數字為各工具預設精度的模型權重大小；HushType 的 675 MB 是 Qwen3-ASR 0.6B 的 4-bit MLX 量化版。選用雲端引擎（OpenAI / Gemini）時**模型記憶體 ~0 MB**，品質同級或更好，代價是每句多幾秒的網路延遲，依時長計費或使用 Gemini 免費（Free tier）API Key。另有 4-bit Whisper-turbo（約 464 MB），但中文輸出仍偏簡體、品質平庸，所以我們的定位是「能做出道地繁中的輕量 ASR」，而非「最小的模型」。</sub>
+<sub>數字為各工具預設精度的模型權重大小；Lamitype 的 675 MB 是 Qwen3-ASR 0.6B 的 4-bit MLX 量化版。選用雲端引擎（OpenAI / Gemini）時**模型記憶體 ~0 MB**，品質同級或更好，代價是每句多幾秒的網路延遲，依時長計費或使用 Gemini 免費（Free tier）API Key。另有 4-bit Whisper-turbo（約 464 MB），但中文輸出仍偏簡體、品質平庸，所以我們的定位是「能做出道地繁中的輕量 ASR」，而非「最小的模型」。</sub>
 
 ---
 
-## 為什麼選擇 HushType
+## 為什麼選擇 Lamitype
 
-**隱私與主導權優先。** 預設模式下語音永遠不離開你的 Mac，模型完全在本機執行，無雲端、無帳號、無使用追蹤，只有首次一次性模型下載（約 675 MB）。選擇加入雲端聽寫時，音訊用**你自己的金鑰**經 HTTPS **直連** OpenAI 或 Gemini：中間沒有 HushType 伺服器，不經手、不攔截、看不到你的音訊與金鑰，且每個工作階段第一次使用前都會先徵求你的同意。**要不要把音訊交給供應商，永遠是你的決定。**
+**隱私與主導權優先。** 預設模式下語音永遠不離開你的 Mac，模型完全在本機執行，無雲端、無帳號、無使用追蹤，只有首次一次性模型下載（約 675 MB）。選擇加入雲端聽寫時，音訊用**你自己的金鑰**經 HTTPS **直連** OpenAI 或 Gemini：中間沒有 Lamitype 伺服器，不經手、不攔截、看不到你的音訊與金鑰，且每個工作階段第一次使用前都會先徵求你的同意。**要不要把音訊交給供應商，永遠是你的決定。**
 
-**記憶體友善：與你的 AI 助手共存。** 本機模型權重只有約 675 MB（載入後常駐約 2.1 GB RAM），輕到能與 Claude Code/Cowork、Codex、瀏覽器同機共存，且 HushType 啟動時就替記憶體暫存設上限，你完全不用管。想把記憶體占用歸零？切到雲端引擎：本機模型不會載入（引擎選擇跨重啟保留，下次啟動就是 ~0 MB 起步）；已載入的模型也可以在選單一鍵卸載，切回本機引擎時自動重新載入。
+**記憶體友善：與你的 AI 助手共存。** 本機模型權重只有約 675 MB（載入後常駐約 2.1 GB RAM），輕到能與 Claude Code/Cowork、Codex、瀏覽器同機共存，且 Lamitype 啟動時就替記憶體暫存設上限，你完全不用管。想把記憶體占用歸零？切到雲端引擎：本機模型不會載入（引擎選擇跨重啟保留，下次啟動就是 ~0 MB 起步）；已載入的模型也可以在選單一鍵卸載，切回本機引擎時自動重新載入。
 
 **雲端聽寫（Opt-in）。** 三件事：(1) 支援 **OpenAI**（預設 `gpt-4o-mini-transcribe`）與 **Gemini**（預設 `gemini-3.5-flash-lite`，可選 `gemini-3.7-flash`），你的金鑰、直連、無轉送；(2) Gemini 有**免費（Free tier）API Key** 可零成本入門；但請注意：Google 免費方案可能用你提交的音訊改進其產品，付費方案則不會；(3) 內建護欄：逐次同意、每日花費警示與當日鎖定（預設 $5）、錄音過長在上傳前就擋下。
 
-**真正能用的繁體中文。** Whisper 與多數開源模型預設輸出簡體或大陸用語（软件 而非 軟體）。HushType 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地輸出，軟體、滑鼠、品質，支援英中同句混用辨識，並可選擇將中文數字依語境轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟。本機與雲端引擎共用同一套後處理管線，輸出品質一致。
+**真正能用的繁體中文。** Whisper 與多數開源模型預設輸出簡體或大陸用語（软件 而非 軟體）。Lamitype 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地輸出，軟體、滑鼠、品質，支援英中同句混用辨識，並可選擇將中文數字依語境轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟。本機與雲端引擎共用同一套後處理管線，輸出品質一致。
 
 **文字就地修正。** 在任何 App 選取文字、雙擊 Right ⌥，裝置端 Apple Intelligence 模型直接就地校對並替換：錯字、文法、標點。它是機械式校對員，不是改寫器：語意、語氣、中英混用全都原樣保留（macOS 26+）。<br>註：Apple Foundation Model 參數較少能力受限，故目前校正選擇較保守，有時可能會完全不改動。
 
@@ -94,7 +96,7 @@ macOS（預設本機，不需要網路）：
   選取文字後雙擊 Right Option → 就地校對（Text Polish）
   本機流程：麥克風 → Qwen3-ASR（MLX、裝置端推論）→ OpenCC s2twp → ITN → 貼上
   雲端流程（選擇加入）：麥克風 → 你的 Mac → HTTPS 直連 OpenAI/Gemini → 同一套 OpenCC/ITN 後處理 → 貼上
-                        （沒有 HushType 伺服器這一站）
+                        （沒有 Lamitype 伺服器這一站）
 
 iOS（透過你的 Mac 作為伺服器）：
   開啟 HushType → 開始聆聽 → 切到任何 App → HushType 鍵盤 → 按麥克風
@@ -112,7 +114,7 @@ iOS（透過你的 Mac 作為伺服器）：
                                      │    → Qwen3-ASR 0.6B (MLX/Metal)  │
                                      │    → OpenCC s2twp                │
                                      │                                  │
-                                     │  HushType.app (選單列)            │
+                                     │  Lamitype.app (選單列)            │
                                      │    → Right Option 快捷鍵          │
                                      │    → 本地轉錄                     │
                                      └──────────────────────────────────┘
@@ -124,10 +126,10 @@ iOS（透過你的 Mac 作為伺服器）：
 
 ### 方案 A：下載 DMG（不需要任何開發工具）
 
-1. 從[最新版本](https://github.com/felixfu824/HushType/releases)下載 `HushType.dmg`
-2. 打開 DMG，將 HushType 拖到「應用程式」
-3. 右鍵點擊 HushType.app → 打開（首次啟動時需要，App 使用臨時簽章，未經 Apple 公證）
-4. 授予**輔助使用**與**麥克風**權限
+1. 從[最新版本](https://github.com/felixfu824/lamitype/releases)下載 `Lamitype.dmg`
+2. 打開 DMG，將 Lamitype 拖到「應用程式」
+3. 從「應用程式」或 Spotlight 開啟 Lamitype；Developer ID 簽章與 Apple 公證可直接通過 Gatekeeper
+4. 依需要授予**輔助使用**、**麥克風**與**螢幕與系統音訊錄製**權限
 5. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
 DMG 為完全獨立版本，OpenCC 及所有相依套件皆已內含。不需要 Homebrew、不需要終端機指令。
@@ -144,13 +146,13 @@ DMG 為完全獨立版本，OpenCC 及所有相依套件皆已內含。不需要
 
 更新等於**覆蓋 `.app` 資料夾**。偏好設定、ASR 模型、使用者資料都存在 `.app` 外面，不會被動到。
 
-**DMG：** 退出 HushType → 開啟新 DMG → 拖 `HushType.app` 到視窗內的 Applications 捷徑（點 **取代 / Replace**）→ 從 Spotlight 重啟。
+**DMG：** 退出並刪除舊的 `/Applications/HushType.app` → 開啟新 DMG → 拖 `Lamitype.app` 到視窗內的 Applications 捷徑 → 從 Spotlight 重啟。
 
 **從原始碼編譯：** `git pull && make install`。
 
-**為什麼每次更新都可能要重新授權？** HushType 是 ad-hoc 簽章，macOS 可能會在更新後要求你重新啟用輔助使用權限。設定視窗會顯示目前權限狀態。點 **Open System Settings**，在輔助使用清單裡開啟 HushType，接著點 **Restart HushType** 讓 macOS 套用權限。如果你看到重複的 HushType、找不到 HushType，或開關無法正常運作，請在設定視窗中使用 **Reset Old HushType Entry**，再重新加入或啟用 HushType。
+**v0.5.12 更名轉換：** 新的 Developer ID 簽章身份會讓 macOS 對輔助使用、麥克風、螢幕與系統音訊錄製分別重新確認一次。設定視窗會顯示目前狀態。若舊 HushType 的輔助使用項目造成重複或失效，請使用 **Reset Old HushType Entry**，再加入或啟用 Lamitype。
 
-**完全解除安裝：** 把 `/Applications/HushType.app` 拖到垃圾桶，必要時執行 `defaults delete com.felix.hushtype`，並刪除 `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` 以清除 macOS App 的模型快取。iOS 伺服器使用另一個 Python / Hugging Face 快取，兩者互不相同。
+**完全解除安裝：** 把 `/Applications/Lamitype.app` 拖到垃圾桶，必要時執行 `defaults delete com.felix.hushtype`，並刪除 `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` 以清除 macOS App 的模型快取。iOS 伺服器使用另一個 Python / Hugging Face 快取，兩者互不相同。
 
 ---
 
@@ -188,8 +190,8 @@ DMG 為完全獨立版本，OpenCC 及所有相依套件皆已內含。不需要
 ### 步驟 1：下載與編譯
 
 ```bash
-git clone https://github.com/felixfu824/HushType.git
-cd HushType
+git clone https://github.com/felixfu824/lamitype.git
+cd Lamitype
 
 # 安裝相依套件
 brew install opencc
@@ -200,11 +202,11 @@ make install
 
 ### 步驟 2：啟動並授予權限
 
-1. 從 Spotlight 啟動 HushType（Cmd+Space → HushType）
-2. 首次啟動時，**Set Up HushType** 視窗會列出需要的權限：輔助使用與麥克風。
-3. 在輔助使用卡片點 **Open System Settings**。在輔助使用清單中找到 HushType 並**開啟開關**。如果清單裡沒有 HushType，可以使用小型提示視窗把 HushType 拖進清單。
+1. 從 Spotlight 啟動 Lamitype（Cmd+Space → Lamitype）
+2. 首次啟動時，**Set Up Lamitype** 視窗會列出需要的權限：輔助使用與麥克風。
+3. 在輔助使用卡片點 **Open System Settings**。在輔助使用清單中找到 Lamitype 並**開啟開關**。如果清單裡沒有 Lamitype，可以使用小型提示視窗把 Lamitype 拖進清單。
 4. 點 **Allow Microphone**，並在 macOS 麥克風權限提示中允許。
-5. 回到 HushType，點擊 **Restart HushType**：App 會自動重新啟動，讓新授予的輔助使用權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟，HushType 會幫你處理這個步驟。）
+5. 回到 Lamitype，點擊 **Restart Lamitype**：App 會自動重新啟動，讓新授予的輔助使用權限生效。（macOS 會在 process 層級快取權限檢查結果，所以授予權限後必須重啟，Lamitype 會幫你處理這個步驟。）
 6. 等待模型下載（約 675 MB，僅首次，進度顯示在選單列）
 
 ### 步驟 3：使用
@@ -271,15 +273,15 @@ make install
 
 ### 選用功能：Text Polish（macOS 26+）
 
-使用 Apple Foundation Models 框架在裝置端校對，就是 macOS 內建的 Apple Intelligence 模型，不增加 HushType 的記憶體預算，內容也不離開你的 Mac。在任何 App 選取文字 → 雙擊 Right Option → 選取範圍就地替換為修正後的文字，結果卡片以 Word 追蹤修訂的方式顯示到底改了什麼：刪除的字紅色刪除線、加入的字綠色底線。
+使用 Apple Foundation Models 框架在裝置端校對，就是 macOS 內建的 Apple Intelligence 模型，不增加 Lamitype 的記憶體預算，內容也不離開你的 Mac。在任何 App 選取文字 → 雙擊 Right Option → 選取範圍就地替換為修正後的文字，結果卡片以 Word 追蹤修訂的方式顯示到底改了什麼：刪除的字紅色刪除線、加入的字綠色底線。
 
 <p align="center">
   <img src="Resources/polish-card-diff-zh.png" alt="Text Polish 結果卡片：刪除紅色刪除線、新增綠色底線" width="560">
-</p>有修正時，修正後的文字同時保留在剪貼簿，所以唯讀畫面（網頁、PDF）也能用：選取、雙擊、貼到你要的地方。原本就正確的文字會顯示「No changes needed」卡片，剪貼簿完全不動。右鍵選單也有：**服務 → Polish with HushType**。
+</p>有修正時，修正後的文字同時保留在剪貼簿，所以唯讀畫面（網頁、PDF）也能用：選取、雙擊、貼到你要的地方。原本就正確的文字會顯示「No changes needed」卡片，剪貼簿完全不動。右鍵選單也有：**服務 → Polish with Lamitype**。
 
 **它修什麼：以及它絕不碰什麼。** 錯字、文法、標點、明顯的 typo。它刻意設計成機械式校對員，而非改寫器：語意、語氣、格式、大小寫、語言混用全部保留。它被要求遵守的規則：
 
-- **絕不翻譯。** 中英夾雜的句子保持夾雜。如果模型把其中一種語言翻掉了，HushType 會在輸出端偵測到、帶著更強的指令重試一次，仍失敗就跳警示，而不是貼上誤譯。
+- **絕不翻譯。** 中英夾雜的句子保持夾雜。如果模型把其中一種語言翻掉了，Lamitype 會在輸出端偵測到、帶著更強的指令重試一次，仍失敗就跳警示，而不是貼上誤譯。
 - **絕不簡繁互轉**，兩個方向都不會。
 - **絕不回答。** 長得像問題或指令的選取內容，一律當成待校對的文字，不當成要執行的 prompt。
 - **不碰程式碼。** 像程式碼的選取會跳警示退回；一般文字裡的 URL、檔案路徑、反引號內容原樣保留。
@@ -287,11 +289,11 @@ make install
 
 **能力邊界（誠實說明）：** 背後是 Apple 裝置端的小型模型，取捨如下，**英文修正最可靠**；**中文偏保守**，語法依存的錯字（的／得、在／再）常修不到；**選取越長越容易回「No changes needed」**，一次選一兩句效果最好。這是刻意的設計：模型沒把握時就原文返回，寧可漏修，也絕不亂改。
 
-**速度：** 通常約 1-3 秒。HushType 會維持一個預熱好的待命模型 session，把 prompt 處理成本在你雙擊之前先付掉。
+**速度：** 通常約 1-3 秒。Lamitype 會維持一個預熱好的待命模型 session，把 prompt 處理成本在你雙擊之前先付掉。
 
-**自訂規則：** 選單列 → **設定… → 文字 → Polish instructions → Open file in TextEdit**，開啟 `~/Library/Application Support/HushType/polish_rules.txt`。一行一條短規則（`#` 開頭為註解），會合併進內建 prompt，例如 `一律用台灣用語` 或 `Use the Oxford comma.`。存檔即生效，不用重啟。
+**自訂規則：** 選單列 → **設定… → 文字 → Polish instructions → Open file in TextEdit**，開啟 `~/Library/Application Support/Lamitype/polish_rules.txt`。一行一條短規則（`#` 開頭為註解），會合併進內建 prompt，例如 `一律用台灣用語` 或 `Use the Oxford comma.`。存檔即生效，不用重啟。
 
-**需求：** macOS 26（Tahoe）+ 已啟用 Apple Intelligence + Apple Silicon。預設開啟；沒有 Foundation Models 的 Mac 上雙擊不會有反應，改用 **服務 → Polish with HushType** 會顯示清楚的原因。可從選單列（**Text Polish**）或 `defaults` 開關。
+**需求：** macOS 26（Tahoe）+ 已啟用 Apple Intelligence + Apple Silicon。預設開啟；沒有 Foundation Models 的 Mac 上雙擊不會有反應，改用 **服務 → Polish with Lamitype** 會顯示清楚的原因。可從選單列（**Text Polish**）或 `defaults` 開關。
 
 ## 安裝指南：iOS（iPhone + Mac 伺服器）
 
@@ -323,12 +325,12 @@ ipconfig getifaddr en0
 
 ### 步驟 3：在 Mac 上啟動 iOS 伺服器
 
-**方法 A，從 HushType 設定（尚未測試）：**
-點擊選單列的 HushType 圖示 → **設定… → iOS → 啟動 iOS 伺服器（尚未測試）**
+**方法 A，從 Lamitype 設定（尚未測試）：**
+點擊選單列的 Lamitype 圖示 → **設定… → iOS → 啟動 iOS 伺服器（尚未測試）**
 
 **方法 B，從終端機：**
 ```bash
-cd HushType
+cd Lamitype
 python3 scripts/ios_server.py
 # 伺服器啟動在 0.0.0.0:8000
 # 首次轉錄請求會下載模型（約 675 MB）
@@ -337,7 +339,7 @@ python3 scripts/ios_server.py
 驗證伺服器是否運行：
 ```bash
 curl http://localhost:8000/
-# 應回傳:{"status":"ok","service":"HushType iOS Server","opencc":true}
+# 應回傳:{"status":"ok","service":"Lamitype iOS Server","opencc":true}
 # （opencc:false 表示尚未 brew install opencc）
 ```
 
@@ -346,13 +348,13 @@ curl http://localhost:8000/
 ```bash
 cd iOS
 xcodegen generate
-open HushType.xcodeproj
+open Lamitype.xcodeproj
 ```
 
 在 Xcode 中：
-1. 點擊左側導覽的 **HushType** 專案
-2. 選擇 **HushType** target → Signing & Capabilities → 設定 **Team** 為你的 Apple ID
-3. 選擇 **HushTypeKeyboard** target → 同樣設定 **Team**
+1. 點擊左側導覽的 **Lamitype** 專案
+2. 選擇 **Lamitype** target → Signing & Capabilities → 設定 **Team** 為你的 Apple ID
+3. 選擇 **LamitypeKeyboard** target → 同樣設定 **Team**
 4. 如果 Xcode 顯示 "Update to recommended settings" → 點擊 **Perform Changes**
 5. 用 USB 連接 iPhone
 6. 選擇你的 iPhone 作為執行目標（頂部欄位）
@@ -462,7 +464,7 @@ defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 
 ### 更改快捷鍵（macOS）
 
-編輯 `Sources/HushType/HotkeyManager.swift`:
+編輯 `Sources/Lamitype/HotkeyManager.swift`:
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
@@ -484,9 +486,9 @@ private static let rightOptionKeyCode: Int64 = 61
 
 ### 雲端模式（選擇加入：雲端語音輸入 / Live Translated Caption）
 
-- **中間沒有轉送伺服器。** 音訊會直接從你的 Mac 經 HTTPS（字幕為 WSS）傳送給服務供應商（OpenAI / Google）。HushType 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。
+- **中間沒有轉送伺服器。** 音訊會直接從你的 Mac 經 HTTPS（字幕為 WSS）傳送給服務供應商（OpenAI / Google）。Lamitype 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。
 - **你的金鑰、你的同意。** 預設全部關閉、需自行填入金鑰開啟；每個工作階段第一次雲端使用前會先徵求同意，絕無靜默上傳。金鑰留空即完全停用雲端功能。
-- **金鑰儲存。** 金鑰存在 `~/Library/Application Support/HushType/`（`openai.json` / `gemini.json`），App 寫入時自動設定 `0600` 檔案權限，與 `.env` 檔同一個安全模型。
+- **金鑰儲存。** 金鑰存在 `~/Library/Application Support/Lamitype/`（`openai.json` / `gemini.json`），App 寫入時自動設定 `0600` 檔案權限，與 `.env` 檔同一個安全模型。
 - **花費護欄。** 每日花費警示（預設 $5）在上傳之前就擋下會超標的請求並鎖定當日雲端；錄音過長在上傳前就被擋下、絕不送出。
 - **Gemini Free tier 揭露。** 使用 Google 免費方案時，Google 可能會使用提交的音訊來改進其產品；付費方案則不會。
 - **狀態語意。** 語音輸入引擎的選擇跨重啟保留（讓雲端使用者持續不佔模型記憶體）。字幕的引擎旗標每次重啟重設回本機，但 Right ⌘ + / 會記得你**上次用過的字幕模式（含雲端）**，且雲端字幕的一次性免責揭露只出現一次，上次用的是雲端翻譯字幕的話，重啟後按快捷鍵會直接再開雲端（計費）字幕。
@@ -500,5 +502,5 @@ private static let rightOptionKeyCode: Int64 = 61
 - 免費佈署：iOS App 每 7 天過期（需透過 Xcode 重新簽署）
 - 聆聽時間固定為 5 分鐘（尚無介面可調整）
 - Mac 必須是 iPhone 可連線的（同一 WiFi 或 Tailscale）
-- DMG 使用臨時簽章（未經 Apple 公證），首次啟動時 macOS Gatekeeper 會發出警告，需右鍵 → 打開來略過
+- DMG 內的 App 使用 Developer ID 簽章並經 Apple 公證，可直接通過 Gatekeeper
 - Text Polish 繼承 Apple Foundation Models 的模型限制：少數中文細微用法（如 的/得/地）可能維持原樣；英文佔比極高的混合句可能被擋下並顯示警示，而不是冒著誤譯風險貼上。被擋下一律代表原文完全不動

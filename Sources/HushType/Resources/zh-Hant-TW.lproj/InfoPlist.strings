@@ -2,11 +2,11 @@
 
 /* macOS-owned TCC purpose string; selected according to OS language behavior, not the in-app override. */
 
-"NSMicrophoneUsageDescription" = "HushType 需要麥克風存取權，才能將你的語音輸入轉成文字。";
+"NSMicrophoneUsageDescription" = "Lamitype 需要麥克風存取權，才能將你的語音輸入轉成文字。";
 
 /* macOS-owned TCC purpose string. High-risk privacy claim; Apple permission label needs macOS 15/26 visual verification. */
 
-"NSScreenCaptureUsageDescription" = "你戴著耳機時，HushType 會使用「螢幕與系統音訊錄製」權限，為 Zoom、Chrome、Safari 等 App 的音訊產生字幕。只會處理音訊，絕不讀取螢幕內容。";
+"NSScreenCaptureUsageDescription" = "你戴著耳機時，Lamitype 會使用「螢幕與系統音訊錄製」權限，為 Zoom、Chrome、Safari 等 App 的音訊產生字幕。只會處理音訊，絕不讀取螢幕內容。";
 
 /* Copyright metadata; proper name and MIT License identity remain unchanged. */
 

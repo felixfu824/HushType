@@ -21,7 +21,7 @@ final class CloudSettingsTests: XCTestCase {
             XCTAssertEqual(alert.messageText, "Reset today's usage counter?")
             XCTAssertEqual(
                 alert.informativeText,
-                "This resets only HushType's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today."
+                "This resets only Lamitype's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today."
             )
             XCTAssertEqual(alert.buttons.map(\.title), ["Cancel", "Reset Counter"])
             XCTAssertEqual(alert.buttons[0].keyEquivalent, "\r")
@@ -41,7 +41,7 @@ final class CloudSettingsTests: XCTestCase {
             XCTAssertEqual(alert.messageText, "要重設今日用量計數嗎？")
             XCTAssertEqual(
                 alert.informativeText,
-                "這只會重設 HushType 對今日雲端用量的估算，不會變更 OpenAI 或 Gemini 顯示的實際用量或費用。重設後，今日將可再次使用雲端上傳。"
+                "這只會重設 Lamitype 對今日雲端用量的估算，不會變更 OpenAI 或 Gemini 顯示的實際用量或費用。重設後，今日將可再次使用雲端上傳。"
             )
             XCTAssertEqual(alert.buttons.map(\.title), ["取消", "重設計數"])
         }

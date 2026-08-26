@@ -104,7 +104,7 @@ struct CaptionPane: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L10n.string(
                         "settings.caption.panel_size",
-                        fallback: "Drag or resize the caption panel; HushType remembers its size and position automatically."
+                        fallback: "Drag or resize the caption panel; Lamitype remembers its size and position automatically."
                     ))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -200,7 +200,7 @@ struct CaptionPane: View {
             SettingsRow {
                 Text(L10n.string(
                     "settings.caption.note",
-                    fallback: "Audio streams Mac → OpenAI directly; HushType is never in the middle. Spend counts against the daily cap on the Cloud tab."
+                    fallback: "Audio streams Mac → OpenAI directly; Lamitype is never in the middle. Spend counts against the daily cap on the Cloud tab."
                 ))
                 .font(.caption)
                 .foregroundStyle(.secondary)

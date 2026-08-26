@@ -180,7 +180,7 @@ private struct SystemAudioPermissionView: View {
 
                 Text(L10n.string(
                     "permission.system_audio.intro",
-                    fallback: "Allow HushType to caption audio from apps like Zoom, Chrome, and Safari."
+                    fallback: "Allow Lamitype to caption audio from apps like Zoom, Chrome, and Safari."
                 ))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
@@ -255,7 +255,7 @@ private struct SystemAudioPermissionView: View {
                     .padding(.top, 1)
                 Text(L10n.string(
                     "permission.system_audio.restart_guidance",
-                    fallback: "After turning on HushType in System Settings, restart the app so macOS applies the permission."
+                    fallback: "After turning on Lamitype in System Settings, restart the app so macOS applies the permission."
                 ))
                     .font(.system(size: 12))
                     .foregroundStyle(.secondary)
@@ -289,7 +289,7 @@ private struct SystemAudioPermissionView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(L10n.string(
                         "permission.system_audio.reset_help",
-                        fallback: "Use this if HushType is missing or appears twice in System Settings."
+                        fallback: "Use this if Lamitype is missing or appears twice in System Settings."
                     ))
                         .font(.system(size: 12))
                         .foregroundStyle(.secondary)
@@ -308,7 +308,7 @@ private struct SystemAudioPermissionView: View {
                         Label(
                             L10n.string(
                                 "permission.system_audio.reset_complete",
-                                fallback: "Reset complete. Turn on HushType in System Settings, then restart."
+                                fallback: "Reset complete. Turn on Lamitype in System Settings, then restart."
                             ),
                             systemImage: "checkmark.circle.fill"
                         )
@@ -343,7 +343,7 @@ private struct SystemAudioPermissionView: View {
             }
 
             Button(model.settingsOpened
-                   ? L10n.string("onboarding.button.restart", fallback: "Restart HushType")
+                   ? L10n.string("onboarding.button.restart", fallback: "Restart Lamitype")
                    : L10n.string("common.button.open_system_settings", fallback: "Open System Settings")) {
                 if model.settingsOpened {
                     onRestart()

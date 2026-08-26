@@ -4,7 +4,7 @@ import SwiftUI
 /// Small app tile that can be dragged into macOS permission lists.
 ///
 /// This is intentionally a fallback affordance for System Settings. The
-/// primary path remains toggling HushType on in the permission list; dragging
+/// primary path remains toggling Lamitype on in the permission list; dragging
 /// helps when macOS fails to show the app clearly.
 struct DraggableAppTileView: NSViewRepresentable {
     let appURL: URL
@@ -27,7 +27,7 @@ final class DraggableAppTileNSView: NSView, NSDraggingSource {
     }
 
     private let iconView = NSImageView()
-    private let titleField = NSTextField(labelWithString: "HushType")
+    private let titleField = NSTextField(labelWithString: "Lamitype")
     private let pathField: NSTextField
     private var dragStarted = false
 
