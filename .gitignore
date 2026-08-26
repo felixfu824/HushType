@@ -2,6 +2,7 @@
 .build/
 .swiftpm/
 HushType.app/
+Lamitype.app/
 VoxKey.app/
 logs/
 
