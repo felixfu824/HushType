@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="Resources/Lamitype.png" width="128" height="128" alt="Lamitype icon">
+  <img src="Resources/lamitype-banner.png" width="100%" alt="lamitype: local voice-to-text for macOS and iOS">
 </p>
-
-<h1 align="center">Lamitype</h1>
 
 <p align="center">
   專為 Apple Silicon macOS 打造的語音轉文字 App<br>
@@ -18,29 +16,29 @@
   官方 repository：<a href="https://github.com/felixfu824/lamitype">github.com/felixfu824/lamitype</a>
 </p>
 
-> **Lamitype** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App。預設使用 Qwen3-ASR 0.6B 的 **4-bit MLX 量化版**在 Apple Silicon 上完全本地執行，支援英文、中文、日文的語音輸入，支援混用多語的句子，並透過 OpenCC 提供穩定的繁體中文輸出；也可**選擇雲端聽寫（OpenAI / Gemini）**：用你提供的金鑰經 HTTPS 直連供應商，中間沒有任何轉送伺服器。相對強迫你把音訊交給第三方的聽寫工具，Lamitype 把選擇權和隱私主導權留在你手上，並專注保持輕量，與你需要同時跑的所有 App 共存。
+> **lamitype** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App。預設使用 Qwen3-ASR 0.6B 的 **4-bit MLX 量化版**在 Apple Silicon 上完全本地執行，支援英文、中文、日文的語音輸入，支援混用多語的句子，並透過 OpenCC 提供穩定的繁體中文輸出；也可**選擇雲端聽寫（OpenAI / Gemini）**：用你提供的金鑰經 HTTPS 直連供應商，中間沒有任何轉送伺服器。相對強迫你把音訊交給第三方的聽寫工具，lamitype 把選擇權和隱私主導權留在你手上，並專注保持輕量，與你需要同時跑的所有 App 共存。
 
-> 🌐 **Lamitype** is a free, local-first dictation app for Apple Silicon Macs (and iOS). It runs Qwen3-ASR (4-bit) locally via MLX for English, Chinese, Japanese, and others, supports mixed-language sentences with genuinely native Traditional Chinese output (via OpenCC). Cloud dictation (OpenAI / Gemini) is an opt-in choice: your own key, a direct connection, and no middleman, either way, privacy choices stay in your hands.<br>→ Read the full English README: [README.en.md](README.en.md)
+> 🌐 **lamitype** is a free, local-first dictation app for Apple Silicon Macs (and iOS). It runs Qwen3-ASR (4-bit) locally via MLX for English, Chinese, Japanese, and others, supports mixed-language sentences with genuinely native Traditional Chinese output (via OpenCC). Cloud dictation (OpenAI / Gemini) is an opt-in choice: your own key, a direct connection, and no middleman, either way, privacy choices stay in your hands.<br>→ Read the full English README: [README.en.md](README.en.md)
 
-> **名稱延續：** Lamitype formerly HushType。v0.5.12 只更名 Mac App；現有設定與 Application Support 資料會自動搬移，iOS App 與鍵盤本版仍沿用 HushType 名稱。
+> **名稱延續：** lamitype formerly HushType。v0.5.12 只更名 Mac App；現有設定與 Application Support 資料會自動搬移，iOS App 與鍵盤本版仍沿用 HushType 名稱。
 
 <p align="center">
-  <img src="Resources/lamitype-memory-zh.svg" alt="常駐記憶體的模型權重：Lamitype 本機 675 MB（道地繁中）、Lamitype 雲端引擎 ~0 MB vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB（不支援中文）" width="100%">
+  <img src="Resources/lamitype-memory-zh.svg" alt="常駐記憶體的模型權重：lamitype 本機 675 MB（道地繁中）、lamitype 雲端引擎 ~0 MB vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB（不支援中文）" width="100%">
 </p>
 
-<sub>數字為各工具預設精度的模型權重大小；Lamitype 的 675 MB 是 Qwen3-ASR 0.6B 的 4-bit MLX 量化版。選用雲端引擎（OpenAI / Gemini）時**模型記憶體 ~0 MB**，品質同級或更好，代價是每句多幾秒的網路延遲，依時長計費或使用 Gemini 免費（Free tier）API Key。另有 4-bit Whisper-turbo（約 464 MB），但中文輸出仍偏簡體、品質平庸，所以我們的定位是「能做出道地繁中的輕量 ASR」，而非「最小的模型」。</sub>
+<sub>數字為各工具預設精度的模型權重大小；lamitype 的 675 MB 是 Qwen3-ASR 0.6B 的 4-bit MLX 量化版。選用雲端引擎（OpenAI / Gemini）時**模型記憶體 ~0 MB**，品質同級或更好，代價是每句多幾秒的網路延遲，依時長計費或使用 Gemini 免費（Free tier）API Key。另有 4-bit Whisper-turbo（約 464 MB），但中文輸出仍偏簡體、品質平庸，所以我們的定位是「能做出道地繁中的輕量 ASR」，而非「最小的模型」。</sub>
 
 ---
 
-## 為什麼選擇 Lamitype
+## 為什麼選擇 lamitype
 
-**隱私與主導權優先。** 預設模式下語音永遠不離開你的 Mac，模型完全在本機執行，無雲端、無帳號、無使用追蹤，只有首次一次性模型下載（約 675 MB）。選擇加入雲端聽寫時，音訊用**你自己的金鑰**經 HTTPS **直連** OpenAI 或 Gemini：中間沒有 Lamitype 伺服器，不經手、不攔截、看不到你的音訊與金鑰，且每個工作階段第一次使用前都會先徵求你的同意。**要不要把音訊交給供應商，永遠是你的決定。**
+**隱私與主導權優先。** 預設模式下語音永遠不離開你的 Mac，模型完全在本機執行，無雲端、無帳號、無使用追蹤，只有首次一次性模型下載（約 675 MB）。選擇加入雲端聽寫時，音訊用**你自己的金鑰**經 HTTPS **直連** OpenAI 或 Gemini：中間沒有 lamitype 伺服器，不經手、不攔截、看不到你的音訊與金鑰，且每個工作階段第一次使用前都會先徵求你的同意。**要不要把音訊交給供應商，永遠是你的決定。**
 
-**記憶體友善：與你的 AI 助手共存。** 本機模型權重只有約 675 MB（載入後常駐約 2.1 GB RAM），輕到能與 Claude Code/Cowork、Codex、瀏覽器同機共存，且 Lamitype 啟動時就替記憶體暫存設上限，你完全不用管。想把記憶體占用歸零？切到雲端引擎：本機模型不會載入（引擎選擇跨重啟保留，下次啟動就是 ~0 MB 起步）；已載入的模型也可以在選單一鍵卸載，切回本機引擎時自動重新載入。
+**記憶體友善：與你的 AI 助手共存。** 本機模型權重只有約 675 MB（載入後常駐約 2.1 GB RAM），輕到能與 Claude Code/Cowork、Codex、瀏覽器同機共存，且 lamitype 啟動時就替記憶體暫存設上限，你完全不用管。想把記憶體占用歸零？切到雲端引擎：本機模型不會載入（引擎選擇跨重啟保留，下次啟動就是 ~0 MB 起步）；已載入的模型也可以在選單一鍵卸載，切回本機引擎時自動重新載入。
 
 **雲端聽寫（Opt-in）。** 三件事：(1) 支援 **OpenAI**（預設 `gpt-4o-mini-transcribe`）與 **Gemini**（預設 `gemini-3.5-flash-lite`，可選 `gemini-3.7-flash`），你的金鑰、直連、無轉送；(2) Gemini 有**免費（Free tier）API Key** 可零成本入門；但請注意：Google 免費方案可能用你提交的音訊改進其產品，付費方案則不會；(3) 內建護欄：逐次同意、每日花費警示與當日鎖定（預設 $5）、錄音過長在上傳前就擋下。
 
-**真正能用的繁體中文。** Whisper 與多數開源模型預設輸出簡體或大陸用語（软件 而非 軟體）。Lamitype 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地輸出，軟體、滑鼠、品質，支援英中同句混用辨識，並可選擇將中文數字依語境轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟。本機與雲端引擎共用同一套後處理管線，輸出品質一致。
+**真正能用的繁體中文。** Whisper 與多數開源模型預設輸出簡體或大陸用語（软件 而非 軟體）。lamitype 串接 Qwen3-ASR 與 OpenCC `s2twp` 做台灣在地輸出，軟體、滑鼠、品質，支援英中同句混用辨識，並可選擇將中文數字依語境轉成阿拉伯數字（`一零一大樓` → `101 大樓`），預設開啟。本機與雲端引擎共用同一套後處理管線，輸出品質一致。
 
 **文字就地修正。** 在任何 App 選取文字、雙擊 Right ⌥，裝置端 Apple Intelligence 模型直接就地校對並替換：錯字、文法、標點。它是機械式校對員，不是改寫器：語意、語氣、中英混用全都原樣保留（macOS 26+）。<br>註：Apple Foundation Model 參數較少能力受限，故目前校正選擇較保守，有時可能會完全不改動。
 
@@ -96,7 +94,7 @@ macOS（預設本機，不需要網路）：
   選取文字後雙擊 Right Option → 就地校對（Text Polish）
   本機流程：麥克風 → Qwen3-ASR（MLX、裝置端推論）→ OpenCC s2twp → ITN → 貼上
   雲端流程（選擇加入）：麥克風 → 你的 Mac → HTTPS 直連 OpenAI/Gemini → 同一套 OpenCC/ITN 後處理 → 貼上
-                        （沒有 Lamitype 伺服器這一站）
+                        （沒有 lamitype 伺服器這一站）
 
 iOS（透過你的 Mac 作為伺服器）：
   開啟 HushType → 開始聆聽 → 切到任何 App → HushType 鍵盤 → 按麥克風
@@ -273,7 +271,7 @@ make install
 
 ### 選用功能：Text Polish（macOS 26+）
 
-使用 Apple Foundation Models 框架在裝置端校對，就是 macOS 內建的 Apple Intelligence 模型，不增加 Lamitype 的記憶體預算，內容也不離開你的 Mac。在任何 App 選取文字 → 雙擊 Right Option → 選取範圍就地替換為修正後的文字，結果卡片以 Word 追蹤修訂的方式顯示到底改了什麼：刪除的字紅色刪除線、加入的字綠色底線。
+使用 Apple Foundation Models 框架在裝置端校對，就是 macOS 內建的 Apple Intelligence 模型，不增加 lamitype 的記憶體預算，內容也不離開你的 Mac。在任何 App 選取文字 → 雙擊 Right Option → 選取範圍就地替換為修正後的文字，結果卡片以 Word 追蹤修訂的方式顯示到底改了什麼：刪除的字紅色刪除線、加入的字綠色底線。
 
 <p align="center">
   <img src="Resources/polish-card-diff-zh.png" alt="Text Polish 結果卡片：刪除紅色刪除線、新增綠色底線" width="560">
@@ -281,7 +279,7 @@ make install
 
 **它修什麼：以及它絕不碰什麼。** 錯字、文法、標點、明顯的 typo。它刻意設計成機械式校對員，而非改寫器：語意、語氣、格式、大小寫、語言混用全部保留。它被要求遵守的規則：
 
-- **絕不翻譯。** 中英夾雜的句子保持夾雜。如果模型把其中一種語言翻掉了，Lamitype 會在輸出端偵測到、帶著更強的指令重試一次，仍失敗就跳警示，而不是貼上誤譯。
+- **絕不翻譯。** 中英夾雜的句子保持夾雜。如果模型把其中一種語言翻掉了，lamitype 會在輸出端偵測到、帶著更強的指令重試一次，仍失敗就跳警示，而不是貼上誤譯。
 - **絕不簡繁互轉**，兩個方向都不會。
 - **絕不回答。** 長得像問題或指令的選取內容，一律當成待校對的文字，不當成要執行的 prompt。
 - **不碰程式碼。** 像程式碼的選取會跳警示退回；一般文字裡的 URL、檔案路徑、反引號內容原樣保留。
@@ -289,7 +287,7 @@ make install
 
 **能力邊界（誠實說明）：** 背後是 Apple 裝置端的小型模型，取捨如下，**英文修正最可靠**；**中文偏保守**，語法依存的錯字（的／得、在／再）常修不到；**選取越長越容易回「No changes needed」**，一次選一兩句效果最好。這是刻意的設計：模型沒把握時就原文返回，寧可漏修，也絕不亂改。
 
-**速度：** 通常約 1-3 秒。Lamitype 會維持一個預熱好的待命模型 session，把 prompt 處理成本在你雙擊之前先付掉。
+**速度：** 通常約 1-3 秒。lamitype 會維持一個預熱好的待命模型 session，把 prompt 處理成本在你雙擊之前先付掉。
 
 **自訂規則：** 選單列 → **設定… → 文字 → Polish instructions → Open file in TextEdit**，開啟 `~/Library/Application Support/Lamitype/polish_rules.txt`。一行一條短規則（`#` 開頭為註解），會合併進內建 prompt，例如 `一律用台灣用語` 或 `Use the Oxford comma.`。存檔即生效，不用重啟。
 
@@ -486,7 +484,7 @@ private static let rightOptionKeyCode: Int64 = 61
 
 ### 雲端模式（選擇加入：雲端語音輸入 / Live Translated Caption）
 
-- **中間沒有轉送伺服器。** 音訊會直接從你的 Mac 經 HTTPS（字幕為 WSS）傳送給服務供應商（OpenAI / Google）。Lamitype 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。
+- **中間沒有轉送伺服器。** 音訊會直接從你的 Mac 經 HTTPS（字幕為 WSS）傳送給服務供應商（OpenAI / Google）。lamitype 沒有自己的伺服器、不轉送任何流量、看不到你的音訊、金鑰、或費用。
 - **你的金鑰、你的同意。** 預設全部關閉、需自行填入金鑰開啟；每個工作階段第一次雲端使用前會先徵求同意，絕無靜默上傳。金鑰留空即完全停用雲端功能。
 - **金鑰儲存。** 金鑰存在 `~/Library/Application Support/Lamitype/`（`openai.json` / `gemini.json`），App 寫入時自動設定 `0600` 檔案權限，與 `.env` 檔同一個安全模型。
 - **花費護欄。** 每日花費警示（預設 $5）在上傳之前就擋下會超標的請求並鎖定當日雲端；錄音過長在上傳前就被擋下、絕不送出。
