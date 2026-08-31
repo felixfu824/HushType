@@ -139,16 +139,16 @@ final class LocalizationTests: XCTestCase {
             // English process tag
             defaults.set("en", forKey: "hushtype.interfaceLanguage")
             L10n.resetLaunchStateForTests()
-            XCTAssertEqual(L10n.string("menu.about", fallback: "About HushType"), "About HushType")
+            XCTAssertEqual(L10n.string("menu.about", fallback: "About Lamitype"), "About Lamitype")
             XCTAssertEqual(L10n.string("common.button.ok", fallback: "OK"), "OK")
-            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit HushType"), "Quit HushType")
+            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit Lamitype"), "Quit Lamitype")
 
             // zh-Hant-TW process tag — exact frozen catalog values
             defaults.set("zh-Hant-TW", forKey: "hushtype.interfaceLanguage")
             L10n.resetLaunchStateForTests()
-            XCTAssertEqual(L10n.string("menu.about", fallback: "About HushType"), "關於 HushType")
+            XCTAssertEqual(L10n.string("menu.about", fallback: "About Lamitype"), "關於 Lamitype")
             XCTAssertEqual(L10n.string("common.button.ok", fallback: "OK"), "好")
-            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit HushType"), "結束 HushType")
+            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit Lamitype"), "結束 Lamitype")
         }
     }
 
@@ -159,8 +159,8 @@ final class LocalizationTests: XCTestCase {
         L10n.resetLaunchStateForTests()
         underBothStrategies { _ in
             L10n.overrideBaseBundle = Self.fixture(withZHTW: false, withEN: true)
-            let s = L10n.string("menu.about", fallback: "About HushType")
-            XCTAssertEqual(s, "About HushType")
+            let s = L10n.string("menu.about", fallback: "About Lamitype")
+            XCTAssertEqual(s, "About Lamitype")
             L10n.overrideBaseBundle = nil
         }
     }
@@ -191,8 +191,8 @@ final class LocalizationTests: XCTestCase {
             defaults.set("zh-Hant-TW", forKey: "hushtype.interfaceLanguage")
             L10n.resetLaunchStateForTests()
             L10n.overrideBaseBundle = Self.fixture(withZHTW: false, withEN: false)
-            let s = L10n.string("menu.about", fallback: "About HushType")
-            XCTAssertEqual(s, "About HushType")
+            let s = L10n.string("menu.about", fallback: "About Lamitype")
+            XCTAssertEqual(s, "About Lamitype")
             XCTAssertNotEqual(s, "menu.about") // semantic key never reaches UI
             L10n.overrideBaseBundle = nil
         }
@@ -203,8 +203,8 @@ final class LocalizationTests: XCTestCase {
             defaults.set("en", forKey: "hushtype.interfaceLanguage")
             L10n.resetLaunchStateForTests()
             L10n.overrideBaseBundle = Self.fixture(withZHTW: false, withEN: true, corruptENLocalizable: true)
-            let s = L10n.string("menu.about", fallback: "About HushType")
-            XCTAssertEqual(s, "About HushType")
+            let s = L10n.string("menu.about", fallback: "About Lamitype")
+            XCTAssertEqual(s, "About Lamitype")
             L10n.overrideBaseBundle = nil
         }
     }
@@ -217,7 +217,7 @@ final class LocalizationTests: XCTestCase {
         L10n.resetLaunchStateForTests()
         underBothStrategies { _ in
             L10n.overrideBaseBundle = Self.fixture(withZHTW: true, withEN: true, deleteZHTWKey: "menu.quit")
-            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit HushType"), "Quit HushType")
+            XCTAssertEqual(L10n.string("menu.quit", fallback: "Quit Lamitype"), "Quit Lamitype")
             L10n.overrideBaseBundle = nil
         }
     }
@@ -569,15 +569,15 @@ final class LocalizationTests: XCTestCase {
         try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
         try? infoData.write(to: tmp.appendingPathComponent("Info.plist"))
         let enEntries: [String: String] = [
-            "menu.about": "About HushType",
+            "menu.about": "About Lamitype",
             "common.button.ok": "OK",
-            "menu.quit": "Quit HushType",
+            "menu.quit": "Quit Lamitype",
             "format.usd_total": "$%1$.2f",
         ]
         var zhEntries: [String: String] = [
-            "menu.about": "關於 HushType",
+            "menu.about": "關於 Lamitype",
             "common.button.ok": "好",
-            "menu.quit": "結束 HushType",
+            "menu.quit": "結束 Lamitype",
             "format.usd_total": "US$%1$.2f",
         ]
         if let drop = deleteZHTWKey { zhEntries[drop] = nil }

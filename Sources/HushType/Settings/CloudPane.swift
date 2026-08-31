@@ -55,7 +55,7 @@ final class CloudSettingsModel: ObservableObject {
         )
         alert.informativeText = L10n.string(
             "alert.cloud.reset_counter.message",
-            fallback: "This resets only HushType's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today."
+            fallback: "This resets only Lamitype's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today."
         )
         alert.alertStyle = .warning
         alert.addButton(withTitle: L10n.string("common.button.cancel", fallback: "Cancel"))

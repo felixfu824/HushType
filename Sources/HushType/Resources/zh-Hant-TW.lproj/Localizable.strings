@@ -1,6 +1,6 @@
 /* Generated from the frozen Gate B manifest + decisions overlay. */
 
-/* Default acknowledgement button used by HushType alerts. */
+/* Default acknowledgement button used by Lamitype alerts. */
 
 "common.button.ok" = "好";
 
@@ -8,7 +8,7 @@
 
 "common.button.cancel" = "取消";
 
-/* Opens the relevant HushType settings window. */
+/* Opens the relevant Lamitype settings window. */
 
 "common.button.open_settings" = "開啟設定";
 
@@ -28,9 +28,9 @@
 
 "common.button.reset_counter" = "重設今日計數…";
 
-/* 清除 HushType 本機用量估算前的費用安全確認。 */
+/* 清除 Lamitype 本機用量估算前的費用安全確認。 */
 "alert.cloud.reset_counter.title" = "要重設今日用量計數嗎？";
-"alert.cloud.reset_counter.message" = "這只會重設 HushType 對今日雲端用量的估算，不會變更 OpenAI 或 Gemini 顯示的實際用量或費用。重設後，今日將可再次使用雲端上傳。";
+"alert.cloud.reset_counter.message" = "這只會重設 Lamitype 對今日雲端用量的估算，不會變更 OpenAI 或 Gemini 顯示的實際用量或費用。重設後，今日將可再次使用雲端上傳。";
 "alert.cloud.reset_counter.confirm" = "重設計數";
 
 /* Runs this one transcription locally without changing the saved engine. */
@@ -65,9 +65,9 @@
 
 /* Accessibility description for the disabled next-launch row; not a restart button. */
 
-"menu.interface_language.applied_next_launch.accessibility" = "介面語言會在你下次開啟 HushType 時套用";
+"menu.interface_language.applied_next_launch.accessibility" = "介面語言會在你下次開啟 Lamitype 時套用";
 
-/* Opens the unified seven-pane HushType Settings window. */
+/* Opens the unified seven-pane Lamitype Settings window. */
 
 "menu.settings" = "設定…";
 
@@ -93,7 +93,7 @@
 
 "settings.caption.cloud_sub" = "OpenAI realtime · 約每小時 US$2 · 以下三項只作用於翻譯字幕";
 
-"settings.caption.note" = "音訊會直接從 Mac 串流至 OpenAI，HushType 絕不介入其中。費用計入「雲端」分頁的每日上限。";
+"settings.caption.note" = "音訊會直接從 Mac 串流至 OpenAI，Lamitype 絕不介入其中。費用計入「雲端」分頁的每日上限。";
 
 "settings.cloud.cap" = "每日費用上限：";
 
@@ -136,7 +136,7 @@
 
 /* Passive next-launch explanation; does not offer or imply programmatic quit/restart. */
 
-"alert.language_saved.message" = "這項設定會在你下次開啟 HushType 時套用。請先完成進行中的工作，再結束 HushType。";
+"alert.language_saved.message" = "這項設定會在你下次開啟 Lamitype 時套用。請先完成進行中的工作，再結束 Lamitype。";
 
 /* Initial status-menu state. */
 
@@ -228,11 +228,11 @@
 
 /* Opens the About alert. */
 
-"menu.about" = "關於 HushType";
+"menu.about" = "關於 Lamitype";
 
 /* Normal explicit Quit command; unrelated to interface-language selection. */
 
-"menu.quit" = "結束 HushType";
+"menu.quit" = "結束 Lamitype";
 
 /* Privacy/cost subtitle for local Live Caption. */
 
@@ -416,7 +416,7 @@
 
 /* Privacy-sensitive consent copy; do not broaden or weaken the data claim. */
 
-"alert.update_consent.message" = "HushType 將連線至 GitHub 以檢查新版本。\n\n不會傳送個人資料，只會呼叫公開 API 來比較版本號碼。";
+"alert.update_consent.message" = "Lamitype 將連線至 GitHub 以檢查新版本。\n\n不會傳送個人資料，只會呼叫公開 API 來比較版本號碼。";
 
 /* Explicitly authorizes the one-time GitHub network request. */
 
@@ -450,21 +450,21 @@
 
 "alert.update.error.message" = "無法連線至 GitHub。\n\n%1$@\n\n請檢查網路連線後再試一次。";
 
-/* HushType-owned version-check diagnostic; argument is HTTP status. */
+/* Lamitype-owned version-check diagnostic; argument is HTTP status. */
 
 "error.version.http" = "GitHub 傳回 HTTP %1$d";
 
-/* HushType-owned version-check diagnostic. */
+/* Lamitype-owned version-check diagnostic. */
 
 "error.version.invalid_json" = "無法解析 GitHub 回應";
 
-/* HushType-owned version-check diagnostic; JSON key stays exact. */
+/* Lamitype-owned version-check diagnostic; JSON key stays exact. */
 
 "error.version.missing_tag" = "GitHub 回應缺少 tag_name";
 
 /* Explicit Services-path error when Text Translation is disabled. */
 
-"error.translation.disabled" = "HushType 選單中的文字翻譯已關閉。";
+"error.translation.disabled" = "Lamitype 選單中的文字翻譯已關閉。";
 
 /* Explicit Services-path and Text Polish empty-selection error. */
 
@@ -530,7 +530,7 @@
 
 "alert.model_unloaded.local.message" = "語音辨識模型已從記憶體移除。\n\n下次按下右側 ⌥ 使用語音輸入時，需要冷啟動（約 3 秒）。";
 
-/* Cloud-upload gate title; this is HushType's local warning, not provider billing enforcement. */
+/* Cloud-upload gate title; this is Lamitype's local warning, not provider billing enforcement. */
 
 "alert.daily_spend_gate.title" = "已達每日費用警示";
 
@@ -538,7 +538,7 @@
 
 "alert.daily_spend_gate.message" = "這次上傳會使今天的雲端預估費用達到 %1$@（警示值：%2$@）。目前尚未上傳任何音訊。請開啟設定並重設今天的計數，才能再次使用雲端。";
 
-/* Local notification title for HushType's daily cloud warning. */
+/* Local notification title for Lamitype's daily cloud warning. */
 
 "notification.daily_spend.title" = "已達每日費用警示";
 
@@ -558,7 +558,7 @@
 
 "alert.cloud.no_key.message" = "使用雲端語音輸入前，請先在「設定」的「雲端」分頁中加入你的 %1$@ API 金鑰。";
 
-/* Argument 1 is provider name; do not imply HushType rejected it. */
+/* Argument 1 is provider name; do not imply Lamitype rejected it. */
 
 "alert.cloud.auth.title" = "%1$@ 拒絕了這組 API 金鑰";
 
@@ -578,9 +578,9 @@
 
 "alert.cloud.rate_limit.title" = "已達 %1$@ 配額或速率限制";
 
-/* Distinguishes provider quota/billing from HushType's local warning; argument is provider. */
+/* Distinguishes provider quota/billing from Lamitype's local warning; argument is provider. */
 
-"alert.cloud.rate_limit.message" = "這項限制來自 %1$@，不是 HushType 的每日費用警示。請檢查服務供應商的用量或帳務資訊，或稍後再試。";
+"alert.cloud.rate_limit.message" = "這項限制來自 %1$@，不是 Lamitype 的每日費用警示。請檢查服務供應商的用量或帳務資訊，或稍後再試。";
 
 /* Cloud upload size-limit title. */
 
@@ -604,7 +604,7 @@
 
 /* Argument 1 is provider; says local recovery remains possible. */
 
-"alert.cloud.network.message" = "HushType 無法連線至 %1$@。這段錄音仍可用於本機轉錄。";
+"alert.cloud.network.message" = "Lamitype 無法連線至 %1$@。這段錄音仍可用於本機轉錄。";
 
 /* Argument 1 is provider; does not expose raw response. */
 
@@ -726,11 +726,11 @@
 
 /* Onboarding/permission-repair panel title and heading. */
 
-"window.onboarding.title" = "設定 HushType";
+"window.onboarding.title" = "設定 Lamitype";
 
 /* Permission-purpose summary; Right Option is a key name, not the ⌥ glyph on this surface. */
 
-"onboarding.intro" = "允許 HushType 偵測右側 Option 鍵，並在本機錄下你的語音。";
+"onboarding.intro" = "允許 Lamitype 偵測右側 Option 鍵，並在本機錄下你的語音。";
 
 /* Apple permission category name. */
 
@@ -754,11 +754,11 @@
 
 /* Stale-entry troubleshooting guidance. */
 
-"permission.accessibility.reset_help" = "如果你安裝過舊版 HushType、看到重複的 HushType 項目、找不到 HushType，或開關無法使用，請使用重設功能。";
+"permission.accessibility.reset_help" = "如果你安裝過 HushType、看到重複的 HushType 項目、找不到 HushType，或其開關無法使用，請使用重設功能。";
 
 /* Success state after tccutil reset. */
 
-"permission.accessibility.reset_complete" = "舊的輔助使用項目已清除。請重新加入或啟用 HushType。";
+"permission.accessibility.reset_complete" = "舊的輔助使用項目已清除。請重新加入或啟用 Lamitype。";
 
 /* Apple permission category name. */
 
@@ -790,7 +790,7 @@
 
 /* Existing permission-flow action; unrelated to interface-language selection. */
 
-"onboarding.button.restart" = "重新啟動 HushType";
+"onboarding.button.restart" = "重新啟動 Lamitype";
 
 /* Disabled restart-button help. */
 
@@ -798,11 +798,11 @@
 
 /* Permission sequencing guidance. */
 
-"onboarding.next_step.allow_microphone" = "在輔助使用中啟用 HushType 後，請先允許麥克風存取權，再重新啟動。";
+"onboarding.next_step.allow_microphone" = "在輔助使用中啟用 Lamitype 後，請先允許麥克風存取權，再重新啟動。";
 
 /* Permission restart guidance. */
 
-"onboarding.next_step.restart" = "在輔助使用中啟用 HushType 後，請重新啟動 App，讓 macOS 套用權限。";
+"onboarding.next_step.restart" = "在輔助使用中啟用 Lamitype 後，請重新啟動 App，讓 macOS 套用權限。";
 
 /* Compact permission status value. */
 
@@ -822,7 +822,7 @@
 
 /* Destructive permission-reset confirmation; accurately states scope and required follow-up. */
 
-"alert.accessibility_reset.message" = "這會從輔助使用權限列表中清除 HushType。\n\n如果你安裝過舊版 HushType、看到重複的 HushType 項目、找不到 HushType，或開關無法使用，請使用這項功能。之後你需要重新加入或啟用 HushType。";
+"alert.accessibility_reset.message" = "這會從輔助使用權限列表中清除 HushType。\n\n如果你安裝過 HushType、看到重複的 HushType 項目、找不到 HushType，或其開關無法使用，請使用這項功能。之後你需要重新加入或啟用 Lamitype。";
 
 /* Confirms reset and reopens System Settings. */
 
@@ -834,7 +834,7 @@
 
 /* Runtime permission-repair path; Apple breadcrumb should be visually checked on supported macOS versions. */
 
-"alert.accessibility_lost.message" = "HushType 已失去輔助使用權限，全域快速鍵目前無法使用。\n\n請在「系統設定 → 隱私權與安全性 → 輔助使用」中重新啟用 HushType，然後結束並重新開啟 HushType。";
+"alert.accessibility_lost.message" = "Lamitype 已失去輔助使用權限，全域快速鍵目前無法使用。\n\n請在「系統設定 → 隱私權與安全性 → 輔助使用」中重新啟用 Lamitype，然後結束並重新開啟 Lamitype。";
 
 /* System-audio permission panel title. */
 
@@ -846,7 +846,7 @@
 
 /* Purpose summary; running app/provider names remain literal. */
 
-"permission.system_audio.intro" = "允許 HushType 為 Zoom、Chrome、Safari 等 App 的音訊產生字幕。";
+"permission.system_audio.intro" = "允許 Lamitype 為 Zoom、Chrome、Safari 等 App 的音訊產生字幕。";
 
 /* Draft Apple Taiwan permission-pane label. Must be visually verified on macOS 15 and 26 before implementation freeze. */
 
@@ -858,7 +858,7 @@
 
 /* Existing permission-flow restart instruction. */
 
-"permission.system_audio.restart_guidance" = "在系統設定中開啟 HushType 後，請重新啟動 App，讓 macOS 套用權限。";
+"permission.system_audio.restart_guidance" = "在系統設定中開啟 Lamitype 後，請重新啟動 App，讓 macOS 套用權限。";
 
 /* Expandable permission troubleshooting heading. */
 
@@ -866,7 +866,7 @@
 
 /* Stale ScreenCapture permission troubleshooting guidance. */
 
-"permission.system_audio.reset_help" = "如果系統設定中找不到 HushType，或 HushType 出現兩次，請使用這項功能。";
+"permission.system_audio.reset_help" = "如果系統設定中找不到 Lamitype，或 Lamitype 出現兩次，請使用這項功能。";
 
 /* Explicit ScreenCapture TCC reset action. */
 
@@ -874,19 +874,19 @@
 
 /* Success state after stale ScreenCapture entries are reset. */
 
-"permission.system_audio.reset_complete" = "重設完成。請在系統設定中開啟 HushType，然後重新啟動。";
+"permission.system_audio.reset_complete" = "重設完成。請在系統設定中開啟 Lamitype，然後重新啟動。";
 
 /* Non-modal draggable-tile helper title; permission label needs OS verification. */
 
-"permission.system_audio.guide.title" = "請在「螢幕與系統音訊錄製」中開啟 HushType。";
+"permission.system_audio.guide.title" = "請在「螢幕與系統音訊錄製」中開啟 Lamitype。";
 
 /* Non-modal draggable-tile helper title. */
 
-"permission.accessibility.guide.title" = "請在「輔助使用」中開啟 HushType。";
+"permission.accessibility.guide.title" = "請在「輔助使用」中開啟 Lamitype。";
 
 /* Draggable app-tile helper instruction. */
 
-"permission.guide.detail" = "如果找不到 HushType，請將 HushType 拖入列表。";
+"permission.guide.detail" = "如果找不到 Lamitype，請將 Lamitype 拖入列表。";
 
 /* Help text for helper-panel close button. */
 
@@ -942,11 +942,11 @@
 
 "error.system_audio.app_not_running" = "App %1$@ 未在執行。請選擇其他來源。";
 
-/* HushType-owned ScreenCaptureKit setup error. */
+/* Lamitype-owned ScreenCaptureKit setup error. */
 
 "error.system_audio.no_display" = "沒有可用於擷取的顯示器。";
 
-/* HushType-owned audio-converter error. */
+/* Lamitype-owned audio-converter error. */
 
 "error.system_audio.converter" = "無法設定用於擷取系統音訊的音訊轉換器。";
 
@@ -1014,19 +1014,19 @@
 
 "caption.role.translated.accessibility" = "翻譯內容";
 
-/* HushType-owned NSError shown through caption startup wrappers. */
+/* Lamitype-owned NSError shown through caption startup wrappers. */
 
 "error.caption.microphone_denied" = "麥克風權限遭拒";
 
-/* HushType-owned NSError/alert title for translated captions. */
+/* Lamitype-owned NSError/alert title for translated captions. */
 
 "error.caption.openai_key_missing" = "尚未設定 OpenAI API 金鑰";
 
-/* HushType-owned NSError after a nominally successful model load. */
+/* Lamitype-owned NSError after a nominally successful model load. */
 
 "error.caption.local_model_unavailable" = "載入後仍無法使用本機字幕模型";
 
-/* HushType-owned internal startup error that can surface through an alert. */
+/* Lamitype-owned internal startup error that can surface through an alert. */
 
 "error.caption.openai_key_lost" = "已取得 OpenAI 金鑰，但之後遺失";
 
@@ -1052,7 +1052,7 @@
 
 /* Apple breadcrumb should be visually checked on supported macOS versions. */
 
-"alert.caption.mic_access.message" = "即時字幕需要麥克風存取權。請開啟「系統設定 → 隱私權與安全性 → 麥克風」，並啟用 HushType。";
+"alert.caption.mic_access.message" = "即時字幕需要麥克風存取權。請開啟「系統設定 → 隱私權與安全性 → 麥克風」，並啟用 Lamitype。";
 
 /* VAD load failure title. */
 
@@ -1110,19 +1110,19 @@
 
 "alert.caption.local_start_failed.title" = "無法啟動即時字幕";
 
-/* HushType-owned NSError that can surface in caption startup wrappers. */
+/* Lamitype-owned NSError that can surface in caption startup wrappers. */
 
 "error.audio_capture.push_to_talk_active" = "按住說話錄音正在進行，無法啟動連續擷取。";
 
-/* HushType-owned continuous-capture NSError. */
+/* Lamitype-owned continuous-capture NSError. */
 
 "error.audio_capture.target_format" = "無法建立目標音訊格式。";
 
-/* HushType-owned backend NSError after authentication failure. */
+/* Lamitype-owned backend NSError after authentication failure. */
 
 "error.openai_translate.auth" = "OpenAI 拒絕了這組 API 金鑰。";
 
-/* HushType-owned backend NSError after rate limit. */
+/* Lamitype-owned backend NSError after rate limit. */
 
 "error.openai_translate.rate_limit" = "已達 OpenAI 速率限制。";
 
@@ -1264,7 +1264,7 @@
 
 /* High-risk opt-in/privacy/billing disclosure. Preserve exact data path, key visibility, approximate hourly cost, billing account, local fallback, and one-time behavior. Product naming needs review. */
 
-"alert.cloud_caption_disclosure.message" = "即時翻譯字幕會將你的音訊傳送至 OpenAI 進行即時翻譯。\n\n• 費用：約每小時 US$2，由你的 OpenAI 帳戶計費\n• 使用你的 API 金鑰；HushType 絕不會看到金鑰\n• 中間沒有 HushType 伺服器；音訊會直接從 Mac 傳至 OpenAI\n• 你可以隨時停止工作階段，或切換回本機\n\n這是選擇加入的功能。你只會看到這則通知一次。";
+"alert.cloud_caption_disclosure.message" = "即時翻譯字幕會將你的音訊傳送至 OpenAI 進行即時翻譯。\n\n• 費用：約每小時 US$2，由你的 OpenAI 帳戶計費\n• 使用你的 API 金鑰；Lamitype 絕不會看到金鑰\n• 中間沒有 Lamitype 伺服器；音訊會直接從 Mac 傳至 OpenAI\n• 你可以隨時停止工作階段，或切換回本機\n\n這是選擇加入的功能。你只會看到這則通知一次。";
 
 /* Accepts the one-time cloud disclosure. */
 
@@ -1284,7 +1284,7 @@
 
 /* Per-session privacy/billing disclosure; argument is provider. Preserve direct path, own-key, no-relay, and local warning semantics. */
 
-"alert.cloud_dictation_consent.base" = "HushType 會使用你自己的 API 金鑰，將這段錄音直接傳送至 %1$@ 進行轉錄。中間沒有轉送伺服器；音訊會直接從你的 Mac 傳送給服務供應商。每日雲端費用警示仍會生效。";
+"alert.cloud_dictation_consent.base" = "Lamitype 會使用你自己的 API 金鑰，將這段錄音直接傳送至 %1$@ 進行轉錄。中間沒有轉送伺服器；音訊會直接從你的 Mac 傳送給服務供應商。每日雲端費用警示仍會生效。";
 
 /* Provider-policy claim copied from current product source; preserve may/does-not distinction without embellishment. */
 
@@ -1493,7 +1493,7 @@
 "settings.caption.local_sub" = "兩種字幕模式共用。本機字幕跑 Qwen3：免費，不離開這台 Mac。";
 
 /* 字幕面板預設尺寸列標籤。 */
-"settings.caption.panel_size" = "拖移或調整字幕面板大小後，HushType 會自動記住其尺寸與位置。";
+"settings.caption.panel_size" = "拖移或調整字幕面板大小後，Lamitype 會自動記住其尺寸與位置。";
 
 /* 字幕面板下次開始位置重設 checkbox。 */
 "settings.caption.reset_position" = "重設尺寸與位置";

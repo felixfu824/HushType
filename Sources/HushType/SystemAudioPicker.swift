@@ -92,7 +92,7 @@ enum SystemAudioPickerCatalog {
 ///
 /// Entry point: `SystemAudioPicker.present(completion:)`. Surfaces the picker
 /// as a modal sheet-style window using `.hudWindow` material for visual
-/// consistency with the rest of HushType's overlays. Persists the chosen
+/// consistency with the rest of Lamitype's overlays. Persists the chosen
 /// `bundleID` to `live_caption.json` via
 /// `LiveCaptionTuning.setSystemAudioBundleID(_:)` and reports it via
 /// `completion`. If the user cancels, `completion` receives `nil`.

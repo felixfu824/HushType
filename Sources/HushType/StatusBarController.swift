@@ -266,7 +266,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // About
         let aboutItem = NSMenuItem(
-            title: L10n.string("menu.about", fallback: "About HushType"),
+            title: L10n.string("menu.about", fallback: "About Lamitype"),
             action: #selector(aboutClicked),
             keyEquivalent: ""
         )
@@ -275,7 +275,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
         // Quit
         let quitItem = NSMenuItem(
-            title: L10n.string("menu.quit", fallback: "Quit HushType"),
+            title: L10n.string("menu.quit", fallback: "Quit Lamitype"),
             action: #selector(quitClicked),
             keyEquivalent: "q"
         )
@@ -501,7 +501,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     @objc private func openSettings() {
         Task { @MainActor [weak self] in
             guard let self else { return }
-            HushTypeSettingsWindowController.shared.presentAndFocus(
+            LamitypeSettingsWindowController.shared.presentAndFocus(
                 onSwitchEngine: { [weak self] engine in
                     guard let self else { return }
                     self.onDictationEngineChanged?(engine)
@@ -548,10 +548,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
     /// cannot be bypassed and the manager retains its single status callback.
     private func wireIOSServerSettings() {
         Task { @MainActor [weak self] in
-            HushTypeSettingsWindowController.shared.onToggleIOSServer = { [weak self] in
+            LamitypeSettingsWindowController.shared.onToggleIOSServer = { [weak self] in
                 self?.toggleIOSServer()
             }
-            HushTypeSettingsWindowController.shared.isIOSServerRunning = { [weak self] in
+            LamitypeSettingsWindowController.shared.isIOSServerRunning = { [weak self] in
                 self?.iosServerManager.isRunning ?? false
             }
         }
@@ -887,6 +887,27 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     // MARK: - Helpers
 
+    /// Canonical Lamitype menubar mark. AppKit keeps the SVG vector-backed,
+    /// while `isTemplate` lets macOS recolor it for light and dark menubars.
+    private static let statusGlyphImage: NSImage = {
+        let svg = """
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16">
+          <g fill="none" stroke="#000" stroke-width="1.4" stroke-linecap="round">
+            <path d="M4.6 6.1 A2.5 2.5 0 0 1 4.6 9.9"/>
+            <path d="M6.2 4.7 A4.3 4.3 0 0 1 6.2 11.3"/>
+            <path d="M7.9 3.4 A6 6 0 0 1 7.9 12.6"/>
+            <path d="M12.7 4.2 V11.8"/>
+            <path d="M11.3 4.2 H14.1"/>
+            <path d="M11.3 11.8 H14.1"/>
+          </g>
+        </svg>
+        """
+        let image = NSImage(data: Data(svg.utf8)) ?? NSImage(size: NSSize(width: 16, height: 16))
+        image.size = NSSize(width: 16, height: 16)
+        image.isTemplate = true
+        return image
+    }()
+
     /// Green checkmark for the menu's leading state column. Rendered from the
     /// SF Symbol as a non-template image so the menu doesn't recolor it.
     private static let greenCheckImage: NSImage = {
@@ -936,7 +957,7 @@ final class StatusBarController: NSObject, NSMenuDelegate {
 
     @objc private func aboutClicked() {
         Task { @MainActor in
-            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .about)
+            LamitypeSettingsWindowController.shared.presentAndFocus(pane: .about)
         }
     }
 
@@ -946,28 +967,10 @@ final class StatusBarController: NSObject, NSMenuDelegate {
         NSApp.terminate(nil)
     }
 
-    private func updateIcon(for state: State) {
+    private func updateIcon(for _: State) {
         guard let button = statusItem.button else { return }
-
-        let symbolName: String
-        switch state {
-        case .loading:
-            symbolName = "arrow.down.circle"
-        case .idle:
-            symbolName = "mic.fill"
-        case .recording:
-            symbolName = "record.circle"
-        case .transcribing:
-            symbolName = "ellipsis.circle"
-        case .polishing:
-            symbolName = "wand.and.sparkles"
-        case .error:
-            symbolName = "exclamationmark.triangle"
-        case .unloaded:
-            symbolName = "mic.slash"
-        }
-
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "HushType")
+        button.image = Self.statusGlyphImage
+        button.image?.accessibilityDescription = "Lamitype"
     }
 
     private func updateStatusText(for state: State) {

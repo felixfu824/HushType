@@ -97,7 +97,7 @@ final class LiveCaptionManager {
     /// Rolling segments buffer cap — §9.b "last 50 segments".
     private static let segmentBufferCap: Int = 50
 
-    /// Tuning knobs loaded from `~/Library/Application Support/HushType/live_caption.json`
+    /// Tuning knobs loaded from `~/Library/Application Support/Lamitype/live_caption.json`
     /// at every `start()` so the user can edit and toggle to apply.
     private var tuning: LiveCaptionTuning = .init()
 
@@ -963,7 +963,7 @@ final class LiveCaptionManager {
         )
         alert.informativeText = L10n.string(
             "alert.caption.mic_access.message",
-            fallback: "Live Caption needs microphone access. Open System Settings → Privacy & Security → Microphone and enable HushType."
+            fallback: "Live Caption needs microphone access. Open System Settings → Privacy & Security → Microphone and enable Lamitype."
         )
         alert.addButton(withTitle: L10n.string(
             "common.button.open_system_settings",
@@ -1033,7 +1033,7 @@ final class LiveCaptionManager {
         alert.addButton(withTitle: L10n.string("common.button.cancel", fallback: "Cancel"))
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
-            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
+            LamitypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
         }
     }
 
@@ -1053,7 +1053,7 @@ final class LiveCaptionManager {
         if response == .alertFirstButtonReturn {
             OpenAIKeyStore.openInDefaultEditor()
         } else {
-            HushTypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
+            LamitypeSettingsWindowController.shared.presentAndFocus(pane: .cloud)
         }
     }
 

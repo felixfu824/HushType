@@ -2,15 +2,15 @@
 
 /* Complete first-created dictionary.txt starter document. Comment prose is localized; executable example lines, separators, case examples, product/proper names, and syntax remain byte-semantic equivalents. */
 
-"template.dictionary.starter_document" = "# HushType 自訂字典\n# ==================\n#\n# 每行一條規則，格式如下：\n#\n#     你說出的內容  ->  要輸入的內容\n#\n# 用來修正常見的轉錄錯誤，例如語音模型總是聽錯的專有名詞、\n# 被逐字母拼出的縮寫，或發音不尋常的技術用語等。\n#\n# 規則：\n#   • 以 # 開頭的行是註解（會忽略）\n#   • 空白行會忽略\n#   • 來源不區分大小寫：\"cloud code\"、\"Cloud Code\" 和\n#     \"CLOUD CODE\" 都會符合相同規則。目標內容會照原樣插入，\n#     因此輸出會與你寫的內容完全相同。\n#   • 僅比對純文字字串，不支援 regex 或萬用字元\n#   • 規則重疊時，以最長的相符項目為準\n#   • 變更會在下一次轉錄時生效（不需重新啟動）\n#\n# ---------------------------------------------------------------\n# 範例（刪除行首的 # 即可啟用）\n# ---------------------------------------------------------------\n\n# 模型轉錄錯誤的專有名詞：\n# 拍粉       -> Python\n# Cloud code -> Claude Code\n# Enfropic   -> Anthropic\n\n# 縮寫正規化：\n# U I U X    -> UI/UX\n\n# 技術用語：\n# J.S.O.N    -> JSON\n\n# ---------------------------------------------------------------\n# 請在下方加入你的項目：\n# ---------------------------------------------------------------\n";
+"template.dictionary.starter_document" = "# Lamitype 自訂字典\n# ==================\n#\n# 每行一條規則，格式如下：\n#\n#     你說出的內容  ->  要輸入的內容\n#\n# 用來修正常見的轉錄錯誤，例如語音模型總是聽錯的專有名詞、\n# 被逐字母拼出的縮寫，或發音不尋常的技術用語等。\n#\n# 規則：\n#   • 以 # 開頭的行是註解（會忽略）\n#   • 空白行會忽略\n#   • 來源不區分大小寫：\"cloud code\"、\"Cloud Code\" 和\n#     \"CLOUD CODE\" 都會符合相同規則。目標內容會照原樣插入，\n#     因此輸出會與你寫的內容完全相同。\n#   • 僅比對純文字字串，不支援 regex 或萬用字元\n#   • 規則重疊時，以最長的相符項目為準\n#   • 變更會在下一次轉錄時生效（不需重新啟動）\n#\n# ---------------------------------------------------------------\n# 範例（刪除行首的 # 即可啟用）\n# ---------------------------------------------------------------\n\n# 模型轉錄錯誤的專有名詞：\n# 拍粉       -> Python\n# Cloud code -> Claude Code\n# Enfropic   -> Anthropic\n\n# 縮寫正規化：\n# U I U X    -> UI/UX\n\n# 技術用語：\n# J.S.O.N    -> JSON\n\n# ---------------------------------------------------------------\n# 請在下方加入你的項目：\n# ---------------------------------------------------------------\n";
 
 /* Complete first-created polish_rules.txt starter document. Commented examples become model instructions if uncommented, so their behavioral meaning is preserved exactly. Service name uses its localized ServicesMenu value. */
 
-"template.polish_rules.starter_document" = "# HushType 校對指示\n# ==================\n#\n# 文字校對的額外指示（連按兩下右側 Option，或\n# 按右鍵 → 服務 →「使用 HushType 校對」）。\n#\n# 這些指示會加入 HushType 的內建校對規則；內建規則仍會生效：\n# 僅修正錯誤、保留原意與語言混用，絕不回答或翻譯選取的內容。\n#\n# 規則：\n#   • 以 # 開頭的行是註解（會忽略）\n#   • 每條指示請保持簡短並使用祈使句；裝置上的模型較小，\n#     少量清楚的規則會比大量規則更有效\n#   • 變更會在下一次校對時生效（不需重新啟動）\n#\n# ---------------------------------------------------------------\n# 範例（刪除行首的 # 即可啟用）\n# ---------------------------------------------------------------\n#\n# 一律使用 Oxford comma。\n# 偏好台灣華語用詞（寫成「計程車」，不要「出租車」）。\n# 完全依照輸入保留 ALL CAPS 的文字。\n# 不要變更換行。\n#\n# ---------------------------------------------------------------\n# 請在下方加入你的指示：\n# ---------------------------------------------------------------\n";
+"template.polish_rules.starter_document" = "# Lamitype 校對指示\n# ==================\n#\n# 文字校對的額外指示（連按兩下右側 Option，或\n# 按右鍵 → 服務 →「使用 Lamitype 校對」）。\n#\n# 這些指示會加入 Lamitype 的內建校對規則；內建規則仍會生效：\n# 僅修正錯誤、保留原意與語言混用，絕不回答或翻譯選取的內容。\n#\n# 規則：\n#   • 以 # 開頭的行是註解（會忽略）\n#   • 每條指示請保持簡短並使用祈使句；裝置上的模型較小，\n#     少量清楚的規則會比大量規則更有效\n#   • 變更會在下一次校對時生效（不需重新啟動）\n#\n# ---------------------------------------------------------------\n# 範例（刪除行首的 # 即可啟用）\n# ---------------------------------------------------------------\n#\n# 一律使用 Oxford comma。\n# 偏好台灣華語用詞（寫成「計程車」，不要「出租車」）。\n# 完全依照輸入保留 ALL CAPS 的文字。\n# 不要變更換行。\n#\n# ---------------------------------------------------------------\n# 請在下方加入你的指示：\n# ---------------------------------------------------------------\n";
 
 /* live_caption.json _comment_about value; JSON key prefix remains exact. */
 
-"template.live_caption.about" = "HushType：即時字幕可調整參數。編輯數值後，關閉再開啟即時字幕即可套用變更。以 _comment_ 開頭的鍵僅供說明，解析器會忽略。";
+"template.live_caption.about" = "Lamitype：即時字幕可調整參數。編輯數值後，關閉再開啟即時字幕即可套用變更。以 _comment_ 開頭的鍵僅供說明，解析器會忽略。";
 
 /* live_caption.json documentation; technical terms and exact numeric semantics remain. */
 
@@ -46,7 +46,7 @@
 
 /* openai.json _comment_overview value. Security/privacy-sensitive; URL, JSON key, provider and filename syntax remain exact. 'Live Caption Engine settings' does not match current UI exactly and needs product copy review. */
 
-"template.openai.overview" = "HushType 雲端功能：OpenAI API 金鑰。這個檔案會以純文字儲存在磁碟上，請像保護 .env 檔案一樣保護它。請前往 https://platform.openai.com/api-keys 取得金鑰。在填入 'api_key'，且於語音輸入引擎或翻譯字幕設定中選擇 OpenAI 引擎之前，雲端功能會維持停用。";
+"template.openai.overview" = "Lamitype 雲端功能：OpenAI API 金鑰。這個檔案會以純文字儲存在磁碟上，請像保護 .env 檔案一樣保護它。請前往 https://platform.openai.com/api-keys 取得金鑰。在填入 'api_key'，且於語音輸入引擎或翻譯字幕設定中選擇 OpenAI 引擎之前，雲端功能會維持停用。";
 
 /* openai.json _comment_api_key value; prefixes remain exact. */
 
@@ -58,7 +58,7 @@
 
 /* gemini.json _comment_overview value. Security/privacy-sensitive; URL, JSON key and provider remain exact. */
 
-"template.gemini.overview" = "HushType 雲端功能：Gemini API 金鑰。這個檔案會以純文字儲存在磁碟上，請像保護 .env 檔案一樣保護它。請前往 https://aistudio.google.com/apikey 取得金鑰。在填入 'api_key' 之前，雲端功能會維持停用。引擎可在 HushType 的語音輸入引擎設定中選擇。";
+"template.gemini.overview" = "Lamitype 雲端功能：Gemini API 金鑰。這個檔案會以純文字儲存在磁碟上，請像保護 .env 檔案一樣保護它。請前往 https://aistudio.google.com/apikey 取得金鑰。在填入 'api_key' 之前，雲端功能會維持停用。引擎可在 Lamitype 的語音輸入引擎設定中選擇。";
 
 /* gemini.json _comment_api_key value; prefix remains exact. */
 

@@ -17,6 +17,12 @@ struct ChineseConverter {
     }()
 
     private static let openccDataDir: String? = {
+        if let resourceDir = Bundle.main.resourceURL?
+            .appendingPathComponent("opencc_data").path,
+           FileManager.default.fileExists(atPath: resourceDir) {
+            return resourceDir
+        }
+        // Keep compatibility with older development bundles.
         if let bundleDir = Bundle.main.executableURL?
             .deletingLastPathComponent()
             .appendingPathComponent("opencc_data").path,

@@ -125,7 +125,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var polishCardWindow = PolishCardWindow()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        print("[HushType] Starting...")
+        print("[Lamitype] Starting...")
+
+        guard CoexistenceGuard.allowLaunch() else {
+            NSApp.terminate(nil)
+            return
+        }
+
+        let appSupport = FileManager.default.urls(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask
+        )[0]
+        let roots = AppSupportMigrator.productionRoots(in: appSupport)
+        let oldRoot = roots.old
+        let newRoot = roots.new
+        switch AppSupportMigrator.migrate(oldRoot: oldRoot, newRoot: newRoot) {
+        case .success(let selectedRoot):
+            AppSupportPaths.configure(root: selectedRoot)
+        case .failure(let error):
+            showAppSupportMigrationFailure(error, oldRoot: oldRoot, newRoot: newRoot)
+            NSApp.terminate(nil)
+            return
+        }
 
         // Cap MLX's GPU buffer recycle pool process-wide. The dictation path
         // never bounds this pool (clearCache() runs only on manual Unload and
@@ -202,11 +223,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.switchDictationEngine(to: engine)
         }
         statusBar.onDictationEngineChanged = switchEngine
-        HushTypeSettingsWindowController.shared.onSwitchEngine = switchEngine
-        HushTypeSettingsWindowController.shared.onCheckForUpdates = {
+        LamitypeSettingsWindowController.shared.onSwitchEngine = switchEngine
+        LamitypeSettingsWindowController.shared.onCheckForUpdates = {
             UpdateCheckCoordinator.shared.checkForUpdates()
         }
-        HushTypeSettingsWindowController.shared.onResetCaptionPanelFrame = { [weak self] in
+        LamitypeSettingsWindowController.shared.onResetCaptionPanelFrame = { [weak self] in
             self?.liveCaptionManager?.resetPanelSizeAndPosition()
         }
 
@@ -267,7 +288,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
             scheduleTextPolishPrewarmIfNeeded(reason: "cloud-engine launch")
-            log.info("HushType ready with cloud dictation; local model not loaded")
+            log.info("Lamitype ready with cloud dictation; local model not loaded")
             return
         }
 
@@ -284,7 +305,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     guard let self else { return }
                     self.state = .idle
                     self.statusBar.setState(.idle)
-                    log.info("HushType ready")
+                    log.info("Lamitype ready")
                 }
                 await self?.scheduleTextPolishPrewarmIfNeeded(reason: "local-model launch")
             } catch {
@@ -309,7 +330,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         tapArbiter.reset()
         hotkeyManager.stop()
         hideOverlay()
-        log.info("HushType terminated")
+        log.info("Lamitype terminated")
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
@@ -381,7 +402,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if state == .unloaded {
             if claimedSecondTap { tapArbiter.reset() }
             if AppConfig.shared.dictationEngine == .local {
-                print("[HushType] Model unloaded — auto-reloading...")
+                print("[Lamitype] Model unloaded — auto-reloading...")
                 reloadModel()
                 return
             }
@@ -394,13 +415,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard state == .idle else {
             if claimedSecondTap { tapArbiter.reset() }
-            print("[HushType] Ignoring press — state is \(state)")
+            print("[Lamitype] Ignoring press — state is \(state)")
             return
         }
 
         guard activeEngine.isLoaded else {
             if claimedSecondTap { tapArbiter.reset() }
-            print("[HushType] Model not loaded yet")
+            print("[Lamitype] Model not loaded yet")
             return
         }
 
@@ -408,7 +429,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusBar.setState(.recording)
         showOverlayRecording()
         audioCapture.startRecording()
-        print("[HushType] Recording started...")
+        print("[Lamitype] Recording started...")
     }
 
     private func handleHotkeyRelease() {
@@ -438,12 +459,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard state == .recording else {
-            print("[HushType] Ignoring release — state is \(state)")
+            print("[Lamitype] Ignoring release — state is \(state)")
             return
         }
 
         let samples = audioCapture.stopRecording()
-        print("[HushType] Recording stopped: \(samples.count) samples (\(String(format: "%.1f", Double(samples.count) / 16000.0))s)")
+        print("[Lamitype] Recording stopped: \(samples.count) samples (\(String(format: "%.1f", Double(samples.count) / 16000.0))s)")
 
         // Skip if too short (< 0.3s) — treat as a TAP for translation
         guard samples.count > 4800 else {
@@ -458,7 +479,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         state = .transcribing
         statusBar.setState(.transcribing)
         switchOverlayToTranscribing()
-        print("[HushType] Transcribing...")
+        print("[Lamitype] Transcribing...")
 
         let language = AppConfig.shared.language
         let selection = AppConfig.shared.dictationEngine
@@ -486,6 +507,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 )
             }
         }
+    }
+
+    private func showAppSupportMigrationFailure(
+        _ error: AppSupportMigrationError,
+        oldRoot: URL,
+        newRoot: URL
+    ) {
+        let alert = NSAlert()
+        alert.alertStyle = .critical
+        alert.messageText = "Lamitype could not prepare your data"
+        alert.informativeText = """
+        No app features were started, and the old data was left in place.
+
+        Old path: \(oldRoot.path)
+        New path: \(newRoot.path)
+        Reason: \(error.localizedDescription)
+
+        Fix the filesystem issue, then relaunch Lamitype to retry safely.
+        """
+        alert.addButton(withTitle: "Quit")
+        alert.runModal()
     }
 
     private func continueCloudTranscriptionAfterConsent(
@@ -662,21 +704,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if resetNetworkFailures { consecutiveCloudNetworkFailures = 0 }
         _ = await restoreInsertionFocus(insertionFocus)
         guard !text.isEmpty else {
-            print("[HushType] Empty transcription, skipping insert")
+            print("[Lamitype] Empty transcription, skipping insert")
             state = .idle
             statusBar.setState(.idle)
             hideOverlay()
             return
         }
 
-        print("[HushType] Transcription result: '\(text)'")
-        print("[HushType] Inserting text...")
+        print("[Lamitype] Transcription result: '\(text)'")
+        print("[Lamitype] Inserting text...")
         state = .inserting
         TextInserter.insert(text)
         state = .idle
         statusBar.setState(.idle)
         hideOverlay()
-        print("[HushType] Done")
+        print("[Lamitype] Done")
     }
 
     private func finishWithoutInsertion(restoreFocus application: NSRunningApplication?) async {
@@ -694,7 +736,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if tapArbiter.consumeSecondTapCandidate() {
-            print("[HushType] Double tap detected — triggering Text Polish")
+            print("[Lamitype] Double tap detected — triggering Text Polish")
             handlePolish(source: .copySelection)
             return
         }
@@ -712,10 +754,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         guard AppConfig.shared.textTranslationEnabled else {
-            print("[HushType] Too short, skipping (translation not enabled)")
+            print("[Lamitype] Too short, skipping (translation not enabled)")
             return
         }
-        print("[HushType] Short tap detected — triggering translation")
+        print("[Lamitype] Short tap detected — triggering translation")
         handleTranslation(source: .copySelection)
     }
 
@@ -749,13 +791,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         // The tap sites check the toggle before calling in, but the Services
-        // entry ("Translate with HushType") dispatches here directly — enforce
+        // entry ("Translate with Lamitype") dispatches here directly — enforce
         // the menu toggle for that path too.
         if case .provided = source, !AppConfig.shared.textTranslationEnabled {
             showTranslationError(TranslationError.translationFailed(
                 L10n.string(
                     "error.translation.disabled",
-                    fallback: "Text Translation is turned off in the HushType menu."
+                    fallback: "Text Translation is turned off in the Lamitype menu."
                 )))
             return
         }
@@ -773,7 +815,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     // A bare Right ⌥ tap with nothing selected is a common
                     // accident — stay silent like pre-0.6 releases. Only the
                     // explicit Services path earns an alert.
-                    print("[HushType] No text on clipboard for translation")
+                    print("[Lamitype] No text on clipboard for translation")
                 case .provided:
                     self.showTranslationError(TranslationError.translationFailed(
                         L10n.string(
@@ -785,7 +827,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
 
-            print("[HushType] Translating: '\(text.prefix(50))...'")
+            print("[Lamitype] Translating: '\(text.prefix(50))...'")
             self.translationManager.translate(text: text) { [weak self] result in
                 DispatchQueue.main.async {
                     guard let self else { return }
@@ -794,7 +836,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                     case .success(let (translated, direction)):
                         NSPasteboard.general.clearContents()
                         NSPasteboard.general.setString(translated, forType: .string)
-                        print("[HushType] Translation result (\(direction)): '\(translated.prefix(80))...'")
+                        print("[Lamitype] Translation result (\(direction)): '\(translated.prefix(80))...'")
                         self.translationCardWindow.show(
                             sourceLanguage: direction,
                             sourceText: text,
@@ -802,7 +844,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                         )
 
                     case .failure(let error):
-                        print("[HushType] Translation error: \(error)")
+                        print("[Lamitype] Translation error: \(error)")
                         self.showTranslationError(error)
                     }
 
@@ -1157,7 +1199,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         AppConfig.shared.dictationEngine = engine
         activeEngine = makeDictationEngine(for: engine)
-        NotificationCenter.default.post(name: .hushTypeDictationEngineDidChange, object: nil)
+        NotificationCenter.default.post(name: .lamitypeDictationEngineDidChange, object: nil)
 
         if engine == .local {
             if !localEngine.isLoaded {
@@ -1172,7 +1214,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func unloadModel() async {
         guard state == .idle else {
-            print("[HushType] Cannot unload — state is \(state)")
+            print("[Lamitype] Cannot unload — state is \(state)")
             return
         }
         // Block dictation while a local-caption backend drains. The status
@@ -1223,7 +1265,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
         }
-        print("[HushType] Model unloaded — memory freed")
+        print("[Lamitype] Model unloaded — memory freed")
 
         // Show confirmation alert with cold-start warning. If live caption
         // was active, the message changes to direct the user accordingly.
@@ -1264,7 +1306,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func reloadModel() {
         guard state == .unloaded || !localEngine.isLoaded else {
-            print("[HushType] Model already loaded")
+            print("[Lamitype] Model already loaded")
             return
         }
 
@@ -1382,7 +1424,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
             hideOverlay()
-            HushTypeSettingsWindowController.shared.presentAndFocus(
+            LamitypeSettingsWindowController.shared.presentAndFocus(
                 pane: .cloud,
                 onSwitchEngine: { [weak self] engine in
                     self?.switchDictationEngine(to: engine)
@@ -1449,7 +1491,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             state = .idle
             statusBar.setState(.idle)
             hideOverlay()
-            HushTypeSettingsWindowController.shared.presentAndFocus(
+            LamitypeSettingsWindowController.shared.presentAndFocus(
                 pane: .cloud,
                 onSwitchEngine: { [weak self] engine in
                     self?.switchDictationEngine(to: engine)
@@ -1577,7 +1619,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             alert.informativeText = L10n.format(
                 "alert.cloud.rate_limit.message",
-                "This limit comes from %1$@, not HushType's Daily spend warning. Check provider usage or billing, or try again later.",
+                "This limit comes from %1$@, not Lamitype's Daily spend warning. Check provider usage or billing, or try again later.",
                 arguments: [limitedProvider]
             )
             alert.addButton(withTitle: L10n.string("common.button.use_local_once", fallback: "Use Local Once"))
@@ -1623,7 +1665,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             )
             alert.informativeText = L10n.format(
                 "alert.cloud.network.message",
-                "HushType could not reach %1$@. The recording is still available for local transcription.",
+                "Lamitype could not reach %1$@. The recording is still available for local transcription.",
                 arguments: [provider]
             )
             addStandardCloudFailureButtons(to: alert, preferSwitchToLocal: preferSwitchToLocal)

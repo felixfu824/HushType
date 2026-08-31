@@ -1,13 +1,18 @@
 <p align="center">
-  <img src="Resources/HushType.png" width="128" height="128" alt="HushType icon">
+  <img src="Resources/Lamitype.png" width="128" alt="Lamitype app icon">
 </p>
 
-<h1 align="center">HushType</h1>
+<h1 align="center">Lamitype</h1>
 
 <p align="center">
-  Voice-to-text built for Apple Silicon macOS<br>
-  <strong>Minimum input friction, with privacy always in your hands:</strong><br>
-  fully local by default, nothing sent anywhere; when you want better quality or lower memory, connect straight to the cloud with your own key, never through a middleman.
+  <strong>Free, private, Traditional-Chinese-first Mac dictation that stays light on memory.</strong><br>
+  Lamitype does one thing: turn your voice into text with minimal friction, privacy first.
+</p>
+
+<p align="center">
+  <a href="https://github.com/felixfu824/Lamitype/releases/latest"><img src="https://img.shields.io/github/v/release/felixfu824/Lamitype?style=flat-square&color=EC6A4E" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%2015%2B-blue?style=flat-square" alt="macOS 15+">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/felixfu824/Lamitype?style=flat-square" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -15,30 +20,33 @@
 </p>
 
 <p align="center">
-  Canonical repository: <a href="https://github.com/felixfu824/HushType">github.com/felixfu824/HushType</a>
+  Canonical repository: <a href="https://github.com/felixfu824/Lamitype">github.com/felixfu824/Lamitype</a><br>
+  Official website: <a href="https://lamitype.com/en/">lamitype.com/en</a>
 </p>
 
-> **HushType** is a free, open-source speech-to-text app for macOS and iOS. By default it runs the **4-bit MLX quant** of Qwen3-ASR 0.6B fully locally on Apple Silicon, transcribing English, Chinese, Japanese, and mixed-language sentences, with steady Traditional Chinese (繁體中文) output via OpenCC. **Cloud dictation (OpenAI / Gemini)** is an opt-in choice: your own key over HTTPS straight to the provider, with no relay server in between. Unlike dictation tools that force your audio through a third-party relay, HushType keeps the choice, and the privacy, in your hands, and stays light enough to coexist with everything you need running at once.
+> **Lamitype** is a free, open-source, privacy-first speech-to-text app for macOS. By default it runs the **4-bit MLX quant** of Qwen3-ASR 0.6B fully locally on Apple Silicon, transcribing English, Chinese, Japanese, and mixed-language sentences, with consistent Traditional Chinese (繁體中文) output via OpenCC. **Cloud dictation (OpenAI / Gemini)** is an opt-in choice: your own key over HTTPS straight to the provider, with no relay server in between. Unlike dictation tools that force your audio through a third-party relay, Lamitype keeps the choice, and the privacy, in your hands. It also stays light enough to coexist with everything else you need running at once.
 
-> 🌐 **HushType** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App，預設使用 Qwen3-ASR 在 Apple Silicon（MLX）上完全本地執行，透過 OpenCC 提供道地的繁體中文輸出；也可選擇用你自己的金鑰直連 OpenAI / Gemini 雲端聽寫，中間沒有任何轉送伺服器。<br>→ 完整中文版 README：[README.md](README.md)
+> 🌐 **Lamitype** 是一款免費、開源、隱私優先的 macOS 語音轉文字 App，預設使用 Qwen3-ASR 在 Apple Silicon（MLX）上完全本地執行，透過 OpenCC 提供道地的繁體中文輸出；也可選擇用你自己的金鑰直連 OpenAI / Gemini 雲端聽寫，中間沒有任何轉送伺服器。<br>→ 完整中文版 README：[README.md](README.md)
+
+> **Name continuity:** Lamitype was formerly HushType. v0.5.12 renames the Mac app only; existing settings and Application Support data migrate automatically, while the iOS app and keyboard keep the HushType name in this release.
 
 <p align="center">
-  <img src="Resources/hushtype-memory-en.svg" alt="Model weights resident in RAM: HushType local 675 MB (native Traditional Chinese), HushType cloud engines ~0 MB, vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB (no Chinese)" width="100%">
+  <img src="Resources/lamitype-memory-en.svg" alt="Model weights resident in RAM: Lamitype local 675 MB (native Traditional Chinese), Lamitype cloud engines ~0 MB, vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB (no Chinese)" width="100%">
 </p>
 
-<sub>Sizes are the weight files each tool ships at default precision; HushType's 675 MB is the 4-bit MLX quant of Qwen3-ASR 0.6B. On a cloud engine (OpenAI / Gemini) **model RAM is ~0 MB**: same or better quality, at the cost of a few seconds of network latency per utterance, billed by duration or free with a Gemini free-tier API key. A 4-bit MLX Whisper-turbo exists (~464 MB) but still outputs mediocre / Simplified Chinese, so the claim is "a light ASR that nails Traditional Chinese," not "the smallest model."</sub>
+<sub>Sizes are the weight files each tool ships at default precision; Lamitype's 675 MB is the 4-bit MLX quant of Qwen3-ASR 0.6B. On a cloud engine (OpenAI / Gemini) **model RAM is ~0 MB**: same or better quality, at the cost of a few seconds of network latency per utterance, billed by duration or free with a Gemini free-tier API key. A 4-bit MLX Whisper-turbo exists (~464 MB) but still outputs mediocre / Simplified Chinese, so the claim is "a light ASR that nails Traditional Chinese," not "the smallest model."</sub>
 
 ---
 
-## Why HushType
+## Why Lamitype
 
-**Privacy and control first.** In the default mode, voice never leaves your Mac: the model runs on-device, no cloud, no account, no telemetry; the only download is the one-time ~675 MB model fetch. When you opt into cloud dictation, audio goes over HTTPS **directly** to OpenAI or Gemini with **your own key**. No HushType server in between: nothing relayed, nothing intercepted, your audio and key never seen, and each session asks for your consent before the first cloud use. **Whether your audio goes to a provider is always your decision.**
+**Privacy and control first.** In the default mode, voice never leaves your Mac: the model runs on-device, no cloud, no account, no telemetry; the only download is the one-time ~675 MB model fetch. When you opt into cloud dictation, audio goes over HTTPS **directly** to OpenAI or Gemini with **your own key**. No Lamitype server in between: nothing relayed, nothing intercepted, your audio and key never seen, and each session asks for your consent before the first cloud use. **Whether your audio goes to a provider is always your decision.**
 
-**Memory-friendly: coexists with your agents.** The local model's weights are just ~675 MB (~2.1 GB RAM resident when loaded), light enough to coexist with Claude Code/Cowork, Codex and a browser, and HushType caps its memory buffer at launch so there's nothing for you to manage. Want the footprint at zero? Switch to a cloud engine: the local model is never loaded (the engine choice persists across restarts, so the next launch starts at ~0 MB); an already-loaded model can be unloaded with one menu click, and it reloads automatically when you switch back to local.
+**Memory-friendly: coexists with your agents.** The local model's weights are just ~675 MB (~2.1 GB RAM resident when loaded), light enough to coexist with Claude Code/Cowork, Codex and a browser, and Lamitype caps its memory buffer at launch so there's nothing for you to manage. Want the footprint at zero? Switch to a cloud engine: the local model is never loaded (the engine choice persists across restarts, so the next launch starts at ~0 MB); an already-loaded model can be unloaded with one menu click, and it reloads automatically when you switch back to local.
 
 **Cloud dictation (opt-in).** Three things: (1) **OpenAI** (default `gpt-4o-mini-transcribe`) and **Gemini** (default `gemini-3.5-flash-lite`, with `gemini-3.7-flash` as the quality option), with your key, a direct connection, and no relay; (2) Gemini offers a **free-tier API key** for a $0 start, but note: on Google's free tier, Google may use submitted audio to improve its products; the paid tier does not; (3) built-in guardrails: per-session consent, a daily spend warning with same-day lockout (default $5), and over-long recordings blocked before upload.
 
-**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). HushType chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output (軟體, 滑鼠, 品質) with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default. Local and cloud engines share the same post-processing pipeline, so output quality is consistent.
+**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). Lamitype chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output (軟體, 滑鼠, 品質) with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default. Local and cloud engines share the same post-processing pipeline, so output quality is consistent.
 
 **Fix text where it stands.** Select text in any app, double-tap Right ⌥, and an on-device Apple Intelligence model proofreads it and replaces it in place: spelling, grammar, typos, punctuation. It's a mechanical proofreader, not a rewriter: meaning, tone, and your 中英 mix stay exactly as you wrote them (macOS 26+).<br>Note: the Apple Foundation Model is small and capability-limited, so corrections are deliberately conservative; sometimes it changes nothing at all.
 
@@ -48,20 +56,41 @@
 
 ## Key Features
 
+### Dictation
+
 | Feature | Default | Requirement |
 |---|---|---|
 | Hold Right ⌥ to dictate (macOS) | ON | macOS 15+ |
 | **Cloud dictation (OpenAI / Gemini, opt-in)**: zero model RAM, per-session consent | OFF | Your own API key |
-| Tap Right ⌥ to translate selected text | OFF | macOS 15+ |
-| Double-tap Right ⌥ to polish selected text (proofread in place) | **ON** | macOS 26 + Apple Intelligence |
+| EN / ZH / JA + native code-switching | ON | - |
+
+### Live Captions
+
+| Feature | Default | Requirement |
+|---|---|---|
 | **Live Caption** (local, free): floating panel from mic or system audio | OFF | macOS 15+ |
 | **Live Translated Caption** (cloud, ~$2/hr): real-time foreign-language subtitles via OpenAI | OFF (opt-in) | Your own OpenAI API key |
-| Right ⌘ + /: toggle whichever caption mode you used last | - | macOS 15+ |
-| EN / ZH / JA + native code-switching | ON | - |
+
+### Other Text-Related Features
+
+| Feature | Default | Requirement |
+|---|---|---|
+| **Translate**: tap Right ⌥ to translate selected text | OFF | macOS 15+ |
+| **Polish**: double-tap Right ⌥ to polish selected text (proofread in place) | **ON** | macOS 26 + Apple Intelligence |
+
+### Output Post-Processing
+
+| Feature | Default | Requirement |
+|---|---|---|
 | 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | - |
 | 阿拉伯數字 conversion (deterministic ITN) | **ON** | - |
 | Chinese punctuation cleanup: trims the model's over-segmentation (soft / hard / off) | **soft** | - |
 | Customized dictionary (proper nouns / jargon) | File-driven | - |
+
+### Interface & Extras
+
+| Feature | Default | Requirement |
+|---|---|---|
 | Interface Language (Follow System / English / 繁體中文) | Follow System | - |
 | Floating "Listening / Transcribing" pill | ON | - |
 | Unload speech-to-text model | One-click | - |
@@ -94,7 +123,7 @@ macOS (local by default, zero network required):
   Double-tap Right Option with text selected → proofread in place (Text Polish)
   Local pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → ITN → paste
   Cloud pipeline (opt-in): mic → your Mac → HTTPS direct to OpenAI/Gemini → same OpenCC/ITN post-processing → paste
-                           (no HushType server on the way)
+                           (no Lamitype server on the way)
 
 iOS (via your Mac as server):
   Open HushType → Start Listening → switch to any app → HushType keyboard → tap mic
@@ -111,7 +140,7 @@ iOS (via your Mac as server):
                                      │    → Qwen3-ASR 0.6B (MLX/Metal)  │
                                      │    → OpenCC s2twp                │
                                      │                                  │
-                                     │  HushType.app (menu bar)         │
+                                     │  Lamitype.app (menu bar)         │
                                      │    → Right Option hotkey         │
                                      │    → Local transcription         │
                                      └──────────────────────────────────┘
@@ -123,10 +152,10 @@ iOS (via your Mac as server):
 
 ### Option A: Download DMG (no build tools needed)
 
-1. Download `HushType.dmg` from the [latest release](https://github.com/felixfu824/HushType/releases)
-2. Open the DMG and drag HushType to Applications
-3. Right-click HushType.app → Open (required on first launch; the app is ad-hoc signed, not notarized)
-4. Grant **Accessibility** and **Microphone** permissions when prompted
+1. Download `Lamitype.dmg` from the [latest release](https://github.com/felixfu824/Lamitype/releases)
+2. Open the DMG and drag Lamitype to Applications
+3. Open Lamitype from Applications or Spotlight; its Developer ID signature and Apple notarization pass Gatekeeper directly
+4. Grant **Accessibility**, **Microphone**, and **Screen & System Audio Recording** when needed
 5. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
 
 The DMG is self-contained: OpenCC and all dependencies are bundled. No Homebrew, no terminal commands.
@@ -143,13 +172,13 @@ See [Prerequisites](#prerequisites-and-dependencies) and [macOS Setup Guide](#se
 
 Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and user data live outside the bundle and are preserved.
 
-**DMG:** quit HushType, drag the new `HushType.app` onto the Applications shortcut in the new DMG (click **Replace**), relaunch from Spotlight.
+**DMG:** quit and delete the old `/Applications/HushType.app`, drag the new `Lamitype.app` onto the Applications shortcut in the new DMG, then relaunch from Spotlight.
 
 **From source:** `git pull && make install`.
 
-**Permission re-grant:** because HushType is ad-hoc signed, macOS may require Accessibility to be enabled again after an update. The setup window will show the current permission state. Click **Open System Settings**, enable HushType in Accessibility, then click **Restart HushType** so macOS applies the grant. If you see duplicate HushType entries, cannot find HushType, or the switch does not work, use **Reset Old HushType Entry** in the setup window and add/enable HushType again.
+**v0.5.12 rename transition:** the new Developer ID signing identity makes macOS reconfirm Accessibility, Microphone, and Screen & System Audio Recording independently once. The setup window shows their current state. If the old HushType Accessibility entry causes duplicates or a broken switch, use **Reset Old HushType Entry**, then add or enable Lamitype.
 
-**Full uninstall:** Trash `/Applications/HushType.app`, then optionally run `defaults delete com.felix.hushtype` and remove `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` to clear the macOS app's model cache. The iOS server uses a separate Python / Hugging Face cache.
+**Full uninstall:** Trash `/Applications/Lamitype.app`, then optionally run `defaults delete com.felix.hushtype` and remove `~/Library/Caches/qwen3-speech/models/aufklarer/Qwen3-ASR-0.6B-MLX-4bit/` to clear the macOS app's model cache. The iOS server uses a separate Python / Hugging Face cache.
 
 ---
 
@@ -187,8 +216,8 @@ Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and 
 ### Step 1: Clone and build
 
 ```bash
-git clone https://github.com/felixfu824/HushType.git
-cd HushType
+git clone https://github.com/felixfu824/Lamitype.git
+cd Lamitype
 
 # Install dependencies
 brew install opencc
@@ -199,11 +228,11 @@ make install
 
 ### Step 2: Launch and grant permissions
 
-1. Launch HushType from Spotlight (Cmd+Space → HushType)
-2. On first launch, the **Set Up HushType** window shows the required permissions: Accessibility and Microphone.
-3. Click **Open System Settings** in the Accessibility card. Find HushType in the Accessibility list and **toggle it on**. If HushType is missing, use the small helper panel to drag HushType into the list.
+1. Launch Lamitype from Spotlight (Cmd+Space → Lamitype)
+2. On first launch, the **Set Up Lamitype** window shows the required permissions: Accessibility and Microphone.
+3. Click **Open System Settings** in the Accessibility card. Find Lamitype in the Accessibility list and **toggle it on**. If Lamitype is missing, use the small helper panel to drag Lamitype into the list.
 4. Click **Allow Microphone** and approve the macOS microphone prompt.
-5. Return to HushType and click **Restart HushType**: the app relaunches itself with the new Accessibility permission active. (macOS caches the permission check per-process, so a restart is mandatory after granting; HushType handles it for you.)
+5. Return to Lamitype and click **Restart Lamitype**: the app relaunches itself with the new Accessibility permission active. (macOS caches the permission check per-process, so a restart is mandatory after granting; Lamitype handles it for you.)
 6. Wait for the model to download (~675 MB, one-time, progress shown in menu bar)
 
 ### Step 3: Use it
@@ -270,15 +299,15 @@ On-device translation via Apple Translation Framework. Select any text → tap R
 
 ### Optional: Text Polish (macOS 26+)
 
-On-device proofreading via Apple's Foundation Models framework: the Apple Intelligence model already shipped with macOS, so it adds nothing to HushType's memory budget and nothing leaves your Mac. Select text in any app → double-tap Right Option → the selection is replaced in place with corrected text, and a result card shows exactly what changed, Word track-changes style: deletions struck through in red, insertions underlined in green.
+On-device proofreading via Apple's Foundation Models framework: the Apple Intelligence model already shipped with macOS, so it adds nothing to Lamitype's memory budget and nothing leaves your Mac. Select text in any app → double-tap Right Option → the selection is replaced in place with corrected text, and a result card shows exactly what changed, Word track-changes style: deletions struck through in red, insertions underlined in green.
 
 <p align="center">
   <img src="Resources/polish-card-diff-en.png" alt="Text Polish result card: deletions in red strikethrough, insertions in green underline" width="560">
-</p> When a correction was made, the polished text also stays on the clipboard, so read-only views (a web page, a PDF) work too: select, double-tap, paste it wherever you want. Already-correct text gets a "No changes needed" card and your clipboard is left alone. Also in the right-click menu: **Services → Polish with HushType**.
+</p> When a correction was made, the polished text also stays on the clipboard, so read-only views (a web page, a PDF) work too: select, double-tap, paste it wherever you want. Already-correct text gets a "No changes needed" card and your clipboard is left alone. Also in the right-click menu: **Services → Polish with Lamitype**.
 
 **What it fixes, and what it never touches.** Spelling, grammar, punctuation, obvious typos. It is deliberately a mechanical proofreader, not a rewriter: meaning, tone, formatting, casing, and language mix are preserved. The rules it is held to:
 
-- **Never translates.** A 中英 mixed sentence stays mixed. If the model drops one of your languages, HushType detects it on the output, retries once with a stronger instruction, and shows an alert rather than paste a mistranslation.
+- **Never translates.** A 中英 mixed sentence stays mixed. If the model drops one of your languages, Lamitype detects it on the output, retries once with a stronger instruction, and shows an alert rather than paste a mistranslation.
 - **Never converts** Simplified ↔ Traditional Chinese in either direction.
 - **Never answers.** A selection shaped like a question or an instruction is text to proofread, not a prompt to obey.
 - **Declines code.** Code-shaped selections are refused with an alert; URLs, file paths, and backtick content inside normal text are left as-is.
@@ -286,11 +315,11 @@ On-device proofreading via Apple's Foundation Models framework: the Apple Intell
 
 **Honest limits:** this runs on Apple's small on-device model, and the trade-offs show: **English corrections are the most reliable**; **Chinese fixes are conservative** and syntax-dependent typos (的/得, 在/再) are often missed; **longer selections tend to come back "No changes needed"**; one or two sentences at a time works best. That bias is deliberate: when the model is unsure it returns your text unchanged; it would rather miss a fix than make one up.
 
-**Speed:** typically ~1-3 s. HushType keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
+**Speed:** typically ~1-3 s. Lamitype keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
 
-**Custom rules:** menu bar → **Settings… → Text → Polish instructions → Open file in TextEdit** opens `~/Library/Application Support/HushType/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt, e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
+**Custom rules:** menu bar → **Settings… → Text → Polish instructions → Open file in TextEdit** opens `~/Library/Application Support/Lamitype/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt, e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
 
-**Requirements:** macOS 26 (Tahoe) + Apple Intelligence enabled + Apple Silicon. On by default; on Macs without Foundation Models the double-tap stays inactive, and the **Services → Polish with HushType** entry reports why. Toggle from the menu bar (**Text Polish**) or via `defaults`.
+**Requirements:** macOS 26 (Tahoe) + Apple Intelligence enabled + Apple Silicon. On by default; on Macs without Foundation Models the double-tap stays inactive, and the **Services → Polish with Lamitype** entry reports why. Toggle from the menu bar (**Text Polish**) or via `defaults`.
 
 ## Setup Guide: iOS (iPhone + Mac Server)
 
@@ -322,12 +351,12 @@ Write down this IP; you'll enter it on your iPhone later.
 
 ### Step 3: Start the iOS server on Mac
 
-**Option A: From HushType Settings (untested)**
-Click the HushType icon in the menu bar → **Settings… → iOS → Start iOS server (untested)**
+**Option A: From Lamitype Settings (untested)**
+Click the Lamitype icon in the menu bar → **Settings… → iOS → Start iOS server (untested)**
 
 **Option B: From terminal**
 ```bash
-cd HushType
+cd Lamitype
 python3 scripts/ios_server.py
 # Server starts on 0.0.0.0:8000
 # First transcription request will download the model (~675 MB)
@@ -336,7 +365,7 @@ python3 scripts/ios_server.py
 Verify the server is running:
 ```bash
 curl http://localhost:8000/
-# Should return: {"status":"ok","service":"HushType iOS Server","opencc":true}
+# Should return: {"status":"ok","service":"Lamitype iOS Server","opencc":true}
 # (opencc:false means `brew install opencc` is still missing)
 ```
 
@@ -345,13 +374,13 @@ curl http://localhost:8000/
 ```bash
 cd iOS
 xcodegen generate
-open HushType.xcodeproj
+open Lamitype.xcodeproj
 ```
 
 In Xcode:
-1. Click the **HushType** project in the navigator (top left)
-2. Select the **HushType** target → Signing & Capabilities → set **Team** to your Apple ID
-3. Select the **HushTypeKeyboard** target → same thing, set **Team**
+1. Click the **Lamitype** project in the navigator (top left)
+2. Select the **Lamitype** target → Signing & Capabilities → set **Team** to your Apple ID
+3. Select the **LamitypeKeyboard** target → same thing, set **Team**
 4. If Xcode shows "Update to recommended settings" → click **Perform Changes**
 5. Connect iPhone via USB cable
 6. Select your iPhone as the run destination (top bar)
@@ -461,7 +490,7 @@ defaults write com.felix.hushtype hushtype.translateTargetLanguage -string "en"
 
 ### Changing the Hotkey (macOS)
 
-Edit `Sources/HushType/HotkeyManager.swift`:
+Edit `Sources/Lamitype/HotkeyManager.swift`:
 ```swift
 private static let rightOptionKeyCode: Int64 = 61
 ```
@@ -483,9 +512,9 @@ Two modes, one principle: **there is never a third party in the middle, and the 
 
 ### Cloud mode (opt-in: cloud dictation / Live Translated Caption)
 
-- **No relay server in the middle.** Audio goes directly from your Mac over HTTPS (WSS for captions) to the provider (OpenAI / Google). HushType operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend.
+- **No relay server in the middle.** Audio goes directly from your Mac over HTTPS (WSS for captions) to the provider (OpenAI / Google). Lamitype operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend.
 - **Your key, your consent.** Everything is off by default and requires you to enter a key; each session asks for consent before the first cloud use; never a silent upload. An empty key disables cloud entirely.
-- **Key storage.** Keys live in `~/Library/Application Support/HushType/` (`openai.json` / `gemini.json`); the app sets `0600` file permissions on write (the same security model as a `.env` file).
+- **Key storage.** Keys live in `~/Library/Application Support/Lamitype/` (`openai.json` / `gemini.json`); the app sets `0600` file permissions on write (the same security model as a `.env` file).
 - **Spend guardrails.** The daily spend warning (default $5) blocks a request before it would cross the threshold and locks cloud for the day; over-long recordings are blocked before upload and never sent.
 - **Gemini free-tier disclosure.** On Google's free tier, Google may use submitted audio to improve its products; the paid tier does not.
 - **State semantics.** The dictation engine choice persists across restarts (so cloud users stay at zero model RAM). The caption engine flag resets to local each launch, but Right ⌘ + / remembers the **last caption mode you used (cloud included)**, and the one-time cloud disclosure does not repeat: if your last session was Live Translated Caption, the hotkey starts a paid cloud session again after a relaunch.
@@ -496,10 +525,10 @@ Two modes, one principle: **there is never a third party in the middle, and the 
 ## Project Structure
 
 ```
-HushType/
+Lamitype/
 ├── Package.swift                      SPM config (macOS target)
 ├── Makefile                           build / install / clean / dmg
-├── Sources/HushType/                  macOS menu bar app
+├── Sources/Lamitype/                  macOS menu bar app
 │   ├── main.swift                     NSApplication bootstrap
 │   ├── AppDelegate.swift              Orchestrator + state machine
 │   ├── StatusBarController.swift      Menu bar icon + menus + Settings routing
@@ -507,7 +536,7 @@ HushType/
 │   ├── OnboardingManager.swift        First-launch / repair permission orchestration
 │   ├── OnboardingSetupWindowController.swift  Setup window for Accessibility + Microphone
 │   ├── PermissionSettingsGuidePanel.swift     Floating helper for macOS permission lists
-│   ├── DraggableAppTileView.swift     Draggable HushType.app tile for System Settings
+│   ├── DraggableAppTileView.swift     Draggable Lamitype.app tile for System Settings
 │   ├── SystemAudioPermissionFlow.swift        Screen & System Audio permission flow
 │   ├── SystemAudioPermissionWindowController.swift  System-audio permission setup panel
 │   ├── HotkeyManager.swift            CGEvent tap for Right Option
@@ -559,8 +588,8 @@ HushType/
 │   └── build_mlx_metallib.sh          MLX Metal shader compilation
 ├── Resources/
 │   ├── Info.plist                     LSUIElement, mic usage description
-│   ├── HushType.png                   App icon (1024x1024)
-│   └── HushType.icns                  macOS app icon
+│   ├── Lamitype.png                   App icon (1024x1024)
+│   └── Lamitype.icns                  macOS app icon
 └── iOS/                               iPhone app + keyboard extension
     ├── project.yml                    xcodegen project spec
     ├── Shared/                        Shared between app + keyboard extension
@@ -568,7 +597,7 @@ HushType/
     │   ├── IPCConstants.swift         Darwin notification names
     │   └── WAVEncoder.swift           Float32 → 16-bit PCM WAV
     ├── VoxKey/                        Main iOS app (directory name kept from v1)
-    │   ├── VoxKeyApp.swift            SwiftUI entry point (@main HushTypeApp)
+    │   ├── VoxKeyApp.swift            SwiftUI entry point (@main LamitypeApp)
     │   ├── Views/ContentView.swift    Server config, listening session, countdown
     │   ├── Services/
     │   │   ├── AudioRecorder.swift    AVAudioEngine with listening + recording modes
@@ -582,16 +611,16 @@ HushType/
 
 ## Customizing for Your Own Setup
 
-To run HushType on your own devices, change these:
+To run Lamitype on your own devices, change these:
 
 | What | Where | Example |
 |---|---|---|
 | Bundle ID | `iOS/project.yml` (both targets) + `iOS/Shared/AppGroupConstants.swift` | `com.yourname.hushtype` / `group.com.yourname.hushtype` |
 | Server URL default | `iOS/VoxKey/Views/ContentView.swift` | Your Tailscale or LAN IP |
-| Hotkey | `Sources/HushType/HotkeyManager.swift` | Any modifier keycode |
+| Hotkey | `Sources/Lamitype/HotkeyManager.swift` | Any modifier keycode |
 | Model | `iOS/VoxKey/Services/RemoteTranscriber.swift` + `scripts/ios_server.py` | `mlx-community/Qwen3-ASR-1.7B-8bit` for better quality |
 | Session timeout | `iOS/VoxKey/Services/BackgroundAudioManager.swift` | `sessionDuration` property |
-| OpenCC config | `Sources/HushType/ChineseConverter.swift` + `scripts/ios_server.py` | Change `s2twp` to `s2t` for standard Traditional |
+| OpenCC config | `Sources/Lamitype/ChineseConverter.swift` + `scripts/ios_server.py` | Change `s2twp` to `s2t` for standard Traditional |
 
 ---
 
@@ -601,7 +630,7 @@ To run HushType on your own devices, change these:
 Run: `bash scripts/build_mlx_metallib.sh release`
 
 **macOS: Hotkey not working**
-Check Accessibility permission in System Settings → Privacy & Security → Accessibility. HushType must be in the list and toggled on. If HushType is missing or the switch does not work, relaunch HushType and use **Reset Old HushType Entry** from the setup window, then add/enable HushType again. If you just granted Accessibility and the hotkey still does not work, click **Restart HushType** in the setup window or quit and relaunch manually; macOS caches the permission check per-process.
+Check Accessibility permission in System Settings → Privacy & Security → Accessibility. Lamitype must be in the list and toggled on. If Lamitype is missing or the switch does not work, relaunch Lamitype and use **Reset Old Lamitype Entry** from the setup window, then add/enable Lamitype again. If you just granted Accessibility and the hotkey still does not work, click **Restart Lamitype** in the setup window or quit and relaunch manually; macOS caches the permission check per-process.
 
 **iOS: "App Transport Security" error**
 The Info.plist must have `NSAllowsArbitraryLoads = true` with NO `NSExceptionDomains`; they conflict and cause iOS to ignore the global allow.
@@ -634,5 +663,5 @@ lsof -ti :8000 :8199 | xargs kill
 - Free provisioning: iOS app expires every 7 days (re-sign via Xcode)
 - Session timeout is fixed at 5 minutes (no UI to change yet)
 - Mac must be reachable from iPhone (same WiFi or Tailscale)
-- DMG is ad-hoc signed (not notarized); macOS Gatekeeper will warn on first launch. Right-click → Open to bypass.
+- The DMG app is Developer ID signed and Apple notarized, so it passes Gatekeeper directly.
 - Text Polish inherits Apple Foundation Models limits: a few fine-grained Chinese distinctions (e.g. 的/得/地) may be left as-is, and heavily English-dominant mixed sentences can be declined with an alert rather than risk a mistranslation. Declined always means your text is untouched.

@@ -1,6 +1,6 @@
 /* Generated from the frozen Gate B manifest + decisions overlay. */
 
-/* Default acknowledgement button used by HushType alerts. */
+/* Default acknowledgement button used by Lamitype alerts. */
 
 "common.button.ok" = "OK";
 
@@ -8,7 +8,7 @@
 
 "common.button.cancel" = "Cancel";
 
-/* Opens the relevant HushType settings window. */
+/* Opens the relevant Lamitype settings window. */
 
 "common.button.open_settings" = "Open Settings";
 
@@ -28,9 +28,9 @@
 
 "common.button.reset_counter" = "Reset today's counter…";
 
-/* Cost-safety confirmation before clearing HushType's local usage estimate. */
+/* Cost-safety confirmation before clearing Lamitype's local usage estimate. */
 "alert.cloud.reset_counter.title" = "Reset today's usage counter?";
-"alert.cloud.reset_counter.message" = "This resets only HushType's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today.";
+"alert.cloud.reset_counter.message" = "This resets only Lamitype's estimate of today's cloud usage. It does not change usage or charges reported by OpenAI or Gemini. Cloud uploads will be allowed again today.";
 "alert.cloud.reset_counter.confirm" = "Reset Counter";
 
 /* Runs this one transcription locally without changing the saved engine. */
@@ -65,9 +65,9 @@
 
 /* Accessibility description for the disabled next-launch row; not a restart button. */
 
-"menu.interface_language.applied_next_launch.accessibility" = "Language applies the next time you open HushType";
+"menu.interface_language.applied_next_launch.accessibility" = "Language applies the next time you open Lamitype";
 
-/* Opens the unified seven-pane HushType Settings window. */
+/* Opens the unified seven-pane Lamitype Settings window. */
 
 "menu.settings" = "Settings…";
 
@@ -93,7 +93,7 @@
 
 "settings.caption.cloud_sub" = "OpenAI realtime · ~$2/hour · these three settings apply to translated caption only";
 
-"settings.caption.note" = "Audio streams Mac → OpenAI directly; HushType is never in the middle. Spend counts against the daily cap on the Cloud tab.";
+"settings.caption.note" = "Audio streams Mac → OpenAI directly; Lamitype is never in the middle. Spend counts against the daily cap on the Cloud tab.";
 
 "settings.cloud.cap" = "Daily spend cap:";
 
@@ -136,7 +136,7 @@
 
 /* Passive next-launch explanation; does not offer or imply programmatic quit/restart. */
 
-"alert.language_saved.message" = "It will be used the next time you open HushType. Finish any active work before quitting.";
+"alert.language_saved.message" = "It will be used the next time you open Lamitype. Finish any active work before quitting.";
 
 /* Initial status-menu state. */
 
@@ -228,11 +228,11 @@
 
 /* Opens the About alert. */
 
-"menu.about" = "About HushType";
+"menu.about" = "About Lamitype";
 
 /* Normal explicit Quit command; unrelated to interface-language selection. */
 
-"menu.quit" = "Quit HushType";
+"menu.quit" = "Quit Lamitype";
 
 /* Privacy/cost subtitle for local Live Caption. */
 
@@ -416,7 +416,7 @@
 
 /* Privacy-sensitive consent copy; do not broaden or weaken the data claim. */
 
-"alert.update_consent.message" = "HushType will connect to GitHub to check for new releases.\n\nNo personal data is sent; only a public API call is made to compare version numbers.";
+"alert.update_consent.message" = "Lamitype will connect to GitHub to check for new releases.\n\nNo personal data is sent; only a public API call is made to compare version numbers.";
 
 /* Explicitly authorizes the one-time GitHub network request. */
 
@@ -450,21 +450,21 @@
 
 "alert.update.error.message" = "Unable to connect to GitHub.\n\n%1$@\n\nCheck your internet connection and try again.";
 
-/* HushType-owned version-check diagnostic; argument is HTTP status. */
+/* Lamitype-owned version-check diagnostic; argument is HTTP status. */
 
 "error.version.http" = "GitHub returned HTTP %1$d";
 
-/* HushType-owned version-check diagnostic. */
+/* Lamitype-owned version-check diagnostic. */
 
 "error.version.invalid_json" = "Could not parse GitHub response";
 
-/* HushType-owned version-check diagnostic; JSON key stays exact. */
+/* Lamitype-owned version-check diagnostic; JSON key stays exact. */
 
 "error.version.missing_tag" = "GitHub response missing tag_name";
 
 /* Explicit Services-path error when Text Translation is disabled. */
 
-"error.translation.disabled" = "Text Translation is turned off in the HushType menu.";
+"error.translation.disabled" = "Text Translation is turned off in the Lamitype menu.";
 
 /* Explicit Services-path and Text Polish empty-selection error. */
 
@@ -530,7 +530,7 @@
 
 "alert.model_unloaded.local.message" = "The speech recognition model has been removed from memory.\n\nVoice input will require a cold start (~3 seconds) the next time you press Right ⌥.";
 
-/* Cloud-upload gate title; this is HushType's local warning, not provider billing enforcement. */
+/* Cloud-upload gate title; this is Lamitype's local warning, not provider billing enforcement. */
 
 "alert.daily_spend_gate.title" = "Daily spend warning reached";
 
@@ -538,7 +538,7 @@
 
 "alert.daily_spend_gate.message" = "This upload would bring today's estimated cloud usage to %1$@ (warning: %2$@). No audio was uploaded. Open Settings and reset today's counter to use cloud again.";
 
-/* Local notification title for HushType's daily cloud warning. */
+/* Local notification title for Lamitype's daily cloud warning. */
 
 "notification.daily_spend.title" = "Daily spend warning reached";
 
@@ -558,7 +558,7 @@
 
 "alert.cloud.no_key.message" = "Add your %1$@ API key in the Cloud pane in Settings before using cloud dictation.";
 
-/* Argument 1 is provider name; do not imply HushType rejected it. */
+/* Argument 1 is provider name; do not imply Lamitype rejected it. */
 
 "alert.cloud.auth.title" = "%1$@ rejected the API key";
 
@@ -578,9 +578,9 @@
 
 "alert.cloud.rate_limit.title" = "%1$@ quota or rate limit reached";
 
-/* Distinguishes provider quota/billing from HushType's local warning; argument is provider. */
+/* Distinguishes provider quota/billing from Lamitype's local warning; argument is provider. */
 
-"alert.cloud.rate_limit.message" = "This limit comes from %1$@, not HushType's Daily spend warning. Check provider usage or billing, or try again later.";
+"alert.cloud.rate_limit.message" = "This limit comes from %1$@, not Lamitype's Daily spend warning. Check provider usage or billing, or try again later.";
 
 /* Cloud upload size-limit title. */
 
@@ -604,7 +604,7 @@
 
 /* Argument 1 is provider; says local recovery remains possible. */
 
-"alert.cloud.network.message" = "HushType could not reach %1$@. The recording is still available for local transcription.";
+"alert.cloud.network.message" = "Lamitype could not reach %1$@. The recording is still available for local transcription.";
 
 /* Argument 1 is provider; does not expose raw response. */
 
@@ -726,11 +726,11 @@
 
 /* Onboarding/permission-repair panel title and heading. */
 
-"window.onboarding.title" = "Set Up HushType";
+"window.onboarding.title" = "Set Up Lamitype";
 
 /* Permission-purpose summary; Right Option is a key name, not the ⌥ glyph on this surface. */
 
-"onboarding.intro" = "Allow HushType to listen for Right Option and record your voice locally.";
+"onboarding.intro" = "Allow Lamitype to listen for Right Option and record your voice locally.";
 
 /* Apple permission category name. */
 
@@ -754,11 +754,11 @@
 
 /* Stale-entry troubleshooting guidance. */
 
-"permission.accessibility.reset_help" = "Use reset if you installed an older HushType, see duplicate HushType entries, cannot find HushType, or the switch does not work.";
+"permission.accessibility.reset_help" = "Use reset if you installed HushType, see duplicate HushType entries, cannot find HushType, or its switch does not work.";
 
 /* Success state after tccutil reset. */
 
-"permission.accessibility.reset_complete" = "Old Accessibility entries cleared. Add or enable HushType again.";
+"permission.accessibility.reset_complete" = "Old Accessibility entries cleared. Add or enable Lamitype again.";
 
 /* Apple permission category name. */
 
@@ -790,7 +790,7 @@
 
 /* Existing permission-flow action; unrelated to interface-language selection. */
 
-"onboarding.button.restart" = "Restart HushType";
+"onboarding.button.restart" = "Restart Lamitype";
 
 /* Disabled restart-button help. */
 
@@ -798,11 +798,11 @@
 
 /* Permission sequencing guidance. */
 
-"onboarding.next_step.allow_microphone" = "After enabling HushType in Accessibility, allow Microphone access before restarting.";
+"onboarding.next_step.allow_microphone" = "After enabling Lamitype in Accessibility, allow Microphone access before restarting.";
 
 /* Permission restart guidance. */
 
-"onboarding.next_step.restart" = "After enabling HushType in Accessibility, restart the app so macOS applies the permission.";
+"onboarding.next_step.restart" = "After enabling Lamitype in Accessibility, restart the app so macOS applies the permission.";
 
 /* Compact permission status value. */
 
@@ -822,7 +822,7 @@
 
 /* Destructive permission-reset confirmation; accurately states scope and required follow-up. */
 
-"alert.accessibility_reset.message" = "This clears HushType from the Accessibility permission list.\n\nUse this if you installed an older HushType, see duplicate HushType entries, cannot find HushType, or the switch does not work. You'll need to add or enable HushType again.";
+"alert.accessibility_reset.message" = "This clears HushType from the Accessibility permission list.\n\nUse this if you installed HushType, see duplicate HushType entries, cannot find HushType, or its switch does not work. You'll need to add or enable Lamitype again.";
 
 /* Confirms reset and reopens System Settings. */
 
@@ -834,7 +834,7 @@
 
 /* Runtime permission-repair path; Apple breadcrumb should be visually checked on supported macOS versions. */
 
-"alert.accessibility_lost.message" = "HushType lost Accessibility permission and the global hotkey is no longer working.\n\nRe-enable HushType in System Settings → Privacy & Security → Accessibility, then quit and relaunch HushType.";
+"alert.accessibility_lost.message" = "Lamitype lost Accessibility permission and the global hotkey is no longer working.\n\nRe-enable Lamitype in System Settings → Privacy & Security → Accessibility, then quit and relaunch Lamitype.";
 
 /* System-audio permission panel title. */
 
@@ -846,7 +846,7 @@
 
 /* Purpose summary; running app/provider names remain literal. */
 
-"permission.system_audio.intro" = "Allow HushType to caption audio from apps like Zoom, Chrome, and Safari.";
+"permission.system_audio.intro" = "Allow Lamitype to caption audio from apps like Zoom, Chrome, and Safari.";
 
 /* Draft Apple Taiwan permission-pane label. Must be visually verified on macOS 15 and 26 before implementation freeze. */
 
@@ -858,7 +858,7 @@
 
 /* Existing permission-flow restart instruction. */
 
-"permission.system_audio.restart_guidance" = "After turning on HushType in System Settings, restart the app so macOS applies the permission.";
+"permission.system_audio.restart_guidance" = "After turning on Lamitype in System Settings, restart the app so macOS applies the permission.";
 
 /* Expandable permission troubleshooting heading. */
 
@@ -866,7 +866,7 @@
 
 /* Stale ScreenCapture permission troubleshooting guidance. */
 
-"permission.system_audio.reset_help" = "Use this if HushType is missing or appears twice in System Settings.";
+"permission.system_audio.reset_help" = "Use this if Lamitype is missing or appears twice in System Settings.";
 
 /* Explicit ScreenCapture TCC reset action. */
 
@@ -874,19 +874,19 @@
 
 /* Success state after stale ScreenCapture entries are reset. */
 
-"permission.system_audio.reset_complete" = "Reset complete. Turn on HushType in System Settings, then restart.";
+"permission.system_audio.reset_complete" = "Reset complete. Turn on Lamitype in System Settings, then restart.";
 
 /* Non-modal draggable-tile helper title; permission label needs OS verification. */
 
-"permission.system_audio.guide.title" = "Turn on HushType in Screen & System Audio Recording.";
+"permission.system_audio.guide.title" = "Turn on Lamitype in Screen & System Audio Recording.";
 
 /* Non-modal draggable-tile helper title. */
 
-"permission.accessibility.guide.title" = "Turn on HushType in Accessibility.";
+"permission.accessibility.guide.title" = "Turn on Lamitype in Accessibility.";
 
 /* Draggable app-tile helper instruction. */
 
-"permission.guide.detail" = "If HushType is missing, drag HushType into the list.";
+"permission.guide.detail" = "If Lamitype is missing, drag Lamitype into the list.";
 
 /* Help text for helper-panel close button. */
 
@@ -942,11 +942,11 @@
 
 "error.system_audio.app_not_running" = "App %1$@ is not running. Pick a different source.";
 
-/* HushType-owned ScreenCaptureKit setup error. */
+/* Lamitype-owned ScreenCaptureKit setup error. */
 
 "error.system_audio.no_display" = "No display is available to capture from.";
 
-/* HushType-owned audio-converter error. */
+/* Lamitype-owned audio-converter error. */
 
 "error.system_audio.converter" = "Could not set up the audio converter for system audio capture.";
 
@@ -1014,19 +1014,19 @@
 
 "caption.role.translated.accessibility" = "Translated";
 
-/* HushType-owned NSError shown through caption startup wrappers. */
+/* Lamitype-owned NSError shown through caption startup wrappers. */
 
 "error.caption.microphone_denied" = "Microphone permission denied";
 
-/* HushType-owned NSError/alert title for translated captions. */
+/* Lamitype-owned NSError/alert title for translated captions. */
 
 "error.caption.openai_key_missing" = "OpenAI API key not set";
 
-/* HushType-owned NSError after a nominally successful model load. */
+/* Lamitype-owned NSError after a nominally successful model load. */
 
 "error.caption.local_model_unavailable" = "Local caption model unavailable after load";
 
-/* HushType-owned internal startup error that can surface through an alert. */
+/* Lamitype-owned internal startup error that can surface through an alert. */
 
 "error.caption.openai_key_lost" = "OpenAI key resolved but lost";
 
@@ -1052,7 +1052,7 @@
 
 /* Apple breadcrumb should be visually checked on supported macOS versions. */
 
-"alert.caption.mic_access.message" = "Live Caption needs microphone access. Open System Settings → Privacy & Security → Microphone and enable HushType.";
+"alert.caption.mic_access.message" = "Live Caption needs microphone access. Open System Settings → Privacy & Security → Microphone and enable Lamitype.";
 
 /* VAD load failure title. */
 
@@ -1110,19 +1110,19 @@
 
 "alert.caption.local_start_failed.title" = "Could not start Live Caption";
 
-/* HushType-owned NSError that can surface in caption startup wrappers. */
+/* Lamitype-owned NSError that can surface in caption startup wrappers. */
 
 "error.audio_capture.push_to_talk_active" = "Push-to-talk recording is active; cannot start continuous capture.";
 
-/* HushType-owned continuous-capture NSError. */
+/* Lamitype-owned continuous-capture NSError. */
 
 "error.audio_capture.target_format" = "Failed to create target audio format.";
 
-/* HushType-owned backend NSError after authentication failure. */
+/* Lamitype-owned backend NSError after authentication failure. */
 
 "error.openai_translate.auth" = "OpenAI rejected the API key.";
 
-/* HushType-owned backend NSError after rate limit. */
+/* Lamitype-owned backend NSError after rate limit. */
 
 "error.openai_translate.rate_limit" = "OpenAI rate limit hit.";
 
@@ -1264,7 +1264,7 @@
 
 /* High-risk opt-in/privacy/billing disclosure. Preserve exact data path, key visibility, approximate hourly cost, billing account, local fallback, and one-time behavior. Product naming needs review. */
 
-"alert.cloud_caption_disclosure.message" = "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Uses your API key; HushType never sees it\n• No HushType server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once.";
+"alert.cloud_caption_disclosure.message" = "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Uses your API key; Lamitype never sees it\n• No Lamitype server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once.";
 
 /* Accepts the one-time cloud disclosure. */
 
@@ -1284,7 +1284,7 @@
 
 /* Per-session privacy/billing disclosure; argument is provider. Preserve direct path, own-key, no-relay, and local warning semantics. */
 
-"alert.cloud_dictation_consent.base" = "HushType will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server; audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.";
+"alert.cloud_dictation_consent.base" = "Lamitype will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server; audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.";
 
 /* Provider-policy claim copied from current product source; preserve may/does-not distinction without embellishment. */
 
@@ -1493,7 +1493,7 @@
 "settings.caption.local_sub" = "Shared by both caption modes. Local caption runs on Qwen3: free, nothing leaves the Mac.";
 
 /* Caption panel default size row label. */
-"settings.caption.panel_size" = "Drag or resize the caption panel; HushType remembers its size and position automatically.";
+"settings.caption.panel_size" = "Drag or resize the caption panel; Lamitype remembers its size and position automatically.";
 
 /* Caption panel next-start position reset checkbox. */
 "settings.caption.reset_position" = "Reset Size & Position";

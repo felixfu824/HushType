@@ -28,7 +28,7 @@ enum CloudOnboardingAlert {
         )
         alert.informativeText = L10n.string(
             "alert.cloud_caption_disclosure.message",
-            fallback: "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Your API key — HushType never sees it\n• No HushType server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once."
+            fallback: "Live Translated Caption sends your audio to OpenAI for live translation.\n\n• Cost: about $2/hour, billed to your OpenAI account\n• Your API key — Lamitype never sees it\n• No Lamitype server in the middle; audio goes Mac → OpenAI directly\n• You can stop the session any time, or switch back to local\n\nThis is opt-in. You'll only see this notice once."
         )
         alert.alertStyle = .informational
         alert.icon = NSImage(systemSymbolName: "cloud", accessibilityDescription: nil)

@@ -63,7 +63,7 @@ final class LiveCaptionTuningTests: XCTestCase {
 
     private func temporaryTuningURL() throws -> URL {
         let directory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("HushType-LiveCaptionTuningTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("Lamitype-LiveCaptionTuningTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
         addTeardownBlock {
             try? FileManager.default.removeItem(at: directory)
@@ -80,7 +80,7 @@ final class LiveCaptionTuningTests: XCTestCase {
 
 final class LiveCaptionPanelFrameStoreTests: XCTestCase {
     func testSavedFrameRoundTripsAndResetClearsAllFrameKeys() throws {
-        let suiteName = "HushType-LiveCaptionFrameTests-\(UUID().uuidString)"
+        let suiteName = "Lamitype-LiveCaptionFrameTests-\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         addTeardownBlock { defaults.removePersistentDomain(forName: suiteName) }
         let expected = NSRect(x: 120, y: 90, width: 900, height: 220)

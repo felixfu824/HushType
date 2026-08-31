@@ -52,7 +52,7 @@ final class GeneralSettingsModel: NSObject, ObservableObject {
         alert.messageText = L10n.string("alert.language_saved.title", fallback: "Language Saved")
         alert.informativeText = L10n.string(
             "alert.language_saved.message",
-            fallback: "It will be used the next time you open HushType. Finish any active work before quitting."
+            fallback: "It will be used the next time you open Lamitype. Finish any active work before quitting."
         )
         alert.alertStyle = .informational
         alert.icon = NSImage(named: "AppIcon") ?? NSApp.applicationIconImage
@@ -94,7 +94,7 @@ struct GeneralPane: View {
                 .labelsHidden()
                 .help(L10n.string(
                     "menu.interface_language.applied_next_launch.accessibility",
-                    fallback: "Language applies the next time you open HushType"
+                    fallback: "Language applies the next time you open Lamitype"
                 ))
             }
 

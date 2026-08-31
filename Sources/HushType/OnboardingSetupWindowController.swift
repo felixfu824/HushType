@@ -64,7 +64,7 @@ final class OnboardingSetupWindowController: NSWindowController, NSWindowDelegat
             backing: .buffered,
             defer: false
         )
-        panel.title = L10n.string("window.onboarding.title", fallback: "Set Up HushType")
+        panel.title = L10n.string("window.onboarding.title", fallback: "Set Up Lamitype")
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isOpaque = false
@@ -224,13 +224,13 @@ private struct OnboardingSetupView: View {
                 .shadow(color: .black.opacity(0.16), radius: 8, x: 0, y: 3)
 
             VStack(spacing: 5) {
-                Text(L10n.string("window.onboarding.title", fallback: "Set Up HushType"))
+                Text(L10n.string("window.onboarding.title", fallback: "Set Up Lamitype"))
                     .font(.system(size: 22, weight: .semibold))
                     .multilineTextAlignment(.center)
 
                 Text(L10n.string(
                     "onboarding.intro",
-                    fallback: "Allow HushType to listen for Right Option and record your voice locally."
+                    fallback: "Allow Lamitype to listen for Right Option and record your voice locally."
                 ))
                     .font(.system(size: 13))
                     .foregroundStyle(.secondary)
@@ -276,7 +276,7 @@ private struct OnboardingSetupView: View {
 
                 Text(L10n.string(
                     "permission.accessibility.reset_help",
-                    fallback: "Use reset if you installed an older HushType, see duplicate HushType entries, cannot find HushType, or the switch does not work."
+                    fallback: "Use reset if you installed HushType, see duplicate HushType entries, cannot find HushType, or its switch does not work."
                 ))
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
@@ -286,7 +286,7 @@ private struct OnboardingSetupView: View {
                     Label(
                         L10n.string(
                             "permission.accessibility.reset_complete",
-                            fallback: "Old Accessibility entries cleared. Add or enable HushType again."
+                            fallback: "Old Accessibility entries cleared. Add or enable Lamitype again."
                         ),
                         systemImage: "checkmark.circle.fill"
                     )
@@ -374,14 +374,14 @@ private struct OnboardingSetupView: View {
             Spacer()
 
             if model.accessibilitySettingsOpened {
-                Button(L10n.string("onboarding.button.restart", fallback: "Restart HushType")) {
+                Button(L10n.string("onboarding.button.restart", fallback: "Restart Lamitype")) {
                     onRestart()
                 }
                 .buttonStyle(.borderedProminent)
                 .keyboardShortcut(.defaultAction)
                 .disabled(!canRestart)
                 .help(canRestart
-                      ? L10n.string("onboarding.button.restart", fallback: "Restart HushType")
+                      ? L10n.string("onboarding.button.restart", fallback: "Restart Lamitype")
                       : L10n.string(
                         "onboarding.restart.help",
                         fallback: "Allow or review Microphone access before restarting."
@@ -401,12 +401,12 @@ private struct OnboardingSetupView: View {
         if model.microphoneStatus == .notDetermined {
             return L10n.string(
                 "onboarding.next_step.allow_microphone",
-                fallback: "After enabling HushType in Accessibility, allow Microphone access before restarting."
+                fallback: "After enabling Lamitype in Accessibility, allow Microphone access before restarting."
             )
         }
         return L10n.string(
             "onboarding.next_step.restart",
-            fallback: "After enabling HushType in Accessibility, restart the app so macOS applies the permission."
+            fallback: "After enabling Lamitype in Accessibility, restart the app so macOS applies the permission."
         )
     }
 

@@ -1,6 +1,6 @@
 // Regression harness for NumberNormalizer.swift.
 //
-// Self-contained standalone script — runs outside the main HushType build so
+// Self-contained standalone script — runs outside the main Lamitype build so
 // we can iterate without linking the whole app. The NumberNormalizer source
 // is included inline via #sourceLocation so the file under test stays the
 // single source of truth.
@@ -14,7 +14,7 @@ import Foundation
 import os
 
 // MARK: - Inline copy of NumberNormalizer (keep in sync with Sources/HushType/NumberNormalizer.swift)
-// Swift scripts can't `import HushType`, so we embed the module body here.
+// Swift scripts can't `import Lamitype`, so we embed the module body here.
 //
 // BEGIN NUMBER_NORMALIZER ----------------------------------------
 

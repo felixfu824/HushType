@@ -4,7 +4,7 @@ import SwiftUI
 /// Small Codex-style helper shown after opening System Settings.
 ///
 /// The panel stays above System Settings and gives the user a concrete app
-/// tile to drag if HushType is missing from the permission list.
+/// tile to drag if Lamitype is missing from the permission list.
 @MainActor
 final class PermissionSettingsGuidePanel {
     static let shared = PermissionSettingsGuidePanel()
@@ -17,11 +17,11 @@ final class PermissionSettingsGuidePanel {
         showGuide(
             title: L10n.string(
                 "permission.system_audio.guide.title",
-                fallback: "Turn on HushType in Screen & System Audio Recording."
+                fallback: "Turn on Lamitype in Screen & System Audio Recording."
             ),
             detail: L10n.string(
                 "permission.guide.detail",
-                fallback: "If HushType is missing, drag HushType into the list."
+                fallback: "If Lamitype is missing, drag Lamitype into the list."
             )
         )
     }
@@ -30,11 +30,11 @@ final class PermissionSettingsGuidePanel {
         showGuide(
             title: L10n.string(
                 "permission.accessibility.guide.title",
-                fallback: "Turn on HushType in Accessibility."
+                fallback: "Turn on Lamitype in Accessibility."
             ),
             detail: L10n.string(
                 "permission.guide.detail",
-                fallback: "If HushType is missing, drag HushType into the list."
+                fallback: "If Lamitype is missing, drag Lamitype into the list."
             )
         )
     }

@@ -12,7 +12,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "systemAudio
 /// macOS caches Screen Recording permission at process start (same per-process
 /// cache barrier as Accessibility). After the user grants permission for the
 /// first time — via the system prompt OR via System Settings — the running
-/// HushType process still cannot capture until it restarts. This flow surfaces
+/// Lamitype process still cannot capture until it restarts. This flow surfaces
 /// that restart requirement explicitly via a focused permission panel.
 ///
 /// Implementation note vs. spec §6.b: the spec described two separate alerts
@@ -20,7 +20,7 @@ private let log = Logger(subsystem: "com.felix.hushtype", category: "systemAudio
 /// `CGPreflightScreenCaptureAccess()` returns `false` in both cases until the
 /// process is restarted, so we cannot reliably distinguish them. This flow
 /// instead presents a single guided setup panel with `Open System Settings`,
-/// `Restart HushType`, and a manual troubleshooting reset for stale TCC rows.
+/// `Restart Lamitype`, and a manual troubleshooting reset for stale TCC rows.
 enum SystemAudioPermissionFlow {
 
     /// If permission is already granted for this process, calls `onReady`

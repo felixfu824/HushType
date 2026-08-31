@@ -25,7 +25,7 @@ enum InterfaceLanguage: String, Hashable, Sendable {
 /// - bare `zh`, `zh-Hans`, `zh-CN`, `zh-SG` -> unsupported; continue walking
 /// - empty/corrupt list or no supported entry -> English
 ///
-/// HushType deliberately prevents Foundation's accidental
+/// Lamitype deliberately prevents Foundation's accidental
 /// Simplified-to-Traditional nearest match: a `zh-CN`-only system stays
 /// English, and only the explicit mappings above produce Chinese.
 enum InterfaceLocale {
@@ -195,7 +195,7 @@ enum L10n {
             return s
         }
         // 4. human-readable fallback
-        if ProcessInfo.processInfo.environment["HUSHTYPE_L10N_ASSERT"] != nil {
+        if ProcessInfo.processInfo.environment["LAMITYPE_L10N_ASSERT"] != nil {
             assertionFailure("L10n: missing localization key \(key) (table \(table))")
         }
         log.error("L10n missing key \(key, privacy: .public) table \(table, privacy: .public) tag \(launchTag, privacy: .public); using English fallback")
@@ -274,7 +274,7 @@ enum L10n {
         if let variant = pluralVariant(key, count: count, table: table, tag: "en", in: base) {
             return String(format: variant, locale: effectiveLocale, arguments: arguments)
         }
-        if ProcessInfo.processInfo.environment["HUSHTYPE_L10N_ASSERT"] != nil {
+        if ProcessInfo.processInfo.environment["LAMITYPE_L10N_ASSERT"] != nil {
             assertionFailure("L10n: missing plural key \(key)")
         }
         log.error("L10n missing plural key \(key, privacy: .public) tag \(launchTag, privacy: .public); using English fallback")

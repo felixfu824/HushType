@@ -56,7 +56,7 @@ final class CloudDictationOnboardingAlert {
     private func informativeText(for provider: Provider) -> String {
         let base = L10n.format(
             "alert.cloud_dictation_consent.base",
-            "HushType will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server — audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.",
+            "Lamitype will send this recording directly to %1$@ for transcription, using your own API key. There is no relay server — audio goes straight from your Mac to the provider. Your daily cloud-spend warning applies.",
             arguments: [provider.rawValue]
         )
         if provider == .gemini {

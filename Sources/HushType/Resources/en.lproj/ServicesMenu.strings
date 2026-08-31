@@ -2,8 +2,8 @@
 
 /* Exact English NSMenuItem.default value is the key; host-app Services localization follows LaunchServices/system behavior. */
 
-"Polish with HushType" = "Polish with HushType";
+"Polish with Lamitype" = "Polish with Lamitype";
 
 /* Exact English NSMenuItem.default value is the key; host-app Services localization follows LaunchServices/system behavior. */
 
-"Translate with HushType" = "Translate with HushType";
+"Translate with Lamitype" = "Translate with Lamitype";

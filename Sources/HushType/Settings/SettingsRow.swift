@@ -16,7 +16,7 @@ enum SettingsGrid {
 }
 
 /// Project-owned settings grid. The Settings package handles the window and
-/// intrinsic pane sizing; HushType owns the approved 170 / 6 / 300 point row.
+/// intrinsic pane sizing; Lamitype owns the approved 170 / 6 / 300 point row.
 struct SettingsRow<Content: View>: View {
     private let label: String
     private let content: Content

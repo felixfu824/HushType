@@ -45,12 +45,7 @@ enum GeminiKeyStore {
     /// Path to the Gemini API key file. (Defined here rather than in
     /// `AppConfig` so this file is self-contained.)
     private static var fileURL: URL {
-        FileManager.default.urls(
-            for: .applicationSupportDirectory,
-            in: .userDomainMask
-        )[0]
-        .appendingPathComponent("HushType", isDirectory: true)
-        .appendingPathComponent("gemini.json")
+        AppSupportPaths.geminiKeyFileURL
     }
 
     /// Maximum accepted file size for `gemini.json`. Real keys fit in <200
@@ -65,7 +60,7 @@ enum GeminiKeyStore {
 
         // Defense in depth: refuse to follow symlinks AND refuse oversized
         // files. The path itself is system-controlled (Application Support /
-        // HushType), so a malicious symlink there would already mean the user
+        // Lamitype), so a malicious symlink there would already mean the user
         // account is compromised — but reading whatever the symlink points at
         // as JSON and pulling an `api_key` field out of it is a footgun we
         // don't need.
@@ -131,7 +126,7 @@ enum GeminiKeyStore {
         let overview = L10n.jsonStringLiteral(L10n.string(
             "template.gemini.overview",
             table: "Templates",
-            fallback: "HushType cloud features: Gemini API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://aistudio.google.com/apikey. Cloud features stay disabled until 'api_key' is filled in. The engine is chosen in HushType's Dictation Engine settings."
+            fallback: "Lamitype cloud features: Gemini API key. This file is plaintext on disk; treat it like a .env file. Get a key at https://aistudio.google.com/apikey. Cloud features stay disabled until 'api_key' is filled in. The engine is chosen in Lamitype's Dictation Engine settings."
         ))
         let apiKeyComment = L10n.jsonStringLiteral(L10n.string(
             "template.gemini.api_key",

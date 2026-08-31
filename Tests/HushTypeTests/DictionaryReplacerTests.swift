@@ -11,7 +11,7 @@ final class DictionaryReplacerTests: XCTestCase {
         try super.setUpWithError()
 
         temporaryDirectoryURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("HushType-DictionaryReplacerTests-\(UUID().uuidString)", isDirectory: true)
+            .appendingPathComponent("Lamitype-DictionaryReplacerTests-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(
             at: temporaryDirectoryURL,
             withIntermediateDirectories: true

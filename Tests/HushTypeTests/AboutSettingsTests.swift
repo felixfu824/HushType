@@ -33,9 +33,9 @@ final class AboutSettingsTests: XCTestCase {
                 L10n.format(
                     "settings.about.version_build",
                     "Version %1$@ (Build %2$@)",
-                    arguments: ["0.5.11", "29"]
+                    arguments: ["0.5.12", "30"]
                 ),
-                "Version 0.5.11 (Build 29)"
+                "Version 0.5.12 (Build 30)"
             )
         }
     }
@@ -51,9 +51,9 @@ final class AboutSettingsTests: XCTestCase {
                 L10n.format(
                     "settings.about.version_build",
                     "Version %1$@ (Build %2$@)",
-                    arguments: ["0.5.11", "29"]
+                    arguments: ["0.5.12", "30"]
                 ),
-                "版本 0.5.11（組建 29）"
+                "版本 0.5.12（組建 30）"
             )
         }
     }
@@ -86,7 +86,7 @@ final class AboutSettingsTests: XCTestCase {
 
         let statusSource = try source(named: "Sources/HushType/StatusBarController.swift")
         XCTAssertTrue(statusSource.contains(
-            "HushTypeSettingsWindowController.shared.presentAndFocus(pane: .about)"
+            "LamitypeSettingsWindowController.shared.presentAndFocus(pane: .about)"
         ))
     }
 
