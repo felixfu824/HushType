@@ -3,13 +3,13 @@
   <text x="28" y="38" font-size="18" font-weight="700" fill="#1f2933">Model weights resident in RAM</text>
   <text x="28" y="59" font-size="12.5" fill="#69707a">shorter = lighter (weights only)</text>
 
-  <text x="28" y="100" font-size="14.5" font-weight="700" fill="#1f2933">★ lamitype</text>
+  <text x="28" y="100" font-size="14.5" font-weight="700" fill="#1f2933">★ Lamitype</text>
   <text x="28" y="116" font-size="10.5" fill="#69707a">Qwen3-ASR 0.6B · 4-bit · default</text>
   <rect x="236" y="86" width="82" height="30" rx="5" fill="#263238"/>
   <text x="326" y="106" font-size="13.5" font-weight="700" fill="#263238">675 MB</text>
   <text x="852" y="106" text-anchor="end" font-size="12.5" font-weight="700" fill="#263238">✓ Native 繁中 (OpenCC)</text>
 
-  <text x="28" y="150" font-size="14.5" font-weight="700" fill="#1f2933">★ lamitype cloud</text>
+  <text x="28" y="150" font-size="14.5" font-weight="700" fill="#1f2933">★ Lamitype cloud</text>
   <text x="28" y="166" font-size="10.5" fill="#69707a">OpenAI / Gemini · opt-in</text>
   <rect x="236" y="136" width="4" height="30" rx="2" fill="#5E6E70"/>
   <text x="248" y="156" font-size="13.5" font-weight="700" fill="#5E6E70">~0 MB</text>

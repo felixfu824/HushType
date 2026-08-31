@@ -1,11 +1,18 @@
 <p align="center">
-  <img src="Resources/lamitype-banner.png" width="100%" alt="lamitype: local voice-to-text for macOS and iOS">
+  <img src="Resources/Lamitype.png" width="128" alt="Lamitype app icon">
+</p>
+
+<h1 align="center">Lamitype</h1>
+
+<p align="center">
+  <strong>Free, private, Traditional-Chinese-first Mac dictation that stays light on memory.</strong><br>
+  Lamitype does one thing: turn your voice into text with minimal friction, privacy first.
 </p>
 
 <p align="center">
-  Voice-to-text built for Apple Silicon macOS<br>
-  <strong>Minimum input friction, with privacy always in your hands:</strong><br>
-  fully local by default, nothing sent anywhere; when you want better quality or lower memory, connect straight to the cloud with your own key, never through a middleman.
+  <a href="https://github.com/felixfu824/Lamitype/releases/latest"><img src="https://img.shields.io/github/v/release/felixfu824/Lamitype?style=flat-square&color=EC6A4E" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/platform-macOS%2015%2B-blue?style=flat-square" alt="macOS 15+">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/felixfu824/Lamitype?style=flat-square" alt="MIT license"></a>
 </p>
 
 <p align="center">
@@ -13,32 +20,33 @@
 </p>
 
 <p align="center">
-  Canonical repository: <a href="https://github.com/felixfu824/lamitype">github.com/felixfu824/lamitype</a>
+  Canonical repository: <a href="https://github.com/felixfu824/Lamitype">github.com/felixfu824/Lamitype</a><br>
+  Official website: <a href="https://lamitype.com/en/">lamitype.com/en</a>
 </p>
 
-> **lamitype** is a free, open-source speech-to-text app for macOS and iOS. By default it runs the **4-bit MLX quant** of Qwen3-ASR 0.6B fully locally on Apple Silicon, transcribing English, Chinese, Japanese, and mixed-language sentences, with steady Traditional Chinese (繁體中文) output via OpenCC. **Cloud dictation (OpenAI / Gemini)** is an opt-in choice: your own key over HTTPS straight to the provider, with no relay server in between. Unlike dictation tools that force your audio through a third-party relay, lamitype keeps the choice, and the privacy, in your hands, and stays light enough to coexist with everything you need running at once.
+> **Lamitype** is a free, open-source, privacy-first speech-to-text app for macOS. By default it runs the **4-bit MLX quant** of Qwen3-ASR 0.6B fully locally on Apple Silicon, transcribing English, Chinese, Japanese, and mixed-language sentences, with consistent Traditional Chinese (繁體中文) output via OpenCC. **Cloud dictation (OpenAI / Gemini)** is an opt-in choice: your own key over HTTPS straight to the provider, with no relay server in between. Unlike dictation tools that force your audio through a third-party relay, Lamitype keeps the choice, and the privacy, in your hands. It also stays light enough to coexist with everything else you need running at once.
 
-> 🌐 **lamitype** 是一款免費、開源的 macOS 與 iOS 語音轉文字 App，預設使用 Qwen3-ASR 在 Apple Silicon（MLX）上完全本地執行，透過 OpenCC 提供道地的繁體中文輸出；也可選擇用你自己的金鑰直連 OpenAI / Gemini 雲端聽寫，中間沒有任何轉送伺服器。<br>→ 完整中文版 README：[README.md](README.md)
+> 🌐 **Lamitype** 是一款免費、開源、隱私優先的 macOS 語音轉文字 App，預設使用 Qwen3-ASR 在 Apple Silicon（MLX）上完全本地執行，透過 OpenCC 提供道地的繁體中文輸出；也可選擇用你自己的金鑰直連 OpenAI / Gemini 雲端聽寫，中間沒有任何轉送伺服器。<br>→ 完整中文版 README：[README.md](README.md)
 
-> **Name continuity:** lamitype was formerly HushType. v0.5.12 renames the Mac app only; existing settings and Application Support data migrate automatically, while the iOS app and keyboard keep the HushType name in this release.
+> **Name continuity:** Lamitype was formerly HushType. v0.5.12 renames the Mac app only; existing settings and Application Support data migrate automatically, while the iOS app and keyboard keep the HushType name in this release.
 
 <p align="center">
-  <img src="Resources/lamitype-memory-en.svg" alt="Model weights resident in RAM: lamitype local 675 MB (native Traditional Chinese), lamitype cloud engines ~0 MB, vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB (no Chinese)" width="100%">
+  <img src="Resources/lamitype-memory-en.svg" alt="Model weights resident in RAM: Lamitype local 675 MB (native Traditional Chinese), Lamitype cloud engines ~0 MB, vs Whisper large-v3-turbo 1,618 MB vs Parakeet 2,472 MB (no Chinese)" width="100%">
 </p>
 
-<sub>Sizes are the weight files each tool ships at default precision; lamitype's 675 MB is the 4-bit MLX quant of Qwen3-ASR 0.6B. On a cloud engine (OpenAI / Gemini) **model RAM is ~0 MB**: same or better quality, at the cost of a few seconds of network latency per utterance, billed by duration or free with a Gemini free-tier API key. A 4-bit MLX Whisper-turbo exists (~464 MB) but still outputs mediocre / Simplified Chinese, so the claim is "a light ASR that nails Traditional Chinese," not "the smallest model."</sub>
+<sub>Sizes are the weight files each tool ships at default precision; Lamitype's 675 MB is the 4-bit MLX quant of Qwen3-ASR 0.6B. On a cloud engine (OpenAI / Gemini) **model RAM is ~0 MB**: same or better quality, at the cost of a few seconds of network latency per utterance, billed by duration or free with a Gemini free-tier API key. A 4-bit MLX Whisper-turbo exists (~464 MB) but still outputs mediocre / Simplified Chinese, so the claim is "a light ASR that nails Traditional Chinese," not "the smallest model."</sub>
 
 ---
 
-## Why lamitype
+## Why Lamitype
 
-**Privacy and control first.** In the default mode, voice never leaves your Mac: the model runs on-device, no cloud, no account, no telemetry; the only download is the one-time ~675 MB model fetch. When you opt into cloud dictation, audio goes over HTTPS **directly** to OpenAI or Gemini with **your own key**. No lamitype server in between: nothing relayed, nothing intercepted, your audio and key never seen, and each session asks for your consent before the first cloud use. **Whether your audio goes to a provider is always your decision.**
+**Privacy and control first.** In the default mode, voice never leaves your Mac: the model runs on-device, no cloud, no account, no telemetry; the only download is the one-time ~675 MB model fetch. When you opt into cloud dictation, audio goes over HTTPS **directly** to OpenAI or Gemini with **your own key**. No Lamitype server in between: nothing relayed, nothing intercepted, your audio and key never seen, and each session asks for your consent before the first cloud use. **Whether your audio goes to a provider is always your decision.**
 
-**Memory-friendly: coexists with your agents.** The local model's weights are just ~675 MB (~2.1 GB RAM resident when loaded), light enough to coexist with Claude Code/Cowork, Codex and a browser, and lamitype caps its memory buffer at launch so there's nothing for you to manage. Want the footprint at zero? Switch to a cloud engine: the local model is never loaded (the engine choice persists across restarts, so the next launch starts at ~0 MB); an already-loaded model can be unloaded with one menu click, and it reloads automatically when you switch back to local.
+**Memory-friendly: coexists with your agents.** The local model's weights are just ~675 MB (~2.1 GB RAM resident when loaded), light enough to coexist with Claude Code/Cowork, Codex and a browser, and Lamitype caps its memory buffer at launch so there's nothing for you to manage. Want the footprint at zero? Switch to a cloud engine: the local model is never loaded (the engine choice persists across restarts, so the next launch starts at ~0 MB); an already-loaded model can be unloaded with one menu click, and it reloads automatically when you switch back to local.
 
 **Cloud dictation (opt-in).** Three things: (1) **OpenAI** (default `gpt-4o-mini-transcribe`) and **Gemini** (default `gemini-3.5-flash-lite`, with `gemini-3.7-flash` as the quality option), with your key, a direct connection, and no relay; (2) Gemini offers a **free-tier API key** for a $0 start, but note: on Google's free tier, Google may use submitted audio to improve its products; the paid tier does not; (3) built-in guardrails: per-session consent, a daily spend warning with same-day lockout (default $5), and over-long recordings blocked before upload.
 
-**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). lamitype chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output (軟體, 滑鼠, 品質) with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default. Local and cloud engines share the same post-processing pipeline, so output quality is consistent.
+**Traditional Chinese that actually works.** Whisper and most open-source models default to Simplified or Mainland phrasing (软件, not 軟體). Lamitype chains Qwen3-ASR with OpenCC `s2twp` for Taiwan-native output (軟體, 滑鼠, 品質) with EN/ZH code-switching in one pass and optional in-context number conversion (`一零一大樓` → `101 大樓`), on by default. Local and cloud engines share the same post-processing pipeline, so output quality is consistent.
 
 **Fix text where it stands.** Select text in any app, double-tap Right ⌥, and an on-device Apple Intelligence model proofreads it and replaces it in place: spelling, grammar, typos, punctuation. It's a mechanical proofreader, not a rewriter: meaning, tone, and your 中英 mix stay exactly as you wrote them (macOS 26+).<br>Note: the Apple Foundation Model is small and capability-limited, so corrections are deliberately conservative; sometimes it changes nothing at all.
 
@@ -48,20 +56,41 @@
 
 ## Key Features
 
+### Dictation
+
 | Feature | Default | Requirement |
 |---|---|---|
 | Hold Right ⌥ to dictate (macOS) | ON | macOS 15+ |
 | **Cloud dictation (OpenAI / Gemini, opt-in)**: zero model RAM, per-session consent | OFF | Your own API key |
-| Tap Right ⌥ to translate selected text | OFF | macOS 15+ |
-| Double-tap Right ⌥ to polish selected text (proofread in place) | **ON** | macOS 26 + Apple Intelligence |
+| EN / ZH / JA + native code-switching | ON | - |
+
+### Live Captions
+
+| Feature | Default | Requirement |
+|---|---|---|
 | **Live Caption** (local, free): floating panel from mic or system audio | OFF | macOS 15+ |
 | **Live Translated Caption** (cloud, ~$2/hr): real-time foreign-language subtitles via OpenAI | OFF (opt-in) | Your own OpenAI API key |
-| Right ⌘ + /: toggle whichever caption mode you used last | - | macOS 15+ |
-| EN / ZH / JA + native code-switching | ON | - |
+
+### Other Text-Related Features
+
+| Feature | Default | Requirement |
+|---|---|---|
+| **Translate**: tap Right ⌥ to translate selected text | OFF | macOS 15+ |
+| **Polish**: double-tap Right ⌥ to polish selected text (proofread in place) | **ON** | macOS 26 + Apple Intelligence |
+
+### Output Post-Processing
+
+| Feature | Default | Requirement |
+|---|---|---|
 | 簡體 → 繁體 post-processing (OpenCC `s2twp`) | **ON** | - |
 | 阿拉伯數字 conversion (deterministic ITN) | **ON** | - |
 | Chinese punctuation cleanup: trims the model's over-segmentation (soft / hard / off) | **soft** | - |
 | Customized dictionary (proper nouns / jargon) | File-driven | - |
+
+### Interface & Extras
+
+| Feature | Default | Requirement |
+|---|---|---|
 | Interface Language (Follow System / English / 繁體中文) | Follow System | - |
 | Floating "Listening / Transcribing" pill | ON | - |
 | Unload speech-to-text model | One-click | - |
@@ -94,7 +123,7 @@ macOS (local by default, zero network required):
   Double-tap Right Option with text selected → proofread in place (Text Polish)
   Local pipeline: mic → Qwen3-ASR (MLX, on-device) → OpenCC s2twp → ITN → paste
   Cloud pipeline (opt-in): mic → your Mac → HTTPS direct to OpenAI/Gemini → same OpenCC/ITN post-processing → paste
-                           (no lamitype server on the way)
+                           (no Lamitype server on the way)
 
 iOS (via your Mac as server):
   Open HushType → Start Listening → switch to any app → HushType keyboard → tap mic
@@ -123,7 +152,7 @@ iOS (via your Mac as server):
 
 ### Option A: Download DMG (no build tools needed)
 
-1. Download `Lamitype.dmg` from the [latest release](https://github.com/felixfu824/lamitype/releases)
+1. Download `Lamitype.dmg` from the [latest release](https://github.com/felixfu824/Lamitype/releases)
 2. Open the DMG and drag Lamitype to Applications
 3. Open Lamitype from Applications or Spotlight; its Developer ID signature and Apple notarization pass Gatekeeper directly
 4. Grant **Accessibility**, **Microphone**, and **Screen & System Audio Recording** when needed
@@ -187,7 +216,7 @@ Updating means **replacing the `.app` bundle**. Preferences, the ASR model, and 
 ### Step 1: Clone and build
 
 ```bash
-git clone https://github.com/felixfu824/lamitype.git
+git clone https://github.com/felixfu824/Lamitype.git
 cd Lamitype
 
 # Install dependencies
@@ -270,7 +299,7 @@ On-device translation via Apple Translation Framework. Select any text → tap R
 
 ### Optional: Text Polish (macOS 26+)
 
-On-device proofreading via Apple's Foundation Models framework: the Apple Intelligence model already shipped with macOS, so it adds nothing to lamitype's memory budget and nothing leaves your Mac. Select text in any app → double-tap Right Option → the selection is replaced in place with corrected text, and a result card shows exactly what changed, Word track-changes style: deletions struck through in red, insertions underlined in green.
+On-device proofreading via Apple's Foundation Models framework: the Apple Intelligence model already shipped with macOS, so it adds nothing to Lamitype's memory budget and nothing leaves your Mac. Select text in any app → double-tap Right Option → the selection is replaced in place with corrected text, and a result card shows exactly what changed, Word track-changes style: deletions struck through in red, insertions underlined in green.
 
 <p align="center">
   <img src="Resources/polish-card-diff-en.png" alt="Text Polish result card: deletions in red strikethrough, insertions in green underline" width="560">
@@ -278,7 +307,7 @@ On-device proofreading via Apple's Foundation Models framework: the Apple Intell
 
 **What it fixes, and what it never touches.** Spelling, grammar, punctuation, obvious typos. It is deliberately a mechanical proofreader, not a rewriter: meaning, tone, formatting, casing, and language mix are preserved. The rules it is held to:
 
-- **Never translates.** A 中英 mixed sentence stays mixed. If the model drops one of your languages, lamitype detects it on the output, retries once with a stronger instruction, and shows an alert rather than paste a mistranslation.
+- **Never translates.** A 中英 mixed sentence stays mixed. If the model drops one of your languages, Lamitype detects it on the output, retries once with a stronger instruction, and shows an alert rather than paste a mistranslation.
 - **Never converts** Simplified ↔ Traditional Chinese in either direction.
 - **Never answers.** A selection shaped like a question or an instruction is text to proofread, not a prompt to obey.
 - **Declines code.** Code-shaped selections are refused with an alert; URLs, file paths, and backtick content inside normal text are left as-is.
@@ -286,7 +315,7 @@ On-device proofreading via Apple's Foundation Models framework: the Apple Intell
 
 **Honest limits:** this runs on Apple's small on-device model, and the trade-offs show: **English corrections are the most reliable**; **Chinese fixes are conservative** and syntax-dependent typos (的/得, 在/再) are often missed; **longer selections tend to come back "No changes needed"**; one or two sentences at a time works best. That bias is deliberate: when the model is unsure it returns your text unchanged; it would rather miss a fix than make one up.
 
-**Speed:** typically ~1-3 s. lamitype keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
+**Speed:** typically ~1-3 s. Lamitype keeps a prewarmed model session on standby, so the prompt-processing cost is paid before you double-tap, not after.
 
 **Custom rules:** menu bar → **Settings… → Text → Polish instructions → Open file in TextEdit** opens `~/Library/Application Support/Lamitype/polish_rules.txt`. One short imperative rule per line (`#` for comments), merged into the built-in prompt, e.g. `Use the Oxford comma.` or `一律用台灣用語`. Saves hot-reload; no restart.
 
@@ -483,7 +512,7 @@ Two modes, one principle: **there is never a third party in the middle, and the 
 
 ### Cloud mode (opt-in: cloud dictation / Live Translated Caption)
 
-- **No relay server in the middle.** Audio goes directly from your Mac over HTTPS (WSS for captions) to the provider (OpenAI / Google). lamitype operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend.
+- **No relay server in the middle.** Audio goes directly from your Mac over HTTPS (WSS for captions) to the provider (OpenAI / Google). Lamitype operates no servers, intermediates no traffic, and never sees your audio, your key, or your spend.
 - **Your key, your consent.** Everything is off by default and requires you to enter a key; each session asks for consent before the first cloud use; never a silent upload. An empty key disables cloud entirely.
 - **Key storage.** Keys live in `~/Library/Application Support/Lamitype/` (`openai.json` / `gemini.json`); the app sets `0600` file permissions on write (the same security model as a `.env` file).
 - **Spend guardrails.** The daily spend warning (default $5) blocks a request before it would cross the threshold and locks cloud for the day; over-long recordings are blocked before upload and never sent.
